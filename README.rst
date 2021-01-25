@@ -22,6 +22,27 @@ Survival analysis-based win percentage
 * Free software: MIT license
 * Documentation: https://nba-survival.readthedocs.io.
 
+Purpose
+-------
+
+The purpose of the ``nba_survival`` package is to develop a Survival Analysis-based methodology for estimating Win Probability.
+I will investigate the following time-varying covariates:
+
+* Scoring margin
+* Lineup net rating
+
+as well as the following static covariates:
+
+* Home team net rating
+* Home team win percentage
+* Away team net rating
+* Away team win percentage
+* Last meeting result (1 for current home team victory, 0 for current home team loss)
+* Home team days since last game
+* Away team days since last game
+
+If I'm able to establish an effective model for win probability I will investigate a player impact metric based on the change
+in survival probability based on play-by-play events.
 
 Features
 --------
