@@ -11,8 +11,10 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
+    'alive-progress>=1.6.2,<=1.6.2',
     'fsspec>=0.8.5,<=0.8.5',
     'pandas>=1.2.1,<=1.2.1',
+    'ratelimit>=2.2.1,<=2.2.1',
     'requests>=2.25.1,<=2.25.1',
 ]
 
