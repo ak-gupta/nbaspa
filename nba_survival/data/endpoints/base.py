@@ -73,6 +73,7 @@ class BaseRequest:
         self.fs = fsspec.filesystem(filesystem)
         self.params = params
 
+        self._response: requests.Response = None
         self._raw_data: Dict = {}
 
     def get(self):
@@ -103,13 +104,10 @@ class BaseRequest:
                 )
             ) as infile:
                 self._raw_data = json.load(infile)
-            # Check if the parameters are equal
-            if self.params != self._raw_data["parameters"]:
-                LOG.info(f"Current API call uses different parameters...")
-                self._get()
         else:
             self._get()
-        if self.output_dir is not None:
+
+        if self.output_dir is not None and self._response is not None:
             LOG.info(f"Writing data to {self.output_dir}...")
             self.fs.mkdir(Path(self.output_dir, self.endpoint))
             with self.fs.open(
@@ -133,14 +131,14 @@ class BaseRequest:
         None
         """
         # Retrieve the data
-        response = SESSION.get(
+        self._response = SESSION.get(
             f"{self.base_url}/{self.endpoint}",
             headers=self.headers,
             params=self.params,
             timeout=(10, 15),
         )
-        response.raise_for_status()
-        self._raw_data = response.json()
+        self._response.raise_for_status()
+        self._raw_data = self._response.json()
 
     def get_data(self, dataset_type: Optional[str] = "default") -> pd.DataFrame:
         """Get a tabular dataset.

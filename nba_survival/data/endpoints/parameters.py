@@ -28,20 +28,20 @@ class DefaultParameters:
     Season: str = CURRENT_SEASON
     SeasonYear: str = CURRENT_SEASON_YEAR
     SeasonType: str = "Regular Season"
-    DayOffset: str = "0"
+    DayOffset: int = 0
     IsOnlyCurrentSeason: str = "1"
-    Month: str = "0"
+    Month: int = 0
     SeasonSegment: str = ""
     DateFrom: str = ""
     DateTo: str = ""
-    LastNGames: str = "0"
-    PORound: str = "0"
+    LastNGames: int = 0
+    PORound: int = 0
     GameScope: str = "Season"
     RookieYear: str = ""
     # Within game time variables
-    Period: str = "0"
-    StartPeriod: str = "0"
-    EndPeriod: str = "0"
+    Period: int = 0
+    StartPeriod: int = 0
+    EndPeriod: int = 0
     GameSegment: str = ""
     ShotClockRange: str = ""
     ClutchTime: str = ""
@@ -49,9 +49,9 @@ class DefaultParameters:
     PointDiff: str = ""
     ContextFilter: str = ""
     # What is this for
-    StartRange: str = "0"
-    EndRange: str = "0"
-    RangeType: str = "0"
+    StartRange: int = 0
+    EndRange: int = 0
+    RangeType: int = 0
     # Type of data to retrieve
     MeasureType: str = "Base"
     PerMode: str = "PerGame"
@@ -61,15 +61,15 @@ class DefaultParameters:
     Rank: str = "N"
     Outcome: str = ""
     Location: str = ""
-    TeamID: str = "0"
+    TeamID: int = 0
     GameID: str = ""
-    OpponentTeamID: str = "0"
+    OpponentTeamID: int = 0
     Conference: str = ""
     Division: str = ""
     VsConference: str = ""
     VsDivision: str = ""
     Scope: str = "S"
-    PlayerID: str = "0"
+    PlayerID: int = 0
     PlayerExperience: str = ""
     Position: str = ""
     PlayerPosition: str = ""
@@ -164,7 +164,7 @@ class ParameterValues:
 
         0 indicates all rounds, 1 retrieves the first round, etc.
         """
-        return {"0", "1", "2", "3", "4"}
+        return {0, 1, 2, 3, 4}
     
     @property
     def GameScope(self) -> Set[str]:
@@ -183,13 +183,13 @@ class ParameterValues:
     # WITHIN GAME RESTRICTIONS
 
     @property
-    def Period(self) -> Set[str]:
+    def Period(self) -> Set[int]:
         """The period of the game to retrieve.
 
         0 indicates the entire game, 1 indicates the first quarter, etc.
         """
         return {
-            "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
         }
     
     @property
@@ -356,8 +356,8 @@ class ParameterValues:
     @property
     def TeamID(self) -> Set[str]:
         """Unique team-level identifier."""
-        return set(["", "0"] + [
-            f"16106127{idval}" for idval in range(37, 67)
+        return set([0] + [
+            idval for idval in range(1610612737, 1610612767)
         ])
     
     @property
