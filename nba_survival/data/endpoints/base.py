@@ -88,35 +88,13 @@ class BaseRequest:
         None
         """
         # Check to see if a file exists
-        if self.output_dir is not None and self.fs.exists(
-            Path(
-                self.output_dir,
-                self.endpoint,
-                self.filename.format(**self.params)
-            )
-        ):
-            LOG.info(f"Reading existing file {self.filename.format(**self.params)}...")
-            with self.fs.open(
-                Path(
-                    self.output_dir,
-                    self.endpoint,
-                    self.filename.format(**self.params)
-                )
-            ) as infile:
-                self._raw_data = json.load(infile)
-        else:
+        self.load()
+        if not self._raw_data:
             self._get()
-
         if self.output_dir is not None and self._response is not None:
-            LOG.info(f"Writing data to {self.output_dir}...")
+            LOG.info(f"Writing data to {str(self.fpath)}...")
             self.fs.mkdir(Path(self.output_dir, self.endpoint))
-            with self.fs.open(
-                Path(
-                    self.output_dir,
-                    self.endpoint,
-                    self.filename.format(**self.params)
-                ), "w"
-            ) as outfile:
+            with self.fs.open(self.fpath, "w") as outfile:
                 json.dump(self._raw_data, outfile, indent=4)
     
     def _get(self):
@@ -164,6 +142,22 @@ class BaseRequest:
             self._raw_data["resultSets"][idx]["rowSet"],
             columns=self._raw_data["resultSets"][idx]["headers"]
         )
+    
+    def load(self):
+        """Load data from JSON.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
+        if self.output_dir is not None and self.fs.exists(self.fpath):
+            LOG.info(f"Reading existing file {str(self.fpath)}...")
+            with self.fs.open(self.fpath) as infile:
+                self._raw_data = json.load(infile)
 
     @property
     def defaults(self) -> Dict:
@@ -185,6 +179,19 @@ class BaseRequest:
             Datasets returned by the API.
         """
         return ["default"]
+    
+    @property
+    def fpath(self) -> Path:
+        """Define the filepath.
+
+        Returns
+        -------
+        Path
+            The path object.
+        """
+        return Path(
+            self.output_dir, self.endpoint, self.filename.format(**self.params)
+        )
     
     @property
     def params(self) -> Dict:
