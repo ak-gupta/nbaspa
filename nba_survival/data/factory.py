@@ -48,9 +48,14 @@ class NBADataFactory:
         List
             The call objects with data.
         """
-        with alive_bar(len(self.calls)) as bar:
-            for callobj in self.calls:
-                self._get(callobj=callobj)
+        # Load what we can load
+        self.load()
+        remaining = [
+            index for index, value in enumerate(self.calls) if not value._raw_data
+        ]
+        with alive_bar(len(remaining)) as bar:
+            for index in remaining:
+                self._get(callobj=self.calls[index])
 
                 bar()
         
