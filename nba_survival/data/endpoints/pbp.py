@@ -8,21 +8,22 @@ from typing import Dict, Optional
 from nba_survival.data.endpoints.base import BaseRequest
 from nba_survival.data.endpoints.parameters import DefaultParameters
 
-EVENT_TYPES: Dict = {
-    1: "FIELD_GOAL_MADE",
-    2: "FIELD_GOAL_MISSED",
-    3: "FREE_THROW",
-    4: "REBOUND",
-    5: "TURNOVER",
-    6: "FOUL",
-    7: "VIOLATION",
-    8: "SUBSTITUTION",
-    9: "TIMEOUT",
-    10: "JUMP_BALL",
-    11: "EJECTION",
-    12: "PERIOD_BEGIN",
-    13: "UNKNOWN"
-}
+class EventTypes:
+    """Play-by-play event types."""
+
+    FIELD_GOAL_MADE: int = 1
+    FIELD_GOAL_MISSED: int = 2
+    FREE_THROW: int = 3
+    REBOUND: int = 4
+    TURNOVER: int = 5
+    FOUL: int = 6
+    VIOLATION: int = 7
+    SUBSTITUTION: int = 8
+    TIMEOUT: int = 9
+    JUMP_BALL: int = 10
+    EJECTION: int = 11
+    PERIOD_BEGIN: int = 12
+    UNKNOWN: int = 13
 
 class PlayByPlay(BaseRequest):
     """Get the play by play data for a game.
