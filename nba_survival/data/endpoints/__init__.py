@@ -16,7 +16,7 @@ from nba_survival.data.endpoints.rotation import GameRotation
 from nba_survival.data.endpoints.scoreboard import Scoreboard
 from nba_survival.data.endpoints.shotchart import ShotChart
 from nba_survival.data.endpoints.synergy import SynergyPlayType
-from nba_survival.data.endpoints.team import TeamStats
+from nba_survival.data.endpoints.team import TeamStats, TeamGameLog
 
 __all__: List[str] = [
     "BoxScoreTraditional",
@@ -31,5 +31,6 @@ __all__: List[str] = [
     "Scoreboard",
     "ShotChart",
     "SynergyPlayType",
-    "TeamStats"
+    "TeamStats",
+    "TeamGameLog"
 ]

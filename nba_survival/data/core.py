@@ -19,8 +19,7 @@ def gen_pipeline(
     header: pd.DataFrame,
     stats: pd.DataFrame,
     last_meeting: pd.DataFrame,
-    east_standings: pd.DataFrame,
-    west_standings: pd.DataFrame,
+    gamelog: pd.DataFrame,
     lineup_stats: pd.DataFrame,
     home_rotation: pd.DataFrame,
     away_rotation: pd.DataFrame,
@@ -37,10 +36,8 @@ def gen_pipeline(
         The output from ``TeamStats.get_data()``.
     last_meeting : pd.DataFrame
         The output from ``Scoreboard.get_data("LastMeeting")``.
-    east_standings : pd.DataFrame
-        The output from ``Scoreboard.get_data("EastConfStandingsByDay")``.
-    west_standings : pd.DataFrame
-        The output from ``Scoreboard.get_data("WestConfStandingsByDay")``.
+    gamelog : pd.DataFrame
+        The output from ``TeamGameLog.get_data()``.
     lineup_stats : pd.DataFrame
         The output from ``TeamLineups.get_data("Lineups")``.
     home_rotation : pd.DataFrame
@@ -70,7 +67,7 @@ def gen_pipeline(
         team_id = team_id_task(pbp=target, header=header)
         rating = rating_task(pbp=team_id, stats=stats)
         meeting = meeting_task(pbp=rating, last_meeting=last_meeting)
-        w_pct = w_pct_task(pbp=meeting, east_standings=east_standings, west_standings=west_standings)
+        w_pct = w_pct_task(pbp=meeting, gamelog=gamelog)
         lineup = lineup_task(pbp=w_pct, lineup_stats=lineup_stats, home_rotation=home_rotation, away_rotation=away_rotation)
     
     return flow

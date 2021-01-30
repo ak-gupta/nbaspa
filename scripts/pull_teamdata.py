@@ -25,18 +25,25 @@ def generate_calls() -> List[Tuple]:
     ]
     teams = ParameterValues().TeamID
     for team in teams:
-        if not team.startswith("16"):
+        if not str(team).startswith("16"):
             continue
 
-        calls.append(
+        calls += [
             (
                 "TeamLineups",
                 {
                     "TeamID": team,
                     "Season": "2018-19"
                 }
+            ),
+            (
+                "TeamGameLog",
+                {
+                    "TeamID": team,
+                    "Season": "2018-19"
+                }
             )
-        )
+        ]
     
     return calls
 

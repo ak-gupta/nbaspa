@@ -1,4 +1,4 @@
-"""TeamStats.
+"""Team data.
 
 Create a class for reading team-level data from the API.
 """
@@ -48,3 +48,49 @@ class TeamStats(BaseRequest):
             self._raw_data["resultSet"]["rowSet"],
             columns=self._raw_data["resultSet"]["headers"]
         )
+
+
+class TeamGameLog(BaseRequest):
+    """Get team game logs.
+    
+    Parameters
+    ----------
+    TeamID : int
+        The team identifier.
+    **params
+        Parameters for ``BaseRequest``
+    
+    Attributes
+    ----------
+    """
+
+    endpoint: str = "teamgamelog"
+    filename: str = "data_{TeamID}.json"
+
+    def __init__(
+        self,
+        TeamID: int,
+        output_dir: Optional[str] = None,
+        filesystem: Optional[str] = "file",
+        **params
+    ):
+        super().__init__(
+            output_dir=output_dir, filesystem=filesystem, TeamID=TeamID, **params
+        )
+    
+    @property
+    def defaults(self) -> Dict:
+        """Default parameters for the endpoint.
+
+        Returns
+        -------
+        Dict
+            The default parameter values.
+        """
+        return {
+            "Season": DefaultParameters.Season,
+            "SeasonType": DefaultParameters.SeasonType,
+            "LeagueID": DefaultParameters.LeagueID,
+            "DateTo": DefaultParameters.DateTo,
+            "DateFrom": DefaultParameters.DateFrom,
+        }
