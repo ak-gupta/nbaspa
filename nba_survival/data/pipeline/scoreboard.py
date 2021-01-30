@@ -51,7 +51,7 @@ class AddLastMeetingResult(Task):
 
         Adds the following column:
 
-        * ``LAST_GAME_IN``
+        * ``LAST_GAME_WIN``
 
         Parameters
         ----------

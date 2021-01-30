@@ -25,24 +25,49 @@ Survival analysis-based win percentage
 Purpose
 -------
 
-The purpose of the ``nba_survival`` package is to develop a Survival Analysis-based methodology for estimating Win Probability.
-I will investigate the following time-varying covariates:
+The purpose of the ``nba_survival`` package is to develop a Survival Analysis-based
+methodology for estimating Win Probability. This package will build and analyze a
+dataset with the following variables:
 
-* Scoring margin
-* Lineup net rating
++-------------------------------+--------------+------------------------------------------------------------+
+| Variable                      | Time-Varying | Description                                                |
+|                               |              |                                                            |
++===============================+==============+============================================================+
+| ``WIN``                       | Yes          | | A boolean indicator of whether or not the home team won  |
+|                               |              | | the game. This is the "event" that the survival analysis |
+|                               |              | | model will predict.                                      |
++-------------------------------+--------------+------------------------------------------------------------+
+| ``TIME``                      | Yes          | | Elapsed game time, in seconds. This is the time variable |
+|                               |              | | for the survival analysis model.                         |
++-------------------------------+--------------+------------------------------------------------------------+
+| ``SCOREMARGIN``               | Yes          | | The scoring margin at time ``TIME`` in the game. For     |
+|                               |              | | example, if the home team is leading 2-0, the value of   |
+|                               |              | | this variable is 2.                                      |
++-------------------------------+--------------+------------------------------------------------------------+
+| ``HOME_LINEUP_PLUS_MINUS``    | Yes          | The plus minus of the current lineup for the home team.    |
++-------------------------------+--------------+------------------------------------------------------------+
+| ``VISITOR_LINEUP_PLUS_MINUS`` | Yes          | | The plus minus of the current lineup for the visiting    |
+|                               |              | | team.                                                    |
++-------------------------------+--------------+------------------------------------------------------------+
+| ``HOME_NET_RATING``           | No           | The net rating of the home team entering the game.         |
++-------------------------------+--------------+------------------------------------------------------------+
+| ``VISITOR_NET_RATING``        | No           | The net rating of the visiting team entering the game.     |
++-------------------------------+--------------+------------------------------------------------------------+
+| ``HOME_W_PCT``                | No           | The win percentage of the home team entering the game.     |
++-------------------------------+--------------+------------------------------------------------------------+
+| ``VISITOR_W_PCT``             | No           | The win percentage of the visiting team entering the game. |
++-------------------------------+--------------+------------------------------------------------------------+
+| ``LAST_GAME_WIN``             | No           | | A boolean indicator of whether or not the current home   |
+|                               |              | | team won the last meeting between these two teams.       |
++-------------------------------+--------------+------------------------------------------------------------+
 
-as well as the following static covariates:
+Still need to be implemented:
 
-* Home team net rating
-* Home team win percentage
-* Away team net rating
-* Away team win percentage
-* Last meeting result (1 for current home team victory, 0 for current home team loss)
-* Home team days since last game
-* Away team days since last game
+* Days since last game
+* Games in past 7 days
 
-If I'm able to establish an effective model for win probability I will investigate a player impact metric based on the change
-in survival probability based on play-by-play events.
+After establishing an effective model for win probability, we will investigate a player impact metric based
+on the change in win probability on a play-by-play basis.
 
 Features
 --------
