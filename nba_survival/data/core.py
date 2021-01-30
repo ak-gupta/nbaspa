@@ -10,6 +10,7 @@ from nba_survival.data.pipeline import (
     AddLastMeetingResult,
     AddTeamID,
     AddWinPercentage,
+    GamesInLastXDays,
     CreateTarget,
     SurvivalTime
 )
@@ -58,6 +59,9 @@ def gen_pipeline(
     rating_task = AddNetRating(name="Add net rating")
     meeting_task = AddLastMeetingResult(name="Add last meeting result")
     w_pct_task = AddWinPercentage(name="Add last meeting result")
+    last3_task = GamesInLastXDays(period=3, name="Games in last 3 days")
+    last5_task = GamesInLastXDays(period=5, name="Games in last 5 days")
+    last7_task = GamesInLastXDays(period=7, name="Games in last 7 days")
     lineup_task = AddLineupPlusMinus(name="Add lineup plus minus")
 
     with Flow(name="Transform raw NBA data") as flow:
@@ -68,6 +72,9 @@ def gen_pipeline(
         rating = rating_task(pbp=team_id, stats=stats)
         meeting = meeting_task(pbp=rating, last_meeting=last_meeting)
         w_pct = w_pct_task(pbp=meeting, gamelog=gamelog)
-        lineup = lineup_task(pbp=w_pct, lineup_stats=lineup_stats, home_rotation=home_rotation, away_rotation=away_rotation)
+        last3 = last3_task(pbp=w_pct, gamelog=gamelog)
+        last5 = last5_task(pbp=last3, gamelog=gamelog)
+        last7 = last7_task(pbp=last5, gamelog=gamelog)
+        lineup = lineup_task(pbp=last7, lineup_stats=lineup_stats, home_rotation=home_rotation, away_rotation=away_rotation)
     
     return flow

@@ -56,3 +56,69 @@ class AddWinPercentage(Task):
         )["PREV_W_PCT"]
 
         return pbp
+
+
+class GamesInLastXDays(Task):
+    """Add the number of games in the last X days.
+    
+    Parameters
+    ----------
+    period : int
+        The number of days to consider.
+    **kwargs
+        Keyword arguments for ``prefect.Task``
+    
+    Attributes
+    ----------
+    """
+    def __init__(self, period: int, **kwargs):
+        """Init method."""
+        self.period = period
+
+        super().__init__(**kwargs)
+    
+    def run(self, pbp: pd.DataFrame, gamelog: pd.DataFrame) -> pd.DataFrame:
+        """Add the number of games in the last ``self.period`` days.
+
+        Adds the following columns:
+
+        * ``HOME_GAMES_IN_LAST_{self.period}_DAYS``
+        * ``VISITOR_GAMES_IN_LAST_{self.period}_DAYS``
+
+        Parameters
+        ----------
+        pbp : pd.DataFrame
+            The output of ``AddTeamID``.
+        gamelog : pd.DataFrame
+            The output of ``TeamGameLog.get_data()``.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The updated dataset.
+        """
+        # Convert the ``GAME_DATE`` to a datetime
+        gamelog["GAME_DATE"] = pd.to_datetime(gamelog["GAME_DATE"])
+        # Get the rolling count
+        rolling = (
+            gamelog.set_index("GAME_DATE")
+            .assign(count=1)
+            .groupby("Team_ID")
+            .rolling(f"{self.period}D")
+            .sum() - 1
+        )
+        # Add the rolling sum back to the PBP dataset
+        pbp[f"HOME_GAMES_IN_LAST_{self.period}_DAYS"] = pbp.merge(
+            rolling,
+            left_on=("GAME_DATE_EST", "HOME_TEAM_ID"),
+            right_on=("GAME_DATE", "Team_ID"),
+            how="left"
+        )["count"]
+        pbp[f"VISITOR_GAMES_IN_LAST_{self.period}_DAYS"] = pbp.merge(
+            rolling,
+            left_on=("GAME_DATE_EST", "VISITOR_TEAM_ID"),
+            right_on=("GAME_DATE", "Team_ID"),
+            how="left"
+        )["count"]
+
+        return pbp
