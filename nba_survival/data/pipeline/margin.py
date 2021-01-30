@@ -27,3 +27,5 @@ class FillMargin(Task):
         pbp["SCOREMARGIN"] = pbp.groupby("GAME_ID")["SCOREMARGIN"].ffill()
         pbp["SCOREMARGIN"] = pbp["SCOREMARGIN"].fillna(0)
         pbp["SCOREMARGIN"] = pbp["SCOREMARGIN"].astype(int)
+
+        return pbp

@@ -41,6 +41,8 @@ def gen_pipeline(
         The output from ``Scoreboard.get_data("EastConfStandingsByDay")``.
     west_standings : pd.DataFrame
         The output from ``Scoreboard.get_data("WestConfStandingsByDay")``.
+    lineup_stats : pd.DataFrame
+        The output from ``TeamLineups.get_data("Lineups")``.
     home_rotation : pd.DataFrame
         The output from ``GameRotation.get_data("HomeTeam")``.
     away_rotation : pd.DataFrame
