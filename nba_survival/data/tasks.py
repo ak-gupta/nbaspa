@@ -264,7 +264,8 @@ def get_win_percentage(
 
 def get_lineup_rating(
     pbp: pd.DataFrame,
-    lineup: pd.DataFrame,
+    home_lineup_stats: pd.DataFrame,
+    away_lineup_stats: pd.DataFrame,
     home_rotation: pd.DataFrame,
     away_rotation: pd.DataFrame
 ) -> pd.DataFrame:
@@ -279,8 +280,10 @@ def get_lineup_rating(
     ----------
     pbp : pd.DataFrame
         The output ``pd.DataFrame`` from ``get_survival_time``.
-    lineup : pd.DataFrame
+    home_lineup_stats : pd.DataFrame
         The output ``pd.DataFrame` from ``TeamLineups.get_data("Lineups")``.
+    away_lineup_stats : pd.DataFrame
+        The output ``pd.DataFrame`` from ``TeamLineups.get_data("Lineups")``.
     home_rotation : pd.DataFrame
         The output ``pd.DataFrame`` from ``GameRotation.get_data("HomeTeam")``.
     away_rotation : pd.DataFrame
@@ -292,40 +295,35 @@ def get_lineup_rating(
         The updated DataFrame
     """
     # Split and reorder the group id column
-    split_id = lineup["GROUP_ID"].str.split("-").str[1:6]
+    split_id = home_lineup_stats["GROUP_ID"].str.split("-").str[1:6]
     split_id = split_id.apply(sorted)
-    lineup["GROUP_ID"] = split_id.str.join("-")
+    home_lineup_stats["GROUP_ID"] = split_id.str.join("-")
+
+    split_id = away_lineup_stats["GROUP_ID"].str.split("-").str[1:6]
+    split_id = split_id.apply(sorted)
+    away_lineup_stats["GROUP_ID"] = split_id.str.join("-")
+
+    # Fix the time values for the rotation data
+    home_rotation["IN_TIME_REAL"] = np.round(home_rotation["IN_TIME_REAL"] / 10)
+    home_rotation["OUT_TIME_REAL"] = np.round(home_rotation["OUT_TIME_REAL"] / 10)
+    away_rotation["IN_TIME_REAL"] = np.round(away_rotation["IN_TIME_REAL"] / 10)
+    away_rotation["OUT_TIME_REAL"] = np.round(away_rotation["OUT_TIME_REAL"] / 10)
+
     # Loop through each game in the play by play dataset
     pbp["HOME_LINEUP_PLUS_MINUS"] = np.nan
     pbp["VISITOR_LINEUP_PLUS_MINUS"] = np.nan
     pbp["EVENTMSGTYPE"] = pbp["EVENTMSGTYPE"].astype(int)
     grouped = pbp.groupby("GAME_ID")
+
     for name, game in grouped:
         # Establish the starting lineup for each team
         LOG.info(f"Adding starting lineup plus minus for {name}")
-        home_lineup = set(
-            home_rotation.loc[
-                (home_rotation["IN_TIME_REAL"] == 0) & (home_rotation["GAME_ID"] == name),
-                "PERSON_ID"
-            ].values.tolist()
-        )
-        away_lineup = set(
-            away_rotation.loc[
-                (away_rotation["IN_TIME_REAL"] == 0) & (away_rotation["GAME_ID"] == name),
-                "PERSON_ID"
-            ].values.tolist()
-        )
-        # Add the starting lineup data
-        homestr = "-".join(sorted(str(item) for item in home_lineup))
-        awaystr = "-".join(sorted(str(item) for item in away_lineup))
-        pbp.loc[pbp.index == game.index.min(), "HOME_LINEUP_PLUS_MINUS"] = lineup.loc[
-            lineup["GROUP_ID"] == homestr, "PLUS_MINUS"
-        ]
-        pbp.loc[pbp.index == game.index.min(), "VISITOR_LINEUP_PLUS_MINUS"] = lineup.loc[
-            lineup["GROUP_ID"] == awaystr, "PLUS_MINUS"
-        ]
+        home_lineup = set()
+        away_lineup = set()
+
         # Loop through each event in the game
         LOG.info(f"Looping through each event in game {name}")
+
         for index, row in game.iterrows():
             if row["EVENTMSGTYPE"] == EventTypes().SUBSTITUTION:
                 if not pd.isnull(row["HOMEDESCRIPTION"]):
@@ -338,11 +336,14 @@ def get_lineup_rating(
                     LOG.debug(f"Adding {row['PLAYER2_ID']}")
                     home_lineup.add(row["PLAYER2_ID"])
                     homestr = "-".join(sorted(str(item) for item in home_lineup))
+                    LOG.debug(
+                        f"Looking for the following lineup group: {homestr}"
+                    )
                     pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = 0
-                    if not lineup.loc[lineup["GROUP_ID"] == homestr].empty:
-                        pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = lineup.loc[
-                            lineup["GROUP_ID"] == homestr, "PLUS_MINUS"
-                        ]
+                    if not home_lineup_stats.loc[home_lineup_stats["GROUP_ID"] == homestr].empty:
+                        pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = home_lineup_stats.loc[
+                            home_lineup_stats["GROUP_ID"] == homestr, "PLUS_MINUS"
+                        ].values[0]
                 else:
                     LOG.info(
                         f"At {row['PCTIMESTRING']} in period {row['PERIOD']}: {row['VISITORDESCRIPTION']}"
@@ -353,58 +354,88 @@ def get_lineup_rating(
                     LOG.debug(f"Adding {row['PLAYER2_ID']}")
                     away_lineup.add(row["PLAYER2_ID"])
                     awaystr = "-".join(sorted(str(item) for item in away_lineup))
+                    LOG.debug(
+                        f"Looking for the following lineup group: {awaystr}"
+                    )
                     pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = 0
-                    if not lineup.loc[lineup["GROUP_ID"] == awaystr].empty:
-                        pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = lineup.loc[
-                            lineup["GROUP_ID"] == awaystr, "PLUS_MINUS"
-                        ]
+                    if not away_lineup_stats.loc[away_lineup_stats["GROUP_ID"] == awaystr].empty:
+                        pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = away_lineup_stats.loc[
+                            away_lineup_stats["GROUP_ID"] == awaystr, "PLUS_MINUS"
+                        ].values[0]
+
             elif row["EVENTMSGTYPE"] == EventTypes().PERIOD_BEGIN:
                 # Look in the home and visitor rotations for substitutions
                 LOG.info(f"Looking for substitutions at the beginning of {row['PERIOD']}...")
                 new_home = home_rotation.loc[
-                    (home_rotation["GAME_ID"] == name) & (home_rotation["IN_TIME_REAL"] == 10 * row["TIME"])
+                    (home_rotation["GAME_ID"] == name) & (home_rotation["IN_TIME_REAL"] == row["TIME"])
                 ]
-                new_visitor = home_rotation.loc[
-                    (away_rotation["GAME_ID"] == name) & (away_rotation["IN_TIME_REAL"] == 10 * row["TIME"])
+                new_visitor = away_rotation.loc[
+                    (away_rotation["GAME_ID"] == name) & (away_rotation["IN_TIME_REAL"] == row["TIME"])
                 ]
-                # at this time
                 if not new_home.empty:
                     LOG.info(f"New home team players at the start of period {row['PERIOD']}")
-                    # Look for players that left at this time
-                    home_lineup = home_lineup.difference(
-                        set(
-                            home_rotation.loc[
-                                (home_rotation["GAME_ID"] == name) & (home_rotation["OUT_TIME_REAL"] == 10 * row["TIME"]),
-                                "PERSON_ID"
-                            ].values.tolist()
-                        )
+
+                    LOG.info(
+                        "Substituting the following players in: "
+                        f"{', '.join(str(itm) for itm in new_home['PERSON_ID'].values)}"
                     )
                     home_lineup.update(new_home["PERSON_ID"].values.tolist())
+
+                    subout = home_rotation.loc[
+                        (home_rotation["GAME_ID"] == name) & (home_rotation["OUT_TIME_REAL"] == row["TIME"]),
+                        "PERSON_ID"
+                    ].values.tolist()
+                    if subout:
+                        LOG.info(
+                            "Substituting the following players out: "
+                            f"{', '.join(str(itm) for itm in subout)}"
+                        )
+                        home_lineup = home_lineup.difference(set(subout))
+
                     homestr = "-".join(sorted(str(item) for item in home_lineup))
-                    if not lineup.loc[lineup["GROUP_ID"] == homestr].empty:
-                        pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = lineup.loc[
-                            lineup["GROUP_ID"] == homestr, "PLUS_MINUS"
-                        ]
+                    LOG.debug(
+                        f"Looking for the following lineup group: {homestr}"
+                    )
+                    if not home_lineup_stats.loc[home_lineup_stats["GROUP_ID"] == homestr].empty:
+                        pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = home_lineup_stats.loc[
+                            home_lineup_stats["GROUP_ID"] == homestr, "PLUS_MINUS"
+                        ].values[0]
+
                 if not new_visitor.empty:
                     LOG.info(f"New visiting team  players at the start of period {row['PERIOD']}")
-                    # Look for players that left at this time
-                    away_lineup = away_lineup.difference(
-                        set(
-                            away_rotation.loc[
-                                (away_rotation["GAME_ID"] == name) & (away_rotation["OUT_TIME_REAL"] == 10 * row["TIME"]),
-                                "PERSON_ID"
-                            ].values.tolist()
-                        )
+
+                    LOG.info(
+                        "Substituting the following players in: "
+                        f"{', '.join(str(itm) for itm in new_visitor['PERSON_ID'].values)}"
                     )
                     away_lineup.update(new_visitor["PERSON_ID"].values.tolist())
+
+                    subout = away_rotation.loc[
+                        (away_rotation["GAME_ID"] == name) & (away_rotation["OUT_TIME_REAL"] == row["TIME"]),
+                        "PERSON_ID"
+                    ].values.tolist()
+                    if subout:
+                        LOG.info(
+                            "Substituting the following players out: "
+                            f"{', '.join(str(itm) for itm in subout)}"
+                        )
+                        away_lineup = away_lineup.difference(set(subout))
+
                     awaystr = "-".join(sorted(str(item) for item in away_lineup))
-                    if not lineup.loc[lineup["GROUP_ID"] == awaystr].empty:
-                        pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = lineup.loc[
-                            lineup["GROUP_ID"] == awaystr, "PLUS_MINUS"
-                        ]
+                    LOG.debug(
+                        f"Looking for the following lineup group: {awaystr}"
+                    )
+                    if not away_lineup_stats.loc[away_lineup_stats["GROUP_ID"] == awaystr].empty:
+                        pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = away_lineup_stats.loc[
+                            away_lineup_stats["GROUP_ID"] == awaystr, "PLUS_MINUS"
+                        ].values[0]
             else:
                 continue
     
+    # Fill the ratings
+    pbp["HOME_LINEUP_PLUS_MINUS"] = pbp.groupby("GAME_ID")["HOME_LINEUP_PLUS_MINUS"].ffill()
+    pbp["VISITOR_LINEUP_PLUS_MINUS"] = pbp.groupby("GAME_ID")["VISITOR_LINEUP_PLUS_MINUS"].ffill()
+
     return pbp
 
 @task(name="Select final features")
