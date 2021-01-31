@@ -103,7 +103,7 @@ class GamesInLastXDays(Task):
         rolling = (
             gamelog.set_index("GAME_DATE")
             .assign(count=1)
-            .groupby("Team_ID")
+            .groupby("Team_ID")["count"]
             .rolling(f"{self.period}D")
             .sum() - 1
         )

@@ -58,7 +58,7 @@ def gen_pipeline(
     team_id_task = AddTeamID(name="Add team ID and game date")
     rating_task = AddNetRating(name="Add net rating")
     meeting_task = AddLastMeetingResult(name="Add last meeting result")
-    w_pct_task = AddWinPercentage(name="Add last meeting result")
+    w_pct_task = AddWinPercentage(name="Add win percentage")
     last3_task = GamesInLastXDays(period=3, name="Games in last 3 days")
     last5_task = GamesInLastXDays(period=5, name="Games in last 5 days")
     last7_task = GamesInLastXDays(period=7, name="Games in last 7 days")
