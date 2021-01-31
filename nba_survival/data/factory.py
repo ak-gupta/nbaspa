@@ -12,7 +12,7 @@ from ratelimit import limits, sleep_and_retry
 import nba_survival.data.endpoints as endpoints
 from nba_survival.data.endpoints.base import BaseRequest
 
-FIFTEEN_MINUTES = 900
+TEN_MINUTES = 600
 
 class NBADataFactory:
     """Make multiple calls to the API.
@@ -103,7 +103,7 @@ class NBADataFactory:
         ).reset_index(drop=True)
     
     @sleep_and_retry
-    @limits(calls=5, period=FIFTEEN_MINUTES)
+    @limits(calls=5, period=TEN_MINUTES)
     def _get(self, callobj: BaseRequest):
         """Run the ``get()`` method to retrieve data.
 
