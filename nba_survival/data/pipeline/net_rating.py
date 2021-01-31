@@ -12,6 +12,8 @@ class AddNetRating(Task):
 
         * ``HOME_NET_RATING``
         * ``VISITOR_NET_RATING``
+        * ``HOME_OFF_RATING``
+        * ``VISITOR_OFF_RATING``
 
         Parameters
         ----------
@@ -25,17 +27,22 @@ class AddNetRating(Task):
         pd.DataFrame
             The updated datasets.
         """
-        pbp["HOME_NET_RATING"] = pbp.merge(
-            stats[["TEAM_ID", "E_NET_RATING"]],
+        home = pbp.merge(
+            stats[["TEAM_ID", "E_NET_RATING", "E_OFF_RATING"]],
             left_on="HOME_TEAM_ID",
             right_on="TEAM_ID",
             how="left"
-        )["E_NET_RATING"]
-        pbp["VISITOR_NET_RATING"] = pbp.merge(
+        )
+        pbp["HOME_NET_RATING"] = home["E_NET_RATING"]
+        pbp["HOME_OFF_RATING"] = home["E_OFF_RATING"]
+
+        visitor = pbp.merge(
             stats[["TEAM_ID", "E_NET_RATING"]],
             left_on="VISITOR_TEAM_ID",
             right_on="TEAM_ID",
             how="left"
-        )["E_NET_RATING"]
+        )
+        pbp["VISITOR_NET_RATING"] = visitor["E_NET_RATING"]
+        pbp["VISITOR_OFF_RATING"] = visitor["E_OFF_RATING"]
 
         return pbp
