@@ -52,7 +52,7 @@ def gen_pipeline(
         The generated flow.
     """
     # Initialize the tasks
-    survtime_task = SurvivalTime(name="Add surival time")
+    survtime_task = SurvivalTime(name="Add survival time")
     margin_task = FillMargin(name="Backfill margin")
     target_task = CreateTarget(name="Add target label")
     team_id_task = AddTeamID(name="Add team ID and game date")
