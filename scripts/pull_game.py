@@ -39,7 +39,8 @@ def generate_calls() -> List[Tuple]:
             calls += [
                 ("PlayByPlay", {"GameID": row["GAME_ID"]}),
                 ("ShotChart", {"GameID": row["GAME_ID"]}),
-                ("GameRotation", {"GameID": row["GAME_ID"]})
+                ("GameRotation", {"GameID": row["GAME_ID"]}),
+                ("WinProbability", {"GameID": row["GAME_ID"]})
             ]
     
     return calls

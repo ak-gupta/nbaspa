@@ -17,6 +17,7 @@ from nba_survival.data.endpoints.scoreboard import Scoreboard
 from nba_survival.data.endpoints.shotchart import ShotChart
 from nba_survival.data.endpoints.synergy import SynergyPlayType
 from nba_survival.data.endpoints.team import TeamStats, TeamGameLog
+from nba_survival.data.endpoints.winprobability import WinProbability
 
 __all__: List[str] = [
     "BoxScoreTraditional",
@@ -32,5 +33,6 @@ __all__: List[str] = [
     "ShotChart",
     "SynergyPlayType",
     "TeamStats",
-    "TeamGameLog"
+    "TeamGameLog",
+    "WinProbability"
 ]

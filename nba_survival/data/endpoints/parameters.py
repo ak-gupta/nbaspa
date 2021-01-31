@@ -52,6 +52,7 @@ class DefaultParameters:
     StartRange: int = 0
     EndRange: int = 0
     RangeType: int = 0
+    RunType: str = "each second"
     # Type of data to retrieve
     MeasureType: str = "Base"
     PerMode: str = "PerGame"
@@ -270,6 +271,11 @@ class ParameterValues:
     
     @property
     def RangeType(self) -> Any:
+        """Unknown."""
+        pass
+
+    @property
+    def RunType(self) -> Any:
         """Unknown."""
         pass
 
