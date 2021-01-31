@@ -59,7 +59,6 @@ class AddLineupPlusMinus(Task):
 
         # Loop through each game in the play by play dataset
         for name, game in grouped:
-            self.logger.info(f"Adding starting lineup plus minus for {name}")
             # Set an empty lineup to start
             home_lineup = set()
             away_lineup = set()
@@ -69,7 +68,7 @@ class AddLineupPlusMinus(Task):
             for index, row in game.iterrows():
                 if row["EVENTMSGTYPE"] == EventTypes().SUBSTITUTION:
                     if not pd.isnull(row["HOMEDESCRIPTION"]):
-                        self.logger.info(
+                        self.logger.debug(
                             f"At {row['PCTIMESTRING']} in period {row['PERIOD']}: {row['HOMEDESCRIPTION']}"
                         )
                         # Get the updated lineup and plus minus value
@@ -80,7 +79,7 @@ class AddLineupPlusMinus(Task):
                         )
                         pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = plusminus
                     else:
-                        self.logger.info(
+                        self.logger.debug(
                             f"At {row['PCTIMESTRING']} in period {row['PERIOD']}: {row['VISITORDESCRIPTION']}"
                         )
                         # Get the updated lineup and plus minus value
@@ -93,7 +92,7 @@ class AddLineupPlusMinus(Task):
 
                 elif row["EVENTMSGTYPE"] == EventTypes().PERIOD_BEGIN:
                     # Look in the home and visitor rotations for substitutions
-                    self.logger.info(f"Looking for substitutions at the beginning of {row['PERIOD']}...")
+                    self.logger.debug(f"Looking for substitutions at the beginning of {row['PERIOD']}...")
                     # Home team
                     home_lineup, plusminus = self._period_begin_substitutions(
                         gametime=row["TIME"],
@@ -247,7 +246,7 @@ class AddLineupPlusMinus(Task):
         ]
         if not new_players.empty:
             self.logger.debug(f"New players at time {gametime}")
-            self.logger.info(
+            self.logger.debug(
                 "Substituting the following players in: "
                 f"{', '.join(str(itm) for itm in new_players['PERSON_ID'].values)}"
             )
@@ -259,7 +258,7 @@ class AddLineupPlusMinus(Task):
                 "PERSON_ID"
             ].values.tolist()
             if subout:
-                self.logger.info(
+                self.logger.debug(
                     "Substituting the following players out: "
                     f"{', '.join(str(itm) for itm in subout)}"
                 )
