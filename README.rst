@@ -115,29 +115,23 @@ That's because determining credit for a field goal can be a bit tricker. To
 simplify it let's split all field goals into two buckets: assisted and unassisted.
 Unassisted field goals are simple: the player that made the shot is given credit.
 However, we need to determine what share of the change in win probability should be
-attributed to an assisting player. We can examine two approaches:
+attributed to an assisting player. For this metric, we will use the following
+system for attributing credit:
 
-Simple
-~~~~~~
+.. math::
 
-The assisting player is attributed the percentage increase in the player's field
-goal percentage while assisted. For example, if Player A shoots 40% on assisted
-3-pointers and 35% on unassisted 3-pointers, the Player B is given :math:`\frac{0.4}{0.35} - 1 = 14.2%`
-of the change in win probability and the assisted player is given :math:`1 - 0.142 = 85.8%`.
-The underlying assumption here is that Player A would've taken the same shot anyways,
-just without the assist.
+        A = \frac{P \cdot FG_PCT \cdot 100}{ORTG} - 1
 
-Complex
-~~~~~~~
+where
 
-A more complex way to estimate the impact of the assist is to incorporate player
-tendencies. First, we can look at who is more likely to use the possession:
-the assisting player or the one who took the shot. If the assisted player has a
-higher usage rate we can assume they would still take a shot, and vice-versa.
-Then, we can look at the expected points from the player that would've taken
-the shot; the percentage difference in expected points from the assisted field
-goal attempt and the potential unassisted attempt is the portion of change in win
-probability attributed to the assisting player.
+* :math:`A` is the percentage of the change in win probability attributed to the
+  assisting player,
+* :math:`P` is the number of points associated with the field goal attempt,
+* :math:`FG_PCT` is the shooter's field goal percentage from the area of the shot, and
+* :math:`ORTG` is the team's offensive rating.
+
+Essentially, we are giving the assisting player the credit for the percentage
+change in the points per 100 possessions driven by the shot that they created.
 
 Features
 --------
