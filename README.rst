@@ -82,7 +82,62 @@ dataset with the following variables:
 +----------------------------------+--------------+---------------------------------------------------------+
 
 After establishing an effective model for win probability, we will investigate a player impact metric based
-on the change in win probability on a play-by-play basis.
+on the change in win probability on a play-by-play basis. For many events in a game, we can attribute the
+impact to a single player:
+
++-------------------+--------------------------------------------+------------------------------------------+
+| Event             | Primary player impact                      | Secondary player impact                  |
+|                   |                                            |                                          |
++===================+============================================+==========================================+
+| Free throw        | | The player shooting the free throws is   | N/A                                      |
+|                   | | attributed with the change in win        |                                          |
+|                   | | probability.                             |                                          |
++-------------------+--------------------------------------------+------------------------------------------+
+| Rebound           | | The player that rebounded the ball is    | N/A                                      |
+|                   | | attributed with the change in win        |                                          |
+|                   | | probability.                             |                                          |
++-------------------+--------------------------------------------+------------------------------------------+
+| Turnover          | | The player that turned the ball over is  | | If a live-ball turnover, the player    |
+|                   | | attributed with the change in win        | | that stole the ball is attributed with |
+|                   | | probability.                             | | an equal change in win probability.    |
++-------------------+--------------------------------------------+------------------------------------------+
+| Foul              | | The player that committed the foul is    | | The player that drew the foul is       |
+|                   | | attributed with the change in win        | | attributed with an equal change in win |
+|                   | | probability.                             | | probability.                           |
++-------------------+--------------------------------------------+------------------------------------------+
+| Missed field goal | | The player that missed the shot is       | N/A                                      |
+|                   | | attributed with the change in win        |                                          |
+|                   | | probability.                             |                                          |
++-------------------+--------------------------------------------+------------------------------------------+
+
+There is one key event that is missing from the table above: made field goals.
+That's because determining credit for a field goal can be a bit tricker. To
+simplify it let's split all field goals into two buckets: assisted and unassisted.
+Unassisted field goals are simple: the player that made the shot is given credit.
+However, we need to determine what share of the change in win probability should be
+attributed to an assisting player. We can examine two approaches:
+
+Simple
+~~~~~~
+
+The assisting player is attributed the percentage increase in the player's field
+goal percentage while assisted. For example, if Player A shoots 40% on assisted
+3-pointers and 35% on unassisted 3-pointers, the Player B is given :math:`\frac{0.4}{0.35} - 1 = 14.2%`
+of the change in win probability and the assisted player is given :math:`1 - 0.142 = 85.8%`.
+The underlying assumption here is that Player A would've taken the same shot anyways,
+just without the assist.
+
+Complex
+~~~~~~~
+
+A more complex way to estimate the impact of the assist is to incorporate player
+tendencies. First, we can look at who is more likely to use the possession:
+the assisting player or the one who took the shot. If the assisted player has a
+higher usage rate we can assume they would still take a shot, and vice-versa.
+Then, we can look at the expected points from the player that would've taken
+the shot; the percentage difference in expected points from the assisted field
+goal attempt and the potential unassisted attempt is the portion of change in win
+probability attributed to the assisting player.
 
 Features
 --------
