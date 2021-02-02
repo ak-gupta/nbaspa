@@ -12,7 +12,11 @@ from nba_survival.data.endpoints.boxscore import (
 )
 from nba_survival.data.endpoints.lineup import TeamLineups
 from nba_survival.data.endpoints.pbp import PlayByPlay
-from nba_survival.data.endpoints.player import PlayerDashboardGeneral, PlayerDashboardShooting
+from nba_survival.data.endpoints.player import (
+    AllPlayers,
+    PlayerDashboardGeneral,
+    PlayerDashboardShooting
+)
 from nba_survival.data.endpoints.rotation import GameRotation
 from nba_survival.data.endpoints.scoreboard import Scoreboard
 from nba_survival.data.endpoints.shotchart import ShotChart
@@ -29,6 +33,7 @@ __all__: List[str] = [
     "BoxScoreUsage",
     "TeamLineups",
     "PlayByPlay",
+    "AllPlayers",
     "PlayerDashboardGeneral",
     "PlayerDashboardShooting",
     "GameRotation",

@@ -121,3 +121,25 @@ class PlayerDashboardShooting(PlayerDashboardBase):
             "ShotTypePlayerDashboard",
             "AssistedBy"
         ]
+
+
+class AllPlayers(BaseRequest):
+    """Get all active players in a given season."""
+
+    endpoint: str = "commonallplayers"
+    filename: str = "data_{Season}.json"
+
+    @property
+    def defaults(self) -> Dict:
+        """Default parameters for the endpoint.
+
+        Returns
+        -------
+        Dict
+            The default parameter values.
+        """
+        return {
+            "IsOnlyCurrentSeason": DefaultParameters.IsOnlyCurrentSeason,
+            "LeagueID": DefaultParameters.LeagueID,
+            "Season": DefaultParameters.Season,
+        }
