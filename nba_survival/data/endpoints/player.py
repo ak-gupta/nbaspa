@@ -5,6 +5,8 @@ Create a class for getting a player dashboard.
 
 from typing import Dict, List, Optional
 
+import pandas as pd
+
 from nba_survival.data.endpoints.base import BaseRequest
 from nba_survival.data.endpoints.parameters import DefaultParameters
 
@@ -74,6 +76,24 @@ class PlayerDashboardBase(BaseRequest):
             "DateFrom": DefaultParameters.DateFrom
         }
 
+    def get_data(self, dataset_type: Optional[str] = "default") -> pd.DataFrame:
+        """Get a tabular dataset.
+
+        Parameters
+        ----------
+        dataset_type : str, optional (default "default")
+            The dataset type.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The tabular dataframe.
+        """
+        df = super().get_data(dataset_type=dataset_type)
+        # Add player ID
+        df["PLAYER_ID"] = self.params["PlayerID"]
+
+        return df
 
 class PlayerDashboardGeneral(PlayerDashboardBase):
     """Get the general dashboard."""
