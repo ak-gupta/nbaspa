@@ -79,12 +79,28 @@ class PlayerImpact(Task):
         pbp.loc[home, "PLAYER1_IMPACT"] += pbp.loc[home, "WIN_PROBABILITY_CHANGE"]
         pbp.loc[visitor, "PLAYER2_IMPACT"] -= pbp.loc[visitor, "WIN_PROBABILITY_CHANGE"]
         # Assisted field goal makes
-        self.logger.info("[WIP] Adding the impact of assisted field goals...")
+        self.logger.info("Adding the impact of assisted field goals...")
         home, visitor = self._ast_filter(df=pbp)
-        pbp.loc[home, "PLAYER1_IMPACT"] += 0.8 * pbp.loc[home, "WIN_PROBABILITY_CHANGE"]
-        pbp.loc[home, "PLAYER2_IMPACT"] += 0.2 * pbp.loc[home, "WIN_PROBABILITY_CHANGE"]
-        pbp.loc[visitor, "PLAYER1_IMPACT"] -= 0.8 * pbp.loc[visitor, "WIN_PROBABILITY_CHANGE"]
-        pbp.loc[visitor, "PLAYER2_IMPACT"] -= 0.2 * pbp.loc[visitor, "WIN_PROBABILITY_CHANGE"]
+        # Get the assist percentage
+        home_assist_factor = (
+            ((pbp.loc[home, "SHOT_VALUE"] * 100) / pbp.loc[home, "HOME_OFF_RATING"]) - 1
+        ).clip(lower=0)
+        pbp.loc[home, "PLAYER1_IMPACT"] += (
+            (1 - home_assist_factor) * pbp.loc[home, "WIN_PROBABILITY_CHANGE"]
+        )
+        pbp.loc[home, "PLAYER2_IMPACT"] += (
+            home_assist_factor * pbp.loc[home, "WIN_PROBABILITY_CHANGE"]
+        )
+        # Visitor assist percentage
+        visitor_assist_factor = (
+            ((pbp.loc[visitor, "SHOT_VALUE"] * 100) / pbp.loc[visitor, "VISITOR_OFF_RATING"]) - 1
+        ).clip(lower=0)
+        pbp.loc[visitor, "PLAYER1_IMPACT"] -= (
+            (1 - visitor_assist_factor) * pbp.loc[visitor, "WIN_PROBABILITY_CHANGE"]
+        )
+        pbp.loc[visitor, "PLAYER2_IMPACT"] -= (
+            visitor_assist_factor * pbp.loc[visitor, "WIN_PROBABILITY_CHANGE"]
+        )
 
         return pbp
     
