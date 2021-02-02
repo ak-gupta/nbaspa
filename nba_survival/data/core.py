@@ -4,16 +4,19 @@ import pandas as pd
 from prefect import Flow
 
 from nba_survival.data.pipeline import (
+    AddWinPercentage,
+    GamesInLastXDays,
     AddLineupPlusMinus,
     FillMargin,
     AddNetRating,
     AddLastMeetingResult,
     AddTeamID,
-    AddWinPercentage,
-    GamesInLastXDays,
+    AddExpectedShotValue,
+    AddShotDetail,
     CreateTarget,
     SurvivalTime
 )
+
 
 def gen_pipeline(
     pbp: pd.DataFrame,
@@ -24,6 +27,8 @@ def gen_pipeline(
     lineup_stats: pd.DataFrame,
     home_rotation: pd.DataFrame,
     away_rotation: pd.DataFrame,
+    shotchart: pd.DataFrame,
+    shotzonedashboard: pd.DataFrame,
 ) -> Flow:
     """Generate the prefect flow.
 
@@ -45,6 +50,11 @@ def gen_pipeline(
         The output from ``GameRotation.get_data("HomeTeam")``.
     away_rotation : pd.DataFrame
         The output from ``GameRotation.get_data("AwayTeam")``.
+    shotchart : pd.DataFrame
+        The output from ``ShotChart.get_data()``.
+    shotzonedashboard : pd.DataFrame
+        The output from ``NBADataFactory.get_data("ShotAreaPlayerDashboard")``
+        where each call is the ``PlayerDashboardShooting`` endpoint for each player.
 
     Returns
     -------
@@ -63,6 +73,9 @@ def gen_pipeline(
     last5_task = GamesInLastXDays(period=5, name="Games in last 5 days")
     last7_task = GamesInLastXDays(period=7, name="Games in last 7 days")
     lineup_task = AddLineupPlusMinus(name="Add lineup plus minus")
+    # Add shotchart data for player rating
+    shotdetail = AddShotDetail(name="Add shotchart zone")
+    shotvalue = AddExpectedShotValue(name="Add shot value")
 
     with Flow(name="Transform raw NBA data") as flow:
         survtime = survtime_task(pbp=pbp)
@@ -76,5 +89,8 @@ def gen_pipeline(
         last5 = last5_task(pbp=last3, gamelog=gamelog)
         last7 = last7_task(pbp=last5, gamelog=gamelog)
         lineup = lineup_task(pbp=last7, lineup_stats=lineup_stats, home_rotation=home_rotation, away_rotation=away_rotation)
+        # Add variables for the player rating
+        shotzone = shotdetail(pbp=lineup, shotchart=shotchart)
+        expected_val = shotvalue(pbp=shotzone, shotzonedashboard=shotzonedashboard)
     
     return flow
