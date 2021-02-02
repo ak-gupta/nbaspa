@@ -38,7 +38,7 @@ def generate_calls() -> List[Tuple]:
         for index, row in df.iterrows():
             calls += [
                 ("PlayByPlay", {"GameID": row["GAME_ID"]}),
-                ("ShotChart", {"GameID": row["GAME_ID"]}),
+                ("ShotChart", {"GameID": row["GAME_ID"], "Season": "2018-19"}),
                 ("GameRotation", {"GameID": row["GAME_ID"]}),
                 ("WinProbability", {"GameID": row["GAME_ID"]}),
                 ("BoxScoreTraditional", {"GameID": row["GAME_ID"]})

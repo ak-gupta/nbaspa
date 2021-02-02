@@ -42,3 +42,37 @@ class AddShotDetail(Task):
         pbp["SHOT_VALUE"] = joined["SHOT_VALUE"]
 
         return pbp
+
+
+class AddExpectedShotValue(Task):
+    """Add the expected shot value based on the shooter and the zone."""
+    def run(self, pbp: pd.DataFrame, shotzonedashboard: pd.DataFrame) -> pd.DataFrame:
+        """Add the expected shot value based on the shooter and the zone.
+
+        Modifies the ``SHOT_VALUE`` column by multiplying it by the field goal percentage.
+        Also adds the following column:
+
+        * ``FG_PCT``
+
+        Parameters
+        ----------
+        pbp : pd.DataFrame
+            The output from ``AddShotDetail``
+        shotzonedashboard : pd.DataFrame
+            The output from ``NBADataFactory.get_data("ShotAreaPlayerDashboard")``
+            where each call is the ``PlayerDashboardShooting`` endpoint for each player.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The updated datasets.
+        """
+        pbp["FG_PCT"] = pbp.merge(
+            shotzonedashboard[["PLAYER_ID", "GROUP_VALUE", "FG_PCT"]],
+            left_on=("PLAYER1_ID", "SHOT_ZONE_BASIC"),
+            right_on=("PLAYER_ID", "GROUP_VALUE"),
+            how="left"
+        )["FG_PCT"]
+        pbp["SHOT_VALUE"] *= pbp["FG_PCT"]
+
+        return pbp
