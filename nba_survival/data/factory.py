@@ -3,6 +3,7 @@
 This factory class will use rate-limiting to avoid spamming the API.
 """
 
+import logging
 from typing import Dict, List, Optional, Tuple
 
 from alive_progress import alive_bar
@@ -11,6 +12,8 @@ from ratelimit import limits, sleep_and_retry
 
 import nba_survival.data.endpoints as endpoints
 from nba_survival.data.endpoints.base import BaseRequest
+
+LOG = logging.getLogger(__name__)
 
 TEN_MINUTES = 600
 
@@ -48,10 +51,10 @@ class NBADataFactory:
         List
             The call objects with data.
         """
-        # Load what we can load
-        self.load()
+        # Don't download what we already have
+        LOG.info("Removing calls we already have data for...")
         remaining = [
-            index for index, value in enumerate(self.calls) if not value._raw_data
+            index for index, value in enumerate(self.calls) if not value.exists()
         ]
         with alive_bar(len(remaining)) as bar:
             for index in remaining:

@@ -1,7 +1,9 @@
 """Simple tasks for loading data from the ``BaseRequest`` API."""
 
+from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 
+import fsspec
 import pandas as pd
 from prefect import Task
 
@@ -175,7 +177,7 @@ class LineupLoader(Task):
         factory = NBADataFactory(calls=calls, output_dir=output_dir, filesystem=filesystem)
         factory.load()
 
-        return factory.get_data()
+        return factory.get_data("Lineups")
 
 
 class RotationLoader(Task):
@@ -333,3 +335,37 @@ class ShotZoneLoader(Task):
         factory.load()
 
         return factory.get_data("ShotAreaPlayerDashboard")
+
+
+class SaveData(Task):
+    """Save the game data."""
+    def run(
+        self,
+        data: pd.DataFrame,
+        output_dir: str,
+        filesystem: Optional[str] = "file",
+    ):
+        """Save the game data.
+
+        Saves the data to ``output_dir/data_{GameID}.csv``
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            The clean data.
+        output_dir : str
+            The directory containing the data.
+        filesystem : str, optional (default "file")
+            The name of the ``fsspec`` filesystem to use.
+        
+        Returns
+        -------
+        None
+        """
+        # Get the filesystem
+        fs = fsspec.filesystem(filesystem)
+        grouped = data.groupby("GAME_ID")
+        for name, group in grouped:
+            # Save
+            with fs.open(Path(output_dir, f"data_{name}.csv"), "wb") as buf:
+                group.to_csv(buf, sep="|", mode="wb")

@@ -154,10 +154,23 @@ class BaseRequest:
         -------
         None
         """
-        if self.output_dir is not None and self.fs.exists(self.fpath):
+        if self.exists():
             LOG.info(f"Reading existing file {str(self.fpath)}...")
             with self.fs.open(self.fpath) as infile:
                 self._raw_data = json.load(infile)
+    
+    def exists(self) -> bool:
+        """Check whether the file exists.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
+        return bool(self.output_dir is not None and self.fs.exists(self.fpath))
 
     @property
     def defaults(self) -> Dict:
