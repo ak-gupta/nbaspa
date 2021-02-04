@@ -101,9 +101,13 @@ class NBADataFactory:
         pd.DataFrame
             The concatenated dataframe.
         """
-        return pd.concat(
-            [callobj.get_data(dataset_type=dataset_type) for callobj in self.calls]
-        ).reset_index(drop=True)
+        try:
+            return pd.concat(
+                [callobj.get_data(dataset_type=dataset_type) for callobj in self.calls]
+            ).reset_index(drop=True)
+        except KeyError:
+            LOG.error("Unable to retrieve data.")
+            raise ValueError("Unable to retrive data.")
     
     @sleep_and_retry
     @limits(calls=5, period=TEN_MINUTES)

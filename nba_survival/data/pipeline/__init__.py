@@ -12,6 +12,7 @@ from nba_survival.data.pipeline.io import (
     ShotChartLoader,
     BoxScoreLoader,
     ShotZoneLoader,
+    SaveData,
 )
 from nba_survival.data.pipeline.lineup import AddLineupPlusMinus
 from nba_survival.data.pipeline.margin import FillMargin
@@ -31,6 +32,7 @@ __all__: List[str] = [
     "ShotChartLoader",
     "BoxScoreLoader",
     "ShotZoneLoader",
+    "SaveData",
     "GamesInLastXDays",
     "AddLineupPlusMinus",
     "FillMargin",

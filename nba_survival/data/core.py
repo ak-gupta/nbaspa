@@ -3,7 +3,7 @@
 from typing import Optional
 
 import pandas as pd
-from prefect import Flow, Parameter
+from prefect import case, Flow, Parameter
 
 from nba_survival.data.pipeline import (
     AddWinPercentage,
@@ -15,6 +15,7 @@ from nba_survival.data.pipeline import (
     ShotChartLoader,
     BoxScoreLoader,
     ShotZoneLoader,
+    SaveData,
     GamesInLastXDays,
     AddLineupPlusMinus,
     FillMargin,
@@ -71,6 +72,8 @@ def gen_pipeline() -> Flow:
     # Add shotchart data for player rating
     shotdetail = AddShotDetail(name="Add shotchart zone")
     shotvalue = AddExpectedShotValue(name="Add shot value")
+    # Persisting clean data
+    persist = SaveData()
 
     with Flow(name="Transform raw NBA data") as flow:
         # Set some parameters
@@ -78,6 +81,7 @@ def gen_pipeline() -> Flow:
         filesystem = Parameter("filesystem", "file")
         season = Parameter("Season", DefaultParameters.Season)
         gamedate = Parameter("GameDate", DefaultParameters.GameDate)
+        save_data = Parameter("save_data", True)
         # Load data
         scoreboard = scoreboard_loader(
             output_dir=output_dir,
@@ -146,6 +150,8 @@ def gen_pipeline() -> Flow:
         # Add variables for the player rating
         shotzone = shotdetail(pbp=lineup, shotchart=shotchart)
         expected_val = shotvalue(pbp=shotzone, shotzonedashboard=shotzonedashboard)
+        with case(save_data, True):
+            persist(data=expected_val, output_dir=output_dir, filesystem=filesystem)
     
     return flow
 
@@ -153,10 +159,11 @@ def gen_pipeline() -> Flow:
 def run_pipeline(
     flow: Flow,
     output_dir: str,
+    save_data: bool = True,
     filesystem: Optional[str] = None,
     Season: Optional[str] = None,
     GameDate: Optional[str] = None
-):
+) -> pd.DataFrame:
     """Run the pipeline.
 
     Parameters
@@ -165,6 +172,8 @@ def run_pipeline(
         The directory containing the data.
     filesystem : str, optional (default "file")
         The name of the ``fsspec`` filesystem to use.
+    save_data : bool, optional (default True)
+        Whether or not to save the output data.
     Season : str, optional (default None)
         The ``Season`` value to use.
     GameDate : str, optional (default None)
@@ -174,10 +183,17 @@ def run_pipeline(
     -------
     None
     """
-    params = {"output_dir": output_dir, "filesystem": filesystem}
+    params = {
+        "output_dir": output_dir,
+        "filesystem": filesystem,
+        "save_data": save_data
+    }
     if Season is not None:
         params["Season"] = Season
     if GameDate is not None:
         params["GameDate"] = GameDate
     
-    flow.run(parameters=params)
+    output = flow.run(parameters=params)
+    final = output.result[flow.get_tasks(name="Add shot value")[0]].result
+
+    return final
