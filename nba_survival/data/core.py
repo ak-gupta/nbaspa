@@ -131,7 +131,7 @@ def gen_pipeline() -> Flow:
         margin = margin_task(pbp=survtime)
         target = target_task(pbp=margin)
         team_id = team_id_task(pbp=target, header=scoreboard["GameHeader"])
-        rating = rating_task(pbp=team_id, stats=stats)
+        rating = rating_task(pbp=team_id, stats=stats["default"])
         meeting = meeting_task(pbp=rating, last_meeting=scoreboard["LastMeeting"])
         w_pct = w_pct_task(pbp=meeting, gamelog=gamelog)
         last3 = last3_task(pbp=w_pct, gamelog=gamelog)
@@ -141,7 +141,7 @@ def gen_pipeline() -> Flow:
             pbp=last7,
             lineup_stats=lineup_stats,
             home_rotation=rotation["HomeTeam"],
-            away_rotation=rotation["AwayRotation"]
+            away_rotation=rotation["AwayTeam"]
         )
         # Add variables for the player rating
         shotzone = shotdetail(pbp=lineup, shotchart=shotchart)
@@ -154,8 +154,8 @@ def run_pipeline(
     flow: Flow,
     output_dir: str,
     filesystem: Optional[str] = None,
-    season: Optional[str] = None,
-    gamedate: Optional[str] = None
+    Season: Optional[str] = None,
+    GameDate: Optional[str] = None
 ):
     """Run the pipeline.
 
@@ -165,19 +165,19 @@ def run_pipeline(
         The directory containing the data.
     filesystem : str, optional (default "file")
         The name of the ``fsspec`` filesystem to use.
-    season : str, optional (default None)
+    Season : str, optional (default None)
         The ``Season`` value to use.
-    gamedate : str, optional (default None)
-        The ``GameDate`` value to use.
+    GameDate : str, optional (default None)
+        The ``GameDate`` value to use, in MM/DD/YYYY format.
     
     Returns
     -------
     None
     """
     params = {"output_dir": output_dir, "filesystem": filesystem}
-    if season is not None:
-        params["Season"] = season
-    if gamedate is not None:
-        params["GameDate"] = gamedate
+    if Season is not None:
+        params["Season"] = Season
+    if GameDate is not None:
+        params["GameDate"] = GameDate
     
     flow.run(parameters=params)

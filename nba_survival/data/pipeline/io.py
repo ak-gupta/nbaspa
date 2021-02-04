@@ -215,7 +215,7 @@ class RotationLoader(Task):
         factory.load()
 
         return {
-            "HomeRotation": factory.get_data(dataset_type="HomeTeam"),
+            "HomeTeam": factory.get_data(dataset_type="HomeTeam"),
             "AwayTeam": factory.get_data(dataset_type="AwayTeam")
         }
 
@@ -364,8 +364,10 @@ class SaveData(Task):
         """
         # Get the filesystem
         fs = fsspec.filesystem(filesystem)
+        fs.mkdir(Path(output_dir, "clean-data"))
         grouped = data.groupby("GAME_ID")
         for name, group in grouped:
-            # Save
-            with fs.open(Path(output_dir, f"data_{name}.csv"), "wb") as buf:
+            fpath = Path(output_dir, "clean-data", f"data_{name}.csv")
+            self.logger.info(f"Writing data for game {name} to {str(fpath)}")
+            with fs.open(fpath, "wb") as buf:
                 group.to_csv(buf, sep="|", mode="wb")

@@ -37,7 +37,7 @@ class AddNetRating(Task):
         pbp["HOME_OFF_RATING"] = home["E_OFF_RATING"]
 
         visitor = pbp.merge(
-            stats[["TEAM_ID", "E_NET_RATING"]],
+            stats[["TEAM_ID", "E_NET_RATING", "E_OFF_RATING"]],
             left_on="VISITOR_TEAM_ID",
             right_on="TEAM_ID",
             how="left"
