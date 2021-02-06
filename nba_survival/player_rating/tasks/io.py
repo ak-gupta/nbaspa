@@ -7,7 +7,7 @@ import fsspec
 import pandas as pd
 from prefect import Task
 
-from nba_survival.data.endpoints import WinProbability
+from nba_survival.data.endpoints import BoxScoreTraditional, WinProbability
 
 
 class LoadCleanData(Task):
@@ -69,3 +69,32 @@ class WinProbabilityLoader(Task):
         win.load()
 
         return win.get_data("WinProbPBP")
+
+
+class BoxScoreLoader(Task):
+    """Load the boxscore data."""
+    def run(
+        self, GameID: str, output_dir: str, filesystem: Optional[str] = "file"
+    ) -> pd.DataFrame:
+        """Load the boxscore data.
+
+        Parameters
+        ----------
+        GameID : str
+            The game identifier.
+        output_dir : str
+            The directory containing the data.
+        filesystem : str, optional (default "file")
+            The name of the ``fsspec`` filesystem to use.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The player-level boxscore data.
+        """
+        box = BoxScoreTraditional(
+            GameID=GameID, output_dir=output_dir, filesystem=filesystem
+        )
+        box.load()
+
+        return box.get_data("PlayerStats")

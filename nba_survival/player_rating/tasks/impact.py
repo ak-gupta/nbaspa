@@ -272,3 +272,54 @@ class PlayerImpact(Task):
         )
 
         return home, visitor
+
+
+class AggregateImpact(Task):
+    """Aggregate player impact for a game."""
+    def run(self, pbp: pd.DataFrame, boxscore: pd.DataFrame) -> pd.DataFrame:
+        """Aggregate player impact for a game.
+
+        Parameters
+        ----------
+        pbp : pd.DataFrame
+            The output of ``PlayerImpact``.
+        boxscore : pd.DataFrame
+            The output of ``BoxScoreTraditional.get_data("PlayerStats")``.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The output DataFrame
+        """
+        impact = boxscore[["GAME_ID", "PLAYER_ID"]].copy()
+        impact.set_index("PLAYER_ID", inplace=True)
+        # Merge
+        impact = pd.merge(
+            impact,
+            pbp.groupby("PLAYER1_ID")["PLAYER1_IMPACT"].sum(),
+            left_index=True,
+            right_index=True,
+            how="left"
+        )
+        impact = pd.merge(
+            impact,
+            pbp.groupby("PLAYER2_ID")["PLAYER2_IMPACT"].sum(),
+            left_index=True,
+            right_index=True,
+            how="left"
+        )
+        impact = pd.merge(
+            impact,
+            pbp.groupby("PLAYER3_ID")["PLAYER3_IMPACT"].sum(),
+            left_index=True,
+            right_index=True,
+            how="left"
+        )
+        impact.fillna(0, inplace=True)
+        impact["IMPACT"] = (
+            impact["PLAYER1_IMPACT"] + impact["PLAYER2_IMPACT"] + impact["PLAYER3_IMPACT"]
+        )
+        # Reset the index
+        impact.reset_index(inplace=True)
+
+        return impact[["GAME_ID", "PLAYER_ID", "IMPACT"]].copy()

@@ -9,6 +9,8 @@ import pandas as pd
 
 from nba_survival.player_rating.tasks import (
     AddWinProbability,
+    AggregateImpact,
+    BoxScoreLoader,
     ConvertNBAWinProbability,
     ConvertSurvivalWinProbability,
     LoadCleanData,
@@ -32,11 +34,13 @@ def gen_pipeline() -> Flow:
     # Loader tasks
     pbp_loader = LoadCleanData(name="Load clean data")
     winprob_loader = WinProbabilityLoader(name="Load NBA win probability loader")
+    box_loader = BoxScoreLoader(name="Load boxscore data")
     # Calculation tasks
     convertwinprob = ConvertNBAWinProbability(name="Convert NBA win probability")
     convertsurvprob = ConvertSurvivalWinProbability(name="Convert survival win probability")
     addwin = AddWinProbability(name="Add win probability")
     addimpact = PlayerImpact(name="Calculate player impact")
+    combineimpact = AggregateImpact(name="Aggregate player impact")
 
     with Flow(name="Calculate player impact") as flow:
         # Parameter
@@ -48,6 +52,9 @@ def gen_pipeline() -> Flow:
         pbp = pbp_loader(
             GameID=game_id, output_dir=output_dir, filesystem=filesystem
         )
+        box = box_loader(
+            GameID=game_id, output_dir=output_dir, filesystem=filesystem,
+        )
         with case(mode, "nba"):
             win_prob = winprob_loader(
                 GameID=game_id, output_dir=output_dir, filesystem=filesystem
@@ -57,7 +64,8 @@ def gen_pipeline() -> Flow:
             survivalprob = convertsurvprob(win_prob=win_prob)
         winprob = merge(nbawinprob, survivalprob)
         win = addwin(pbp=pbp, win_prob=winprob)
-        addimpact(pbp=win)
+        calculate = addimpact(pbp=win)
+        combineimpact(pbp=calculate, boxscore=box)
     
     return flow
 
@@ -93,6 +101,6 @@ def run_pipeline(
             "filesystem": filesystem,
         }
     )
-    final = output.result[flow.get_tasks(name="Calculate player impact")[0]].result
+    final = output.result[flow.get_tasks(name="Aggregate player impact")[0]].result
 
     return final
