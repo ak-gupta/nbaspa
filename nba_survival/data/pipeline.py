@@ -160,7 +160,7 @@ def run_pipeline(
     flow: Flow,
     output_dir: str,
     save_data: bool = True,
-    filesystem: Optional[str] = None,
+    filesystem: Optional[str] = "file",
     Season: Optional[str] = None,
     GameDate: Optional[str] = None
 ) -> pd.DataFrame:

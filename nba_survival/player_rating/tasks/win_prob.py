@@ -3,6 +3,47 @@
 import pandas as pd
 from prefect import Task
 
+
+class ConvertNBAWinProbability(Task):
+    """Convert the NBA win probability to a series."""
+    def run(self, win_prob: pd.DataFrame) -> pd.Series:
+        """Convert the NBA win probability to a series.
+
+        Parameters
+        ----------
+        win_prob : pd.DataFrame
+            The output from ``WinProbability.get_data("WinProbPBP")``.
+        
+        Returns
+        -------
+        pd.Series
+            A pandas series containing the win probability at a given event
+            in the play-by-play data. Indexed first by the game identifier
+            and the event number second.
+        """
+        df = win_prob[~pd.isnull(win_prob["EVENT_NUM"])].copy()
+        df.set_index(["GAME_ID", "EVENT_NUM"], inplace=True)
+
+        return df["HOME_PCT"]
+
+
+class ConvertSurvivalWinProbability(Task):
+    """Convert NBA survival win probability."""
+    def run(self, win_prob: pd.DataFrame) -> pd.Series:
+        """Convert NBA survival win probability.
+
+        Parameters
+        ----------
+        win_prob : pd.DataFrame
+            Ignored.
+        
+        Returns
+        -------
+        pd.Series
+            Ignored.
+        """
+        pass
+
 class AddWinProbability(Task):
     """Add win probability to the data."""
     def run(self, pbp: pd.DataFrame, win_prob: pd.Series) -> pd.DataFrame:
@@ -27,19 +68,13 @@ class AddWinProbability(Task):
         pd.DataFrame
             The updated dataset.
         """
-        # Store the index names for the series
-        idx_names = win_prob.index.names
-        prob_variable = win_prob.name
-        win_prob = win_prob.reset_index()
-        # Remove all null event rows
-        win_prob = win_prob.loc[~pd.isnull(win_prob[idx_names[1]])].copy()
         # Add the win probability to the play-by-play data
         pbp["WIN_PROBABILITY"] = pbp.merge(
             win_prob,
             left_on=("GAME_ID", "EVENTNUM"),
-            right_on=idx_names,
+            right_index=True,
             how="left"
-        )[prob_variable]
+        )[win_prob.name]
         # Create a variable that represents the change in win probability over events
         pbp["WIN_PROBABILITY_CHANGE"] = pbp.groupby("GAME_ID")["WIN_PROBABILITY"].diff()
 
