@@ -5,7 +5,7 @@ from typing import Optional
 import pandas as pd
 from prefect import case, Flow, Parameter
 
-from nba_survival.data.pipeline import (
+from nba_survival.data.tasks import (
     AddWinPercentage,
     GenericLoader,
     PlayByPlayLoader,
