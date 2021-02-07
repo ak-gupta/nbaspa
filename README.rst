@@ -25,6 +25,9 @@ Survival analysis-based win percentage
 Purpose
 -------
 
+Win Probability
+~~~~~~~~~~~~~~~
+
 The purpose of the ``nba_survival`` package is to develop a Survival Analysis-based
 methodology for estimating Win Probability. This package will build and analyze a
 dataset with the following variables:
@@ -81,6 +84,9 @@ dataset with the following variables:
 |                                  |              | | the last 7 days.                                      |
 +----------------------------------+--------------+---------------------------------------------------------+
 
+Player Impact Metric
+~~~~~~~~~~~~~~~~~~~~
+
 After establishing an effective model for win probability, we will investigate a player impact metric based
 on the change in win probability on a play-by-play basis. For many events in a game, we can attribute the
 impact to a single player:
@@ -132,6 +138,93 @@ where
 
 Essentially, we are giving the assisting player the credit for the percentage
 change in the points per 100 possessions driven by the shot that they created.
+
+Sequences
++++++++++
+
+There is another corner case we need to address: sequences. Here, we will define a sequence
+as a combination of events that occur in the same time period. For instance, a shooting foul
+has a foul and free throws associated with a single timestamp. We need to firmly define how
+much impact each player in the sequence should get. Below we've defined some common sequences:
+
++-----------------------------------------+-----------------------+-----------------------------------------+
+| Sequence                                | Events                | Attribution                             |
+|                                         |                       |                                         |
++=========================================+=======================+=========================================+
+| Offensive foul                          | | * Foul              | | Offensive foul row dropped, player    |
+|                                         | | * Turnover          | | committing the foul given blame.      |
++-----------------------------------------+-----------------------+-----------------------------------------+
+| Shooting foul (2PT FGA)                 | | * Foul              | | Player committing the foul given      |
+|                                         | | * Free throw        | | blame. Player shooting free throws    |
+|                                         | | * Free throw        | | given credit.                         |
++-----------------------------------------+-----------------------+-----------------------------------------+
+| Shooting foul (2PT FGA - Missed FT)     | | * Foul              | | Player committing the foul given      |
+|                                         | | * Free throw        | | blame. Player shooting free throws    |
+|                                         | | * Free throw        | | given credit. Unknown effect for      |
+|                                         | | * Rebound           | | rebound.                              |
++-----------------------------------------+-----------------------+-----------------------------------------+
+| Shooting foul (3PT FGA)                 | | * Foul              | | Player committing the foul given      |
+|                                         | | * Free throw        | | blame. Player shooting free throws    |
+|                                         | | * Free throw        | | given credit.                         |
+|                                         | | * Free throw        |                                         |
++-----------------------------------------+-----------------------+-----------------------------------------+
+| Shooting foul (3PT FGA - Missed FT)     | | * Foul              | | Player committing the foul given      |
+|                                         | | * Free throw        | | blame. Player shooting free throws    |
+|                                         | | * Free throw        | | given credit. Unknown effect for      |
+|                                         | | * Free throw        | | rebound.                              |
+|                                         | | * Rebound           |                                         |
++-----------------------------------------+-----------------------+-----------------------------------------+
+| Shooting foul (FGM)                     | | * Field goal made   | | Player committing the foul given      |
+|                                         | | * Foul              | | blame. Player shooting the free throw |
+|                                         | | * Free throw        | | given credit.                         |
++-----------------------------------------+-----------------------+-----------------------------------------+
+| Shooting foul (FGM - Missed FT)         | | * Field goal made   | | Player committing the foul given      |
+|                                         | | * Foul              | | blame. Player shooting the free throw |
+|                                         | | * Free throw        | | given credit. Unknown effect for      |
+|                                         | | * Rebound           | | rebound.                              |
++-----------------------------------------+-----------------------+-----------------------------------------+
+| Putback FGM                             | | * Rebound           | | Player getting the rebound given      |
+|                                         | | * Field goal made   | | credit proportional to the quality    |
+|                                         |                       | | of the shot taken (similar to         |
+|                                         |                       | | assist). Player making the shot given |
+|                                         |                       | | rest of credit.                       |
++-----------------------------------------+-----------------------+-----------------------------------------+
+| Putback FGA                             | | * Rebound           | | Player getting the rebound given      |
+|                                         | | * Field goal missed | | credit proportional to the quality of |
+|                                         |                       | | shot taken (similar to assist).       |
+|                                         |                       | | Player taking the shot given rest of  |
+|                                         |                       | | credit.                               |
++-----------------------------------------+-----------------------+-----------------------------------------+
+| Shooting foul (Putback FGM)             | | * Rebound           | | Player getting the rebound given      |
+|                                         | | * Field goal made   | | credit proportional to the quality of |
+|                                         | | * Foul              | | the shot. Quality of shot includes    |
+|                                         | | * Free throw        | | expected value from free throw.       |
+|                                         |                       | | Player that made the shot and shoots  |
+|                                         |                       | | the free throw given rest of credit.  |
++-----------------------------------------+-----------------------+-----------------------------------------+
+| Shooting foul (Putback FGA)             | | * Rebound           | | Player getting the rebound given      |
+|                                         | | * Foul              | | credit proportional to the expected   |
+|                                         | | * Free throw        | | value from free throws. Player taking |
+|                                         | | * Free throw        | | free throws given rest of credit.     |
++-----------------------------------------+-----------------------+-----------------------------------------+
+| Shooting foul (Putback FGM - Missed FT) | | * Rebound           | | Player getting the rebound given      |
+|                                         | | * Field goal made   | | credit proportional to the quality of |
+|                                         | | * Foul              | | the shot. Quality of shot includes    |
+|                                         | | * Free throw        | | expected value from free throw.       |
+|                                         | | * Rebound           | | Player that made the shot and shoots  |
+|                                         |                       | | the free throw given rest of credit.  |
+|                                         |                       | | Unknown effect for following rebound. |
++-----------------------------------------+-----------------------+-----------------------------------------+
+| Shooting foul (Putback FGA - Missed FT) | | * Rebound           | | Player getting the rebound given      |
+|                                         | | * Foul              | | credit proportional to the expected   |
+|                                         | | * Free throw        | | value from free throws. Player taking |
+|                                         | | * Free throw        | | free throws given rest of credit.     |
+|                                         | | * Rebound           | | Unknown effect for following rebound. |
++-----------------------------------------+-----------------------+-----------------------------------------+
+
+.. note::
+
+        In the table above, we're defining "proportional" credit similarly to assists.
 
 Features
 --------
