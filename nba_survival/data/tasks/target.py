@@ -25,7 +25,7 @@ class CreateTarget(Task):
         pd.DataFrame
             The updated dataset.
         """
-        pbp.sort_values(by="TIME", ascending=True, inplace=True)
+        pbp.sort_values(by="EVENTNUM", ascending=True, inplace=True)
         pbp["WIN"] = pbp.groupby("GAME_ID").tail(1)["SCOREMARGIN"] > 0
         pbp["WIN"] = pbp["WIN"].fillna(False)
         pbp["WIN"] = pbp["WIN"].astype(int)

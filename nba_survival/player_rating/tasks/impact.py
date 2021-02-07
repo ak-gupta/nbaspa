@@ -1,21 +1,26 @@
 """Calculate player impact."""
 
-from typing import Tuple
+from typing import List, Tuple
 
 import pandas as pd
 from prefect import Task
 
 from nba_survival.data.endpoints.pbp import EventTypes
 
-class PlayerImpact(Task):
-    """Add player impact to the data."""
+class SimplePlayerImpact(Task):
+    """Add player impact to the data.
+    
+    This class will only calculate player impact for time periods in the game
+    with a single event.
+    """
 
     event_types = EventTypes()
 
     def run(self, pbp: pd.DataFrame) -> pd.DataFrame:
         """Add player impact to the data.
 
-        Adds the following columns:
+        This class will only calculate player impact for time periods in the game
+        with a single event. Adds the following columns:
 
         * ``PLAYER1_IMPACT``
         * ``PLAYER2_IMPACT``
@@ -104,6 +109,37 @@ class PlayerImpact(Task):
 
         return pbp
     
+    def _single_event_times(self, df: pd.DataFrame) -> List[int]:
+        """Get the time stamps with one event.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The play-by-play data.
+        event_type : str
+            The event type to get from ``EventTypes``.
+        
+        Returns
+        -------
+        List
+            The list of time stamps
+        """
+        # Filter out player-independent events
+        teamevents = [
+            EventTypes().SUBSTITUTION,
+            EventTypes().TIMEOUT,
+            EventTypes().JUMP_BALL,
+            EventTypes().PERIOD_BEGIN,
+            EventTypes().UNKNOWN
+        ]
+        sizes = df[
+            (df["PLAYER1_ID"] != df["HOME_TEAM_ID"])
+            & (df["PLAYER1_ID"] != df["VISITOR_TEAM_ID"])
+            & (~df["EVENTMSGTYPE"].isin(teamevents))
+        ].groupby("TIME").size()
+
+        return sizes[sizes == 1].index.tolist()
+
     def _basic_filter(self, df: pd.DataFrame, event_type: str) -> Tuple[pd.Series, pd.Series]:
         """Return a basic filter.
 
@@ -126,10 +162,12 @@ class PlayerImpact(Task):
         homefilter = (
             (df["EVENTMSGTYPE"] == eventmsgtype)
             & (~pd.isnull(df["HOMEDESCRIPTION"]))
+            & (df["TIME"].isin(self._single_event_times(df=df)))
         )
         visitorfilter = (
             (df["EVENTMSGTYPE"] == eventmsgtype)
             & (~pd.isnull(df["VISITORDESCRIPTION"]))
+            & (df["TIME"].isin(self._single_event_times(df=df)))
         )
 
         return homefilter, visitorfilter
@@ -149,15 +187,18 @@ class PlayerImpact(Task):
         pd.Series
             A boolean fitler for the visiting team events.
         """
+        eventmsgtype = self.event_types.TURNOVER
         home = (
-            (df["EVENTMSGTYPE"] == self.event_types.TURNOVER)
+            (df["EVENTMSGTYPE"] == eventmsgtype)
             & (~pd.isnull(df["HOMEDESCRIPTION"]))
             & (df["PLAYER2_ID"] == 0)
+            & (df["TIME"].isin(self._single_event_times(df=df)))
         )
         visitor = (
             (df["EVENTMSGTYPE"] == self.event_types.TURNOVER)
             & (~pd.isnull(df["VISITORDESCRIPTION"]))
             & (df["PLAYER2_ID"] == 0)
+            & (df["TIME"].isin(self._single_event_times(df=df)))
         )
 
         return home, visitor
@@ -177,15 +218,18 @@ class PlayerImpact(Task):
         pd.Series
             A boolean filter for the visiting team events.
         """
+        eventmsgtype = self.event_types.TURNOVER
         home = (
-            (df["EVENTMSGTYPE"] == self.event_types.TURNOVER)
+            (df["EVENTMSGTYPE"] == eventmsgtype)
             & (df["HOMEDESCRIPTION"].str.contains("STL", na=False))
             & (df["PLAYER2_ID"] != 0)
+            & (df["TIME"].isin(self._single_event_times(df=df)))
         )
         visitor = (
-            (df["EVENTMSGTYPE"] == self.event_types.TURNOVER)
+            (df["EVENTMSGTYPE"] == eventmsgtype)
             & (df["VISITORDESCRIPTION"].str.contains("STL", na=False))
             & (df["PLAYER2_ID"] != 0)
+            & (df["TIME"].isin(self._single_event_times(df=df)))
         )
 
         return home, visitor
@@ -205,13 +249,16 @@ class PlayerImpact(Task):
         pd.Series
             A boolean filter for the visiting team events.
         """
+        eventmsgtype = self.event_types.FIELD_GOAL_MISSED
         home = (
-            (df["EVENTMSGTYPE"] == self.event_types.FIELD_GOAL_MISSED)
+            (df["EVENTMSGTYPE"] == eventmsgtype)
             & (df["HOMEDESCRIPTION"].str.contains("BLK", na=False))
+            & (df["TIME"].isin(self._single_event_times(df=df)))
         )
         visitor = (
-            (df["EVENTMSGTYPE"] == self.event_types.FIELD_GOAL_MISSED)
-            & (df["VISITORDESCRIPTION"].str.contains("BLK", na=False)) 
+            (df["EVENTMSGTYPE"] == eventmsgtype)
+            & (df["VISITORDESCRIPTION"].str.contains("BLK", na=False))
+            & (df["TIME"].isin(self._single_event_times(df=df)))
         )
 
         return home, visitor
@@ -231,15 +278,18 @@ class PlayerImpact(Task):
         pd.Series
             A boolean filter for the visiting team events.
         """
+        eventmsgtype = self.event_types.FIELD_GOAL_MADE
         home = (
-            (df["EVENTMSGTYPE"] == self.event_types.FIELD_GOAL_MADE)
+            (df["EVENTMSGTYPE"] == eventmsgtype)
             & (~pd.isnull(df["HOMEDESCRIPTION"]))
             & (df["PLAYER2_ID"] == 0)
+            & (df["TIME"].isin(self._single_event_times(df=df)))
         )
         visitor = (
-            (df["EVENTMSGTYPE"] == self.event_types.FIELD_GOAL_MADE)
+            (df["EVENTMSGTYPE"] == eventmsgtype)
             & (~pd.isnull(df["VISITORDESCRIPTION"]))
             & (df["PLAYER2_ID"] == 0)
+            & (df["TIME"].isin(self._single_event_times(df=df)))
         )
 
         return home, visitor
@@ -260,19 +310,65 @@ class PlayerImpact(Task):
         pd.Series
             A boolean filter for the visiting team events.
         """
+        eventmsgtype = self.event_types.FIELD_GOAL_MADE
         home = (
-            (df["EVENTMSGTYPE"] == self.event_types.FIELD_GOAL_MADE)
+            (df["EVENTMSGTYPE"] == eventmsgtype)
             & (~pd.isnull(df["HOMEDESCRIPTION"]))
             & (df["PLAYER2_ID"] != 0)
+            & (df["TIME"].isin(self._single_event_times(df=df)))
         )
         visitor = (
-            (df["EVENTMSGTYPE"] == self.event_types.FIELD_GOAL_MADE)
+            (df["EVENTMSGTYPE"] == eventmsgtype)
             & (~pd.isnull(df["VISITORDESCRIPTION"]))
             & (df["PLAYER2_ID"] != 0)
+            & (df["TIME"].isin(self._single_event_times(df=df)))
         )
 
         return home, visitor
 
+
+class CompoundPlayerImpact(Task):
+    """Define player impact for time periods with multiple events."""
+    def run(self, pbp: pd.DataFrame) -> pd.DataFrame:
+        """Define player impact for time periods with multiple events.
+
+        Parameters
+        ----------
+        pbp : pd.DataFrame
+            The output from ``SimplePlayerImpact``.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The updated dataset.
+        """
+        # Filter out player-independent events
+        teamevents = [
+            EventTypes().SUBSTITUTION,
+            EventTypes().TIMEOUT,
+            EventTypes().JUMP_BALL,
+            EventTypes().PERIOD_BEGIN,
+            EventTypes().UNKNOWN
+        ]
+        sizes = pbp[
+            (pbp["PLAYER1_ID"] != pbp["HOME_TEAM_ID"])
+            & (pbp["PLAYER1_ID"] != pbp["VISITOR_TEAM_ID"])
+            & (~pbp["EVENTMSGTYPE"].isin(teamevents))
+        ].groupby("TIME").size()
+        # Get compound events
+        compound = sizes[sizes > 1].index.tolist()
+        for timeperiod in compound:
+            print(f"Compound event at time period {timeperiod}")
+            print("------------------------------------------")
+            print(
+                pbp.loc[
+                    (pbp["TIME"] == timeperiod)
+                    & (pbp["PLAYER1_ID"] != pbp["HOME_TEAM_ID"])
+                    & (pbp["PLAYER1_ID"] != pbp["VISITOR_TEAM_ID"])
+                    & (~pbp["EVENTMSGTYPE"].isin(teamevents)),
+                    ["EVENTMSGTYPE", "HOMEDESCRIPTION", "VISITORDESCRIPTION"]
+                ]
+            )
 
 class AggregateImpact(Task):
     """Aggregate player impact for a game."""

@@ -103,43 +103,17 @@ def gen_pipeline() -> Flow:
             filesystem=filesystem,
             Season=season,
         )
-        gamelog = log_loader(
-            season=season,
-            output_dir=output_dir,
-            filesystem=filesystem,
-        )
-        lineup_stats = lineup_loader(
-            season=season,
-            output_dir=output_dir,
-            filesystem=filesystem,
-        )
-        rotation = rota_loader(
-            header=scoreboard["GameHeader"],
-            output_dir=output_dir,
-            filesystem=filesystem,
-        )
         boxscore = box_loader(
             header=scoreboard["GameHeader"],
             output_dir=output_dir,
             filesystem=filesystem
         )
-        # Transform data
+        # Base transformations
         survtime = survtime_task(pbp=pbp)
         margin = margin_task(pbp=survtime)
         target = target_task(pbp=margin)
         team_id = team_id_task(pbp=target, header=scoreboard["GameHeader"])
         rating = rating_task(pbp=team_id, stats=stats["default"])
-        meeting = meeting_task(pbp=rating, last_meeting=scoreboard["LastMeeting"])
-        w_pct = w_pct_task(pbp=meeting, gamelog=gamelog)
-        last3 = last3_task(pbp=w_pct, gamelog=gamelog)
-        last5 = last5_task(pbp=last3, gamelog=gamelog)
-        last7 = last7_task(pbp=last5, gamelog=gamelog)
-        lineup = lineup_task(
-            pbp=last7,
-            lineup_stats=lineup_stats,
-            home_rotation=rotation["HomeTeam"],
-            away_rotation=rotation["AwayTeam"]
-        )
         with case(mode, "rating"):
             # Load shotchart and shot zone data
             shotchart = shotchart_loader(
@@ -154,10 +128,37 @@ def gen_pipeline() -> Flow:
                 filesystem=filesystem
             )
             # Add variables for the player rating
-            shotzone = shotdetail(pbp=lineup, shotchart=shotchart)
+            shotzone = shotdetail(pbp=rating, shotchart=shotchart)
             expected_val = shotvalue(pbp=shotzone, shotzonedashboard=shotzonedashboard)
         with case(mode, "model"):
-            # De-dupe time
+            # Load data
+            gamelog = log_loader(
+                season=season,
+                output_dir=output_dir,
+                filesystem=filesystem,
+            )
+            lineup_stats = lineup_loader(
+                season=season,
+                output_dir=output_dir,
+                filesystem=filesystem,
+            )
+            rotation = rota_loader(
+                header=scoreboard["GameHeader"],
+                output_dir=output_dir,
+                filesystem=filesystem,
+            )
+            # Transform data for the survival model
+            meeting = meeting_task(pbp=rating, last_meeting=scoreboard["LastMeeting"])
+            w_pct = w_pct_task(pbp=meeting, gamelog=gamelog)
+            last3 = last3_task(pbp=w_pct, gamelog=gamelog)
+            last5 = last5_task(pbp=last3, gamelog=gamelog)
+            last7 = last7_task(pbp=last5, gamelog=gamelog)
+            lineup = lineup_task(
+                pbp=last7,
+                lineup_stats=lineup_stats,
+                home_rotation=rotation["HomeTeam"],
+                away_rotation=rotation["AwayTeam"]
+            )
             deduped = dedupe_task(pbp=lineup)
         # Save
         final = merge(expected_val, deduped)
@@ -207,7 +208,8 @@ def run_pipeline(
     params = {
         "output_dir": output_dir,
         "filesystem": filesystem,
-        "save_data": save_data
+        "save_data": save_data,
+        "mode": mode
     }
     if Season is not None:
         params["Season"] = Season

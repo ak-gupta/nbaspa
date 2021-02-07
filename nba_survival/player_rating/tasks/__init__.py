@@ -2,9 +2,9 @@
 
 from typing import List
 
-from nba_survival.player_rating.tasks.impact import AggregateImpact, PlayerImpact
+from nba_survival.player_rating.tasks.impact import AggregateImpact, SimplePlayerImpact
 from nba_survival.player_rating.tasks.io import (
-    LoadCleanData,
+    LoadRatingData,
     WinProbabilityLoader,
     BoxScoreLoader
 )
@@ -16,8 +16,8 @@ from nba_survival.player_rating.tasks.win_prob import (
 
 __all__: List[str] = [
     "AggregateImpact",
-    "PlayerImpact",
-    "LoadCleanData",
+    "SimplePlayerImpact",
+    "LoadRatingData",
     "WinProbabilityLoader",
     "BoxScoreLoader",
     "AddWinProbability",

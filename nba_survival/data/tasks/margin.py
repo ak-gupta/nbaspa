@@ -21,8 +21,8 @@ class FillMargin(Task):
         pd.DataFrame
             The updated dataset.
         """
-        # Sort by the ``TIME`` variable
-        pbp.sort_values(by="TIME", ascending=True, inplace=True)
+        # Sort by the game event identifier
+        pbp.sort_values(by="EVENTNUM", ascending=True, inplace=True)
         pbp.loc[pbp["SCOREMARGIN"] == "TIE", "SCOREMARGIN"] = 0
         pbp["SCOREMARGIN"] = pbp.groupby("GAME_ID")["SCOREMARGIN"].ffill()
         pbp["SCOREMARGIN"] = pbp["SCOREMARGIN"].fillna(0)
