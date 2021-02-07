@@ -337,6 +337,46 @@ class ShotZoneLoader(Task):
         return factory.get_data("ShotAreaPlayerDashboard")
 
 
+class GeneralShootingLoader(Task):
+    """Load the general shooting data for each player in each game."""
+    def run(
+        self,
+        boxscore: pd.DataFrame,
+        output_dir: str,
+        filesystem: Optional[str] = "file",
+    ) -> pd.DataFrame:
+        """Load the general shooting data for each player in each game.
+
+        Parameters
+        ----------
+        boxscore : pd.DataFrame
+            The output from ``BoxScoreTraditional.get_data("PlayerStats")``.
+        output_dir : str
+            The directory containing the data.
+        filesystem : str, optional (default "file")
+            The name of the ``fsspec`` filesystem to use.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The output dataset.
+        """
+        calls: List[str] = []
+        for _, row in boxscore.iterrows():
+            calls.append(
+                (
+                    "PlayerDashboardGeneral",
+                    {"PlayerID": row["PLAYER_ID"], "Season": "2018-19"}
+                )
+            )
+
+        # Create the factory and load the data
+        factory = NBADataFactory(calls=calls, output_dir=output_dir, filesystem=filesystem)
+        factory.load()
+
+        return factory.get_data("OverallPlayerDashboard")
+
+
 class SaveData(Task):
     """Save the game data."""
     def run(

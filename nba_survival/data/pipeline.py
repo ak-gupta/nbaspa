@@ -16,6 +16,7 @@ from nba_survival.data.tasks import (
     ShotChartLoader,
     BoxScoreLoader,
     ShotZoneLoader,
+    GeneralShootingLoader,
     SaveData,
     GamesInLastXDays,
     AddLineupPlusMinus,
@@ -59,6 +60,7 @@ def gen_pipeline() -> Flow:
     shotchart_loader = ShotChartLoader(name="Load shotchart data")
     box_loader = BoxScoreLoader(name="Load boxscore data")
     shotzone_loader = ShotZoneLoader(name="Load player-level shot zone dashboards")
+    gshooting_loader = GeneralShootingLoader(name="Load player-level overall shooting dashboards")
     # Transformation tasks
     survtime_task = SurvivalTime(name="Add survival time")
     margin_task = FillMargin(name="Backfill margin")
@@ -127,9 +129,18 @@ def gen_pipeline() -> Flow:
                 output_dir=output_dir,
                 filesystem=filesystem
             )
+            shooting = gshooting_loader(
+                boxscore=boxscore,
+                output_dir=output_dir,
+                filesystem=filesystem,
+            )
             # Add variables for the player rating
             shotzone = shotdetail(pbp=rating, shotchart=shotchart)
-            expected_val = shotvalue(pbp=shotzone, shotzonedashboard=shotzonedashboard)
+            expected_val = shotvalue(
+                pbp=shotzone,
+                shotzonedashboard=shotzonedashboard,
+                overallshooting=shooting,
+            )
         with case(mode, "model"):
             # Load data
             gamelog = log_loader(

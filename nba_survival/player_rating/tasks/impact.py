@@ -1,11 +1,44 @@
 """Calculate player impact."""
 
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 import pandas as pd
 from prefect import Task
 
 from nba_survival.data.endpoints.pbp import EventTypes
+
+def _num_events_at_time(df: pd.DataFrame) -> Tuple[pd.Series, pd.Series]:
+    """Get the number of events at each time.
+
+    Parameters
+    ----------
+    pbp : pd.DataFrame
+        The clean player-rating play-by-play data.
+    
+    Returns
+    -------
+    pd.Series
+        A series indexed by the time period with the number
+        of play-by-play events associated with that time.
+    pd.Series
+        The row-level filter applied to the dataset before aggregation
+    """
+    # Filter out player-independent events
+    teamevents = [
+        EventTypes().SUBSTITUTION,
+        EventTypes().TIMEOUT,
+        EventTypes().JUMP_BALL,
+        EventTypes().PERIOD_BEGIN,
+        EventTypes().UNKNOWN
+    ]
+    rowfilter = (
+        (df["PLAYER1_ID"] != df["HOME_TEAM_ID"])
+        & (df["PLAYER1_ID"] != df["VISITOR_TEAM_ID"])
+        & (~df["EVENTMSGTYPE"].isin(teamevents))
+    )
+    sizes = df[rowfilter].groupby("TIME").size()
+
+    return sizes, rowfilter
 
 class SimplePlayerImpact(Task):
     """Add player impact to the data.
@@ -124,19 +157,7 @@ class SimplePlayerImpact(Task):
         List
             The list of time stamps
         """
-        # Filter out player-independent events
-        teamevents = [
-            EventTypes().SUBSTITUTION,
-            EventTypes().TIMEOUT,
-            EventTypes().JUMP_BALL,
-            EventTypes().PERIOD_BEGIN,
-            EventTypes().UNKNOWN
-        ]
-        sizes = df[
-            (df["PLAYER1_ID"] != df["HOME_TEAM_ID"])
-            & (df["PLAYER1_ID"] != df["VISITOR_TEAM_ID"])
-            & (~df["EVENTMSGTYPE"].isin(teamevents))
-        ].groupby("TIME").size()
+        sizes, _ = _num_events_at_time(df)
 
         return sizes[sizes == 1].index.tolist()
 
@@ -342,33 +363,142 @@ class CompoundPlayerImpact(Task):
         pd.DataFrame
             The updated dataset.
         """
-        # Filter out player-independent events
-        teamevents = [
-            EventTypes().SUBSTITUTION,
-            EventTypes().TIMEOUT,
-            EventTypes().JUMP_BALL,
-            EventTypes().PERIOD_BEGIN,
-            EventTypes().UNKNOWN
-        ]
-        sizes = pbp[
-            (pbp["PLAYER1_ID"] != pbp["HOME_TEAM_ID"])
-            & (pbp["PLAYER1_ID"] != pbp["VISITOR_TEAM_ID"])
-            & (~pbp["EVENTMSGTYPE"].isin(teamevents))
-        ].groupby("TIME").size()
+        sizes, rowfilter = _num_events_at_time(pbp)
         # Get compound events
         compound = sizes[sizes > 1].index.tolist()
         for timeperiod in compound:
-            print(f"Compound event at time period {timeperiod}")
-            print("------------------------------------------")
-            print(
-                pbp.loc[
-                    (pbp["TIME"] == timeperiod)
-                    & (pbp["PLAYER1_ID"] != pbp["HOME_TEAM_ID"])
-                    & (pbp["PLAYER1_ID"] != pbp["VISITOR_TEAM_ID"])
-                    & (~pbp["EVENTMSGTYPE"].isin(teamevents)),
-                    ["EVENTMSGTYPE", "HOMEDESCRIPTION", "VISITORDESCRIPTION"]
-                ]
-            )
+            # Get the sequence
+            sequence = pbp.loc[(pbp["TIME"] == timeperiod) & (rowfilter)]
+            try:
+                sequence_type = self.identify_sequence(sequence["EVENTMSGTYPE"].tolist())
+                print("-------------------------------------------------")
+                print(f"Common sequence at {timeperiod}: {sequence_type}")
+                print("-------------------------------------------------")
+            except ValueError:
+                print("-------------------------------------------------------")
+                print(f"Unexplained compount event at time period {timeperiod}")
+                print("-------------------------------------------------------")
+                print(
+                    sequence[
+                        [
+                            "EVENTNUM",
+                            "EVENTMSGTYPE",
+                            "HOMEDESCRIPTION",
+                            "VISITORDESCRIPTION",
+                            "PLAYER1_NAME",
+                            "PLAYER2_NAME",
+                            "PLAYER3_NAME"
+                        ]
+                    ]
+                )
+    
+    def identify_sequence(self, eventlist: List) -> str:
+        """Identify the event sequence.
+
+        Parameters
+        ----------
+        eventlist : list
+            A list of event types.
+        
+        Returns
+        -------
+        str
+            The event type
+        """
+        for key, value in self.common_sequences.items():
+            if eventlist == value:
+                event_type = key
+                break
+        else:
+            raise ValueError("Unknown event type")
+
+        return event_type
+    
+    @property
+    def common_sequences(self) -> Dict[str, List[int]]:
+        """Common sequences.
+
+        Returns
+        -------
+        List
+            A list of combinations of events that commonly occur together.
+        """
+        event_types = EventTypes()
+        return {
+            "Offensive foul": [
+                event_types.FOUL,
+                event_types.TURNOVER
+            ],
+            "Shooting foul (2PT FGA)": [
+                event_types.FOUL,
+                event_types.FREE_THROW,
+                event_types.FREE_THROW
+            ],
+            "Shooting foul (2PT FGA - Missed FT)": [
+                event_types.FOUL,
+                event_types.FREE_THROW,
+                event_types.FREE_THROW,
+                event_types.REBOUND
+            ],
+            "Shooting foul (3PT FGA)": [
+                event_types.FOUL,
+                event_types.FREE_THROW,
+                event_types.FREE_THROW,
+                event_types.FREE_THROW
+            ],
+            "Shooting foul (3PT FGA - Missed FT)": [
+                event_types.FOUL,
+                event_types.FREE_THROW,
+                event_types.FREE_THROW,
+                event_types.FREE_THROW,
+                event_types.REBOUND                
+            ],
+            "Shooting foul (FGM)": [
+                event_types.FIELD_GOAL_MADE,
+                event_types.FOUL,
+                event_types.FREE_THROW,
+            ],
+            "Shooting foul (FGM - Missed FT)": [
+                event_types.FIELD_GOAL_MADE,
+                event_types.FOUL,
+                event_types.FREE_THROW,
+                event_types.REBOUND,
+            ],
+            "Putback FGM": [
+                event_types.REBOUND,
+                event_types.FIELD_GOAL_MADE
+            ],
+            "Putback FGA": [
+                event_types.REBOUND,
+                event_types.FIELD_GOAL_MISSED
+            ],
+            "Shooting foul (Putback FGM)": [
+                event_types.REBOUND,
+                event_types.FIELD_GOAL_MADE,
+                event_types.FOUL,
+                event_types.FREE_THROW,
+            ],
+            "Shooting foul (Putback FGA)": [
+                event_types.REBOUND,
+                event_types.FOUL,
+                event_types.FREE_THROW,
+                event_types.FREE_THROW
+            ],
+            "Shooting foul (Putback FGM - Missed FT)": [
+                event_types.REBOUND,
+                event_types.FIELD_GOAL_MADE,
+                event_types.FOUL,
+                event_types.FREE_THROW,
+                event_types.REBOUND,
+            ],
+            "Shooting foul (Putback FGA - Missed FT)": [
+                event_types.REBOUND,
+                event_types.FOUL,
+                event_types.FREE_THROW,
+                event_types.FREE_THROW,
+                event_types.REBOUND
+            ],
+        }
 
 class AggregateImpact(Task):
     """Aggregate player impact for a game."""

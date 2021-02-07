@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 from prefect import Task
 
+from nba_survival.data.endpoints.pbp import EventTypes
+
 class AddShotDetail(Task):
     """Add shotchart details."""
     def run(self, pbp: pd.DataFrame, shotchart: pd.DataFrame) -> pd.DataFrame:
@@ -40,13 +42,20 @@ class AddShotDetail(Task):
         # Add the variables
         pbp["SHOT_ZONE_BASIC"] = joined["SHOT_ZONE_BASIC"]
         pbp["SHOT_VALUE"] = joined["SHOT_VALUE"]
+        # Add shot value for free throws
+        pbp.loc[pbp["EVENTMSGTYPE"] == EventTypes().FREE_THROW, "SHOT_VALUE"] = 1
 
         return pbp
 
 
 class AddExpectedShotValue(Task):
     """Add the expected shot value based on the shooter and the zone."""
-    def run(self, pbp: pd.DataFrame, shotzonedashboard: pd.DataFrame) -> pd.DataFrame:
+    def run(
+        self,
+        pbp: pd.DataFrame,
+        shotzonedashboard: pd.DataFrame,
+        overallshooting: pd.DataFrame
+    ) -> pd.DataFrame:
         """Add the expected shot value based on the shooter and the zone.
 
         Modifies the ``SHOT_VALUE`` column by multiplying it by the field goal percentage.
@@ -61,18 +70,34 @@ class AddExpectedShotValue(Task):
         shotzonedashboard : pd.DataFrame
             The output from ``NBADataFactory.get_data("ShotAreaPlayerDashboard")``
             where each call is the ``PlayerDashboardShooting`` endpoint for each player.
+        overallshooting : pd.DataFrame
+            The output from ``NBADataFactory.get_data("OverallPlayerDashboard")``
+            where each call is the ``PlayerDashboardGeneral`` endpoint for each player.
         
         Returns
         -------
         pd.DataFrame
             The updated datasets.
         """
-        pbp["FG_PCT"] = pbp.merge(
+        pbp.loc[
+            pbp["EVENTGMSGTYPE"].isin(
+                [EventTypes().FIELD_GOAL_MADE, EventTypes().FIELD_GOAL_MISSED]
+            ),
+            "FG_PCT"
+        ] = pbp.merge(
             shotzonedashboard[["PLAYER_ID", "GROUP_VALUE", "FG_PCT"]],
             left_on=("PLAYER1_ID", "SHOT_ZONE_BASIC"),
             right_on=("PLAYER_ID", "GROUP_VALUE"),
             how="left"
         )["FG_PCT"]
+        pbp.loc[
+            pbp["EVENTMSGTYPE"] == EventTypes().FREE_THROW, "FG_PCT"
+        ] = pbp.merge(
+            overallshooting[["PLAYER_ID", "FT_PCT"]],
+            left_on="PLAYER1_ID",
+            right_on="PLAYER_ID",
+            how="left"
+        )["FT_PCT"]
         pbp["SHOT_VALUE"] *= pbp["FG_PCT"]
 
         return pbp

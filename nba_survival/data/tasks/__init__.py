@@ -12,6 +12,7 @@ from nba_survival.data.tasks.io import (
     ShotChartLoader,
     BoxScoreLoader,
     ShotZoneLoader,
+    GeneralShootingLoader,
     SaveData,
 )
 from nba_survival.data.tasks.lineup import AddLineupPlusMinus
@@ -32,6 +33,7 @@ __all__: List[str] = [
     "ShotChartLoader",
     "BoxScoreLoader",
     "ShotZoneLoader",
+    "GeneralShootingLoader",
     "SaveData",
     "GamesInLastXDays",
     "AddLineupPlusMinus",
