@@ -371,13 +371,13 @@ class CompoundPlayerImpact(Task):
             sequence = pbp.loc[(pbp["TIME"] == timeperiod) & (rowfilter)]
             try:
                 sequence_type = self.identify_sequence(sequence["EVENTMSGTYPE"].tolist())
-                print("-------------------------------------------------")
-                print(f"Common sequence at {timeperiod}: {sequence_type}")
-                print("-------------------------------------------------")
+                self.logger.info("----------------------------------------------------------")
+                self.logger.info(f"Found following sequence at {timeperiod}: {sequence_type}")
+                self.logger.info("----------------------------------------------------------")
             except ValueError:
-                print("-------------------------------------------------------")
-                print(f"Unexplained compount event at time period {timeperiod}")
-                print("-------------------------------------------------------")
+                self.logger.info("---------------------------------------")
+                self.logger.warning(f"Unexpected sequence at {timeperiod}")
+                self.logger.info("---------------------------------------")
                 print(
                     sequence[
                         [
@@ -420,8 +420,8 @@ class CompoundPlayerImpact(Task):
 
         Returns
         -------
-        List
-            A list of combinations of events that commonly occur together.
+        Dict
+            The defined sequences.
         """
         event_types = EventTypes()
         return {
@@ -499,6 +499,7 @@ class CompoundPlayerImpact(Task):
                 event_types.REBOUND
             ],
         }
+
 
 class AggregateImpact(Task):
     """Aggregate player impact for a game."""
