@@ -344,6 +344,7 @@ class SaveData(Task):
         data: pd.DataFrame,
         output_dir: str,
         filesystem: Optional[str] = "file",
+        mode: Optional[str] = "model"
     ):
         """Save the game data.
 
@@ -357,17 +358,27 @@ class SaveData(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
+        mode : str, optional (default "model")
+            The type of clean data to save. If ``model``, save to the directory
+            ``model-data``. If ``rating``, save to ``rating-data``.
         
         Returns
         -------
         None
         """
+        # Define subdirectory
+        if mode == "model":
+            subdir = "model-data"
+        elif mode == "rating":
+            subdir = "rating-data"
+        else:
+            raise ValueError("Please supply a valid value for ``mode``")
         # Get the filesystem
         fs = fsspec.filesystem(filesystem)
-        fs.mkdir(Path(output_dir, "clean-data"))
+        fs.mkdir(Path(output_dir, subdir))
         grouped = data.groupby("GAME_ID")
         for name, group in grouped:
-            fpath = Path(output_dir, "clean-data", f"data_{name}.csv")
+            fpath = Path(output_dir, subdir, f"data_{name}.csv")
             self.logger.info(f"Writing data for game {name} to {str(fpath)}")
             with fs.open(fpath, "wb") as buf:
                 group.to_csv(buf, sep="|", mode="wb")

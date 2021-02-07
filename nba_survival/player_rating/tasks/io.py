@@ -10,7 +10,7 @@ from prefect import Task
 from nba_survival.data.endpoints import BoxScoreTraditional, WinProbability
 
 
-class LoadCleanData(Task):
+class LoadRatingData(Task):
     """Load the clean NBA play-by-play data."""
     def run(
         self, GameID: str, output_dir: str, filesystem: Optional[str] = "file"
@@ -31,7 +31,7 @@ class LoadCleanData(Task):
         pd.DataFrame
             The clean play-by-play data.
         """
-        fpath = Path(output_dir, "clean-data", f"data_{GameID}.csv")
+        fpath = Path(output_dir, "rating-data", f"data_{GameID}.csv")
         fs = fsspec.filesystem(filesystem)
         if fs.exists(fpath):
             with fs.open(fpath, "rb") as infile:

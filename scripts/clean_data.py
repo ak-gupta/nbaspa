@@ -28,15 +28,24 @@ def generate_calls() -> List[Dict]:
     calls: List[Dict] = []
     for n in range(int((END - START).days) + 1):
         game_date = START + datetime.timedelta(n)
-        calls.append(
+        calls += [
             {
                 "flow": PIPELINE,
                 "output_dir": "nba-data/2018-19",
                 "save_data": True,
+                "mode": "model",
+                "Season": "2018-19",
+                "GameDate": game_date.strftime("%m/%d/%Y")
+            },
+            {
+                "flow": PIPELINE,
+                "output_dir": "nba-data/2018-19",
+                "save_data": True,
+                "mode": "rating",
                 "Season": "2018-19",
                 "GameDate": game_date.strftime("%m/%d/%Y")
             }
-        )
+        ]
     
     return calls
 

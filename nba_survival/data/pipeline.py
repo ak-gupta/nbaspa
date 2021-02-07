@@ -4,6 +4,7 @@ from typing import Optional
 
 import pandas as pd
 from prefect import case, Flow, Parameter
+from prefect.tasks.control_flow import merge
 
 from nba_survival.data.tasks import (
     AddWinPercentage,
@@ -25,6 +26,7 @@ from nba_survival.data.tasks import (
     AddExpectedShotValue,
     AddShotDetail,
     CreateTarget,
+    DeDupeTime,
     SurvivalTime
 )
 from nba_survival.data.endpoints.parameters import DefaultParameters
@@ -69,6 +71,7 @@ def gen_pipeline() -> Flow:
     last5_task = GamesInLastXDays(period=5, name="Games in last 5 days")
     last7_task = GamesInLastXDays(period=7, name="Games in last 7 days")
     lineup_task = AddLineupPlusMinus(name="Add lineup plus minus")
+    dedupe_task = DeDupeTime(name="De-dupe time")
     # Add shotchart data for player rating
     shotdetail = AddShotDetail(name="Add shotchart zone")
     shotvalue = AddExpectedShotValue(name="Add shot value")
@@ -82,6 +85,7 @@ def gen_pipeline() -> Flow:
         season = Parameter("Season", DefaultParameters.Season)
         gamedate = Parameter("GameDate", DefaultParameters.GameDate)
         save_data = Parameter("save_data", True)
+        mode = Parameter("mode", "model")
         # Load data
         scoreboard = scoreboard_loader(
             output_dir=output_dir,
@@ -114,19 +118,8 @@ def gen_pipeline() -> Flow:
             output_dir=output_dir,
             filesystem=filesystem,
         )
-        shotchart = shotchart_loader(
-            header=scoreboard["GameHeader"],
-            season=season,
-            output_dir=output_dir,
-            filesystem=filesystem,
-        )
         boxscore = box_loader(
             header=scoreboard["GameHeader"],
-            output_dir=output_dir,
-            filesystem=filesystem
-        )
-        shotzonedashboard = shotzone_loader(
-            boxscore=boxscore,
             output_dir=output_dir,
             filesystem=filesystem
         )
@@ -147,11 +140,34 @@ def gen_pipeline() -> Flow:
             home_rotation=rotation["HomeTeam"],
             away_rotation=rotation["AwayTeam"]
         )
-        # Add variables for the player rating
-        shotzone = shotdetail(pbp=lineup, shotchart=shotchart)
-        expected_val = shotvalue(pbp=shotzone, shotzonedashboard=shotzonedashboard)
+        with case(mode, "rating"):
+            # Load shotchart and shot zone data
+            shotchart = shotchart_loader(
+                header=scoreboard["GameHeader"],
+                season=season,
+                output_dir=output_dir,
+                filesystem=filesystem,
+            )
+            shotzonedashboard = shotzone_loader(
+                boxscore=boxscore,
+                output_dir=output_dir,
+                filesystem=filesystem
+            )
+            # Add variables for the player rating
+            shotzone = shotdetail(pbp=lineup, shotchart=shotchart)
+            expected_val = shotvalue(pbp=shotzone, shotzonedashboard=shotzonedashboard)
+        with case(mode, "model"):
+            # De-dupe time
+            deduped = dedupe_task(pbp=lineup)
+        # Save
+        final = merge(expected_val, deduped)
         with case(save_data, True):
-            persist(data=expected_val, output_dir=output_dir, filesystem=filesystem)
+            persist(
+                data=final,
+                output_dir=output_dir,
+                filesystem=filesystem,
+                mode=mode
+            )
     
     return flow
 
@@ -161,6 +177,7 @@ def run_pipeline(
     output_dir: str,
     save_data: bool = True,
     filesystem: Optional[str] = "file",
+    mode: Optional[str] = "model",
     Season: Optional[str] = None,
     GameDate: Optional[str] = None
 ) -> pd.DataFrame:
@@ -172,6 +189,10 @@ def run_pipeline(
         The directory containing the data.
     filesystem : str, optional (default "file")
         The name of the ``fsspec`` filesystem to use.
+    mode : str, optional (default "model")
+        The type of clean data to save. If ``model``, the time will be de-duped
+        and the output will be saved to the directory ``model-data``. If ``rating``,
+        the time will not be de-duped and the output will be saved to ``rating-data``.
     save_data : bool, optional (default True)
         Whether or not to save the output data.
     Season : str, optional (default None)
@@ -194,6 +215,6 @@ def run_pipeline(
         params["GameDate"] = GameDate
     
     output = flow.run(parameters=params)
-    final = output.result[flow.get_tasks(name="Add shot value")[0]].result
+    final = output.result[flow.get_tasks(name="Merge")[0]].result
 
     return final

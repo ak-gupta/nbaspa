@@ -34,3 +34,32 @@ class SurvivalTime(Task):
         pbp.loc[pbp["PERIOD"] > 4, "TIME"] = (4 * 720) + ((pbp["PERIOD"] - 5) * 300) + 720 - (pbp_time[0] * 60) - pbp_time[1]
 
         return pbp
+
+
+class DeDupeTime(Task):
+    """De-dupe time for model fitting."""
+    def run(self, pbp: pd.DataFrame) -> pd.DataFrame:
+        """De-dupe time for model fitting.
+
+        Parameters
+        ----------
+        pbp : pd.DataFrame
+            The (mostly) clean play-by-play data.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The updated dataset.
+        """
+        grouped = pbp.groupby("GAME_ID")
+        # Loop through each game
+        for name, group in grouped:
+            self.logger.info(f"De-duping ``TIME`` for game {name}")
+            dupes = (
+                group
+                .sort_values(by="EVENTNUM", ascending=True)
+                .duplicated(subset="TIME", keep="last")
+            )
+            pbp.drop(dupes[dupes == True].index, inplace=True)
+        
+        return pbp
