@@ -11,6 +11,7 @@ from nba_survival.player_rating.tasks import (
     AddWinProbability,
     AggregateImpact,
     BoxScoreLoader,
+    CompoundPlayerImpact,
     ConvertNBAWinProbability,
     ConvertSurvivalWinProbability,
     LoadRatingData,
@@ -39,7 +40,8 @@ def gen_pipeline() -> Flow:
     convertwinprob = ConvertNBAWinProbability(name="Convert NBA win probability")
     convertsurvprob = ConvertSurvivalWinProbability(name="Convert survival win probability")
     addwin = AddWinProbability(name="Add win probability")
-    addsimpleimpact = SimplePlayerImpact(name="Calculate player impact")
+    addsimpleimpact = SimplePlayerImpact(name="Calculate simple player impact")
+    compoundimpact = CompoundPlayerImpact(name="Calculate sequence player impact")
     combineimpact = AggregateImpact(name="Aggregate player impact")
 
     with Flow(name="Calculate player impact") as flow:
@@ -65,7 +67,8 @@ def gen_pipeline() -> Flow:
         winprob = merge(nbawinprob, survivalprob)
         win = addwin(pbp=pbp, win_prob=winprob)
         calculatesimple = addsimpleimpact(pbp=win)
-        combineimpact(pbp=calculatesimple, boxscore=box)
+        sequence = calculatesimple(pbp=calculatesimple)
+        combineimpact(pbp=sequence, boxscore=box)
     
     return flow
 

@@ -107,7 +107,7 @@ class NBADataFactory:
             ).reset_index(drop=True)
         except KeyError:
             LOG.error("Unable to retrieve data.")
-            raise ValueError("Unable to retrive data.")
+            raise ValueError("Unable to retrieve data.")
     
     @sleep_and_retry
     @limits(calls=5, period=TEN_MINUTES)
