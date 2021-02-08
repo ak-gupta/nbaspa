@@ -1,6 +1,6 @@
 """Calculate player impact."""
 
-from typing import Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 import pandas as pd
 from prefect import Task
@@ -350,6 +350,9 @@ class SimplePlayerImpact(Task):
 
 class CompoundPlayerImpact(Task):
     """Define player impact for time periods with multiple events."""
+
+    event_types = EventTypes()
+
     def run(self, pbp: pd.DataFrame) -> pd.DataFrame:
         """Define player impact for time periods with multiple events.
 
@@ -366,30 +369,33 @@ class CompoundPlayerImpact(Task):
         sizes, rowfilter = _num_events_at_time(pbp)
         # Get compound events
         compound = sizes[sizes > 1].index.tolist()
+        incomplete_times = []
         for timeperiod in compound:
             # Get the sequence
             sequence = pbp.loc[(pbp["TIME"] == timeperiod) & (rowfilter)]
             try:
                 sequence_type = self.identify_sequence(sequence["EVENTMSGTYPE"].tolist())
-                self.logger.info("----------------------------------------------------------")
                 self.logger.info(f"Found following sequence at {timeperiod}: {sequence_type}")
-                self.logger.info("----------------------------------------------------------")
+                # Assign the impact
+                pbp = self.dispatcher[sequence_type](
+                    df=pbp, event_indices=(pbp["TIME"] == timeperiod).index
+                )
             except ValueError:
-                self.logger.info("---------------------------------------")
-                self.logger.warning(f"Unexpected sequence at {timeperiod}")
-                self.logger.info("---------------------------------------")
-                print(
-                    sequence[
-                        [
-                            "EVENTNUM",
-                            "EVENTMSGTYPE",
-                            "HOMEDESCRIPTION",
-                            "VISITORDESCRIPTION",
-                            "PLAYER1_NAME",
-                            "PLAYER2_NAME",
-                            "PLAYER3_NAME"
+                self.logger.warning(
+                    "Unexpected sequence at {timeperiod}:\n{df_sample}\n".format(
+                        timeperiod=timeperiod,
+                        df_sample=sequence[
+                            [
+                                "EVENTNUM",
+                                "EVENTMSGTYPE",
+                                "HOMEDESCRIPTION",
+                                "VISITORDESCRIPTION",
+                                "PLAYER1_NAME",
+                                "PLAYER2_NAME",
+                                "PLAYER3_NAME"
+                            ]
                         ]
-                    ]
+                    )
                 )
     
     def identify_sequence(self, eventlist: List) -> str:
@@ -423,82 +429,261 @@ class CompoundPlayerImpact(Task):
         Dict
             The defined sequences.
         """
-        event_types = EventTypes()
         return {
             "Offensive foul": [
-                event_types.FOUL,
-                event_types.TURNOVER
+                self.event_types.FOUL,
+                self.event_types.TURNOVER
             ],
             "Shooting foul (2PT FGA)": [
-                event_types.FOUL,
-                event_types.FREE_THROW,
-                event_types.FREE_THROW
+                self.event_types.FOUL,
+                self.event_types.FREE_THROW,
+                self.event_types.FREE_THROW
             ],
             "Shooting foul (2PT FGA - Missed FT)": [
-                event_types.FOUL,
-                event_types.FREE_THROW,
-                event_types.FREE_THROW,
-                event_types.REBOUND
+                self.event_types.FOUL,
+                self.event_types.FREE_THROW,
+                self.event_types.FREE_THROW,
+                self.event_types.REBOUND
             ],
             "Shooting foul (3PT FGA)": [
-                event_types.FOUL,
-                event_types.FREE_THROW,
-                event_types.FREE_THROW,
-                event_types.FREE_THROW
+                self.event_types.FOUL,
+                self.event_types.FREE_THROW,
+                self.event_types.FREE_THROW,
+                self.event_types.FREE_THROW
             ],
             "Shooting foul (3PT FGA - Missed FT)": [
-                event_types.FOUL,
-                event_types.FREE_THROW,
-                event_types.FREE_THROW,
-                event_types.FREE_THROW,
-                event_types.REBOUND                
+                self.event_types.FOUL,
+                self.event_types.FREE_THROW,
+                self.event_types.FREE_THROW,
+                self.event_types.FREE_THROW,
+                self.event_types.REBOUND                
             ],
             "Shooting foul (FGM)": [
-                event_types.FIELD_GOAL_MADE,
-                event_types.FOUL,
-                event_types.FREE_THROW,
+                self.event_types.FIELD_GOAL_MADE,
+                self.event_types.FOUL,
+                self.event_types.FREE_THROW,
             ],
             "Shooting foul (FGM - Missed FT)": [
-                event_types.FIELD_GOAL_MADE,
-                event_types.FOUL,
-                event_types.FREE_THROW,
-                event_types.REBOUND,
+                self.event_types.FIELD_GOAL_MADE,
+                self.event_types.FOUL,
+                self.event_types.FREE_THROW,
+                self.event_types.REBOUND,
             ],
             "Putback FGM": [
-                event_types.REBOUND,
-                event_types.FIELD_GOAL_MADE
+                self.event_types.REBOUND,
+                self.event_types.FIELD_GOAL_MADE
             ],
             "Putback FGA": [
-                event_types.REBOUND,
-                event_types.FIELD_GOAL_MISSED
+                self.event_types.REBOUND,
+                self.event_types.FIELD_GOAL_MISSED
             ],
             "Shooting foul (Putback FGM)": [
-                event_types.REBOUND,
-                event_types.FIELD_GOAL_MADE,
-                event_types.FOUL,
-                event_types.FREE_THROW,
+                self.event_types.REBOUND,
+                self.event_types.FIELD_GOAL_MADE,
+                self.event_types.FOUL,
+                self.event_types.FREE_THROW,
             ],
             "Shooting foul (Putback FGA)": [
-                event_types.REBOUND,
-                event_types.FOUL,
-                event_types.FREE_THROW,
-                event_types.FREE_THROW
+                self.event_types.REBOUND,
+                self.event_types.FOUL,
+                self.event_types.FREE_THROW,
+                self.event_types.FREE_THROW
             ],
             "Shooting foul (Putback FGM - Missed FT)": [
-                event_types.REBOUND,
-                event_types.FIELD_GOAL_MADE,
-                event_types.FOUL,
-                event_types.FREE_THROW,
-                event_types.REBOUND,
+                self.event_types.REBOUND,
+                self.event_types.FIELD_GOAL_MADE,
+                self.event_types.FOUL,
+                self.event_types.FREE_THROW,
+                self.event_types.REBOUND,
             ],
             "Shooting foul (Putback FGA - Missed FT)": [
-                event_types.REBOUND,
-                event_types.FOUL,
-                event_types.FREE_THROW,
-                event_types.FREE_THROW,
-                event_types.REBOUND
+                self.event_types.REBOUND,
+                self.event_types.FOUL,
+                self.event_types.FREE_THROW,
+                self.event_types.FREE_THROW,
+                self.event_types.REBOUND
             ],
         }
+    
+    @property
+    def dispatcher(self) -> Dict[str, Callable]:
+        """Return the appropriate calculation function.
+
+        Returns
+        -------
+        Dict
+            A dictionary with the appropriate calculation function.
+        """
+        return {
+            "Offensive foul": self._offensive_foul_impact,
+            "Shooting foul (2PT FGA)": self._shooting_foul_impact,
+            "Shooting foul (2PT FGA - Missed FT)": self._shooting_foul_impact,
+            "Shooting foul (3PT FGA)": self._shooting_foul_impact,
+            "Shooting foul (3PT FGA - Missed FT)": self._shooting_foul_impact,
+            "Shooting foul (FGM)": self._shooting_foul_impact,
+            "Shooting foul (FGM - Missed FT)": self._shooting_foul_impact,
+            "Putback FGM": self._putback_impact,
+            "Putback FGA": self._putback_impact,
+            "Shooting foul (Putback FGM)": self._putback_impact,
+            "Shooting foul (Putbcak FGA)": self._putback_impact,
+            "Shooting foul (Putback FGM - Missed FT)": self._putback_impact,
+            "Shooting foul (Putback FGA - Missed FT)": self._putback_impact,
+        }
+    
+    def _offensive_foul_impact(self, df: pd.DataFrame, event_indices: List[int]) -> pd.DataFrame:
+        """Calculate the impact of an offensive foul.
+
+        We will drop the offensive foul row and give the player committing the foul
+        credit/blame.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The complete play-by-play data.
+        event_indices : list
+            The list of indices in the play-by-play data associated with the sequence.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The updated dataset.
+        """
+        # Attribute blame for the second row (the turnover)
+        if not pd.isnull(df.loc[event_indices[1], "HOMEDESCRIPTION"]):
+            df.loc[event_indices[1], "PLAYER1_IMPACT"] += df.loc[
+                event_indices[1], "WIN_PROBABILITY_CHANGE"
+            ]
+        else:
+            df.loc[event_indices[1], "PLAYER1_IMPACT"] -= df.loc[
+                event_indices[1], "WIN_PROBABILITY_CHANGE"
+            ]
+        
+        return df
+
+    def _shooting_foul_impact(self, df: pd.DataFrame, event_indices: List[int]) -> pd.DataFrame:
+        """Calculate the impact of a shooting foul (non-putback).
+
+        The player committing the foul is given blame and the player shooting free throws
+        will be given credit.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The complete play-by-play data.
+        event_indices : list
+            The list of indices in the play-by-play data associated with the sequence.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The updated dataset.
+        """
+        # Assign blame for the foul
+        # If the player made the shot, the second event is the foul
+        if df.loc[event_indices[0], "EVENTMSGTYPE"] == self.event_types.FIELD_GOAL_MADE:
+            idx = event_indices[1]
+        else:
+            idx = event_indices[0]
+        if not pd.isnull(df.loc[idx, "HOMEDESCRIPTION"]):
+            df.loc[idx, "PLAYER1_IMPACT"] += df.loc[
+                idx, "WIN_PROBABILITY_CHANGE"
+            ]
+        else:
+            df.loc[event_indices[0], "PLAYER1_IMPACT"] -= df.loc[
+                event_indices[0], "WIN_PROBABILITY_CHANGE"
+            ]
+        
+        # Give credit for the free throw
+        if df.loc[event_indices[-1], "EVENTMSGTYPE"] == self.event_types.REBOUND:
+            # Defensive rebound is the final event -- give credit in second last row
+            idx = event_indices[-2]
+        else:
+            idx = event_indices[-1]
+        if not pd.isnull(df.loc[idx, "HOMEDESCRIPTION"]):
+            df.loc[idx, "PLAYER1_IMPACT"] += df.loc[
+                idx, "WIN_PROBABILITY_CHANGE"
+            ]
+        else:
+            df.loc[event_indices[-1], "PLAYER1_IMPACT"] -= df.loc[
+                idx, "WIN_PROBABILITY_CHANGE"
+            ]
+        
+        return df
+
+    def _putback_impact(self, df: pd.DataFrame, event_indices: List[int]) -> pd.DataFrame:
+        """Calculate the impact of a putback.
+
+        Player getting the rebound will be given credit proportional to the quality
+        of the shot taken. Quality of the shot will include the expected value from the
+        free throw, if applicable.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The complete play-by-play data.
+        event_indices : list
+            The list of indices in the play-by-play data associated with the sequence.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The updated dataset.
+        """
+        # Get the shot value
+        shotval = df.loc[event_indices, "SHOT_VALUE"].sum()
+        if df.loc[event_indices[-1], "EVENTMSGTYPE"] == self.event_types.REBOUND:
+            # Second last event was the field goal or free throw attempt
+            idx = event_indices[-2]
+        else:
+            idx = event_indices[-1]
+        if pd.isnull(df.loc[event_indices[0], "HOMEDESCRIPTION"]):
+            # Get the credit for the rebounder
+            reb_factor = max(
+                ((shotval * 100) / df.loc[event_indices[0], "HOME_OFF_RATING"]) - 1, 0
+            )
+            # Assign credit for the rebounder
+            df.loc[event_indices[0], "PLAYER1_IMPACT"] += (
+                reb_factor * df.loc[event_indices[0], "WIN_PROBABILITY_CHANGE"]
+            )
+            # Assign credit for the player who took the shot/free throws
+            df.loc[idx, "PLAYER1_IMPACT"] += (
+                (1 - reb_factor) * df.loc[idx, "WIN_PROBABILITY_CHANGE"]
+            )
+            # Assign blame for the person fouling -- either the second or third event
+            if df.loc[event_indices[1], "EVENTMSGTYPE"] == self.event_types.FOUL:
+                # Home team scored -> visiting player is ``PLAYER1_ID`` and they committed the foul
+                df.loc[event_indices[1], "PLAYER1_IMPACT"] -= df.loc[
+                    event_indices[1], "WIN_PROBABILITY_CHANGE"
+                ]
+            elif df.loc[event_indices[2], "EVENTMSGTYPE"] == self.event_types.FOUL:
+                df.loc[event_indices[2], "PLAYER1_IMPACT"] -= df.loc[
+                    event_indices[2], "WIN_PROBABILITY_CHANGE"
+                ]
+        else:
+            # Get the credit for the rebounder
+            reb_factor = (
+                ((shotval * 100) / df.loc[event_indices[0], "VISITOR_OFF_RATING"]) - 1, 0
+            )
+            # Assign credit for the rebounder
+            df.loc[event_indices[0], "PLAYER1_IMPACT"] -= (
+                reb_factor * df.loc[event_indices[0], "WIN_PROBABILITY_CHANGE"]
+            )
+            # Assign credit for the player who took the shot/free throws
+            df.loc[idx, "PLAYER1_IMPACT"] -= (
+                (1 - reb_factor) * df.loc[idx, "WIN_PROBABILITY_CHANGE"]
+            )
+            # Assign blame for the person fouling -- either the second or third event
+            if df.loc[event_indices[1], "EVENTMSGTYPE"] == self.event_types.FOUL:
+                # Visiting team score -> home player is ``PLAYER1_ID`` and they committed the foul
+                df.loc[event_indices[1], "PLAYER1_IMPACT"] += df.loc[
+                    event_indices[1], "WIN_PROBABILITY_CHANGE"
+                ]
+            elif df.loc[event_indices[2], "EVENTMSGTYPE"] == self.event_types.FOUL:
+                df.loc[event_indices[2], "PLAYER1_IMPACT"] += df.loc[
+                    event_indices[2], "WIN_PROBABILITY_CHANGE"
+                ]
+
+        return df
 
 
 class AggregateImpact(Task):
