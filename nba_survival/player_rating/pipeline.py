@@ -1,6 +1,6 @@
 """Create a player rating pipeline."""
 
-from typing import Optional
+from typing import Optional, Tuple
 
 from prefect import case, Flow, Parameter
 from prefect.tasks.control_flow import merge
@@ -67,7 +67,7 @@ def gen_pipeline() -> Flow:
         winprob = merge(nbawinprob, survivalprob)
         win = addwin(pbp=pbp, win_prob=winprob)
         calculatesimple = addsimpleimpact(pbp=win)
-        sequence = calculatesimple(pbp=calculatesimple)
+        sequence = compoundimpact(pbp=calculatesimple)
         combineimpact(pbp=sequence, boxscore=box)
     
     return flow
@@ -78,7 +78,7 @@ def run_pipeline(
     output_dir: str,
     GameID: str,
     filesystem: Optional[str] = "file",
-) -> pd.DataFrame:
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Run the pipeline.
 
     Parameters
@@ -95,7 +95,11 @@ def run_pipeline(
     Returns
     -------
     pd.DataFrame
-        The output dataset.
+        The play-by-play dataset.
+    pd.DataFrame
+        The player-level boxscore.
+    pd.DataFrame
+        The aggregated player impact scores.
     """
     output = flow.run(
         parameters={
@@ -104,6 +108,8 @@ def run_pipeline(
             "filesystem": filesystem,
         }
     )
-    final = output.result[flow.get_tasks(name="Aggregate player impact")[0]].result
+    pbp = output.result[flow.get_tasks(name="Calculate sequence player impact")[0]].result
+    box = output.result[flow.get_tasks(name="Load boxscore data")[0]].result
+    agg = output.result[flow.get_tasks(name="Aggregate player impact")[0]].result
 
-    return final
+    return pbp, box, agg

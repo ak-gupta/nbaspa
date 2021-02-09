@@ -1,5 +1,6 @@
 """Add win probability to the play-by-play data."""
 
+import numpy as np
 import pandas as pd
 from prefect import Task
 
@@ -67,13 +68,13 @@ class AddWinProbability(Task):
             The updated dataset.
         """
         # Add the win probability to the play-by-play data
-        pbp["WIN_PROBABILITY"] = pbp[
-            ~(
-                pbp
-                .sort_values(by="EVENTNUM", ascending=True)
-                .duplicated(subset="TIME", keep="last")
-            )
-        ].merge(
+        filter = (
+            pbp
+            .sort_values(by="EVENTNUM", ascending=True)
+            .duplicated(subset="TIME", keep="last")
+        )
+        pbp["WIN_PROBABILITY"] = np.nan
+        pbp.loc[~filter, "WIN_PROBABILITY"] = pbp[~filter].merge(
             win_prob,
             left_on="EVENTNUM",
             right_index=True,
@@ -85,7 +86,7 @@ class AddWinProbability(Task):
         ] = pbp.loc[
             ~pd.isnull(pbp["WIN_PROBABILITY"]), "WIN_PROBABILITY"
         ].diff()
-        pbp["WIN_PROBABILITY"] = pbp["WIN_PROBABILITY"].ffill()
-        pbp["WIN_PROBABILITY_CHANGE"] = pbp["WIN_PROBABILITY_CHANGE"].ffill()
+        pbp["WIN_PROBABILITY"] = pbp["WIN_PROBABILITY"].bfill()
+        pbp["WIN_PROBABILITY_CHANGE"] = pbp["WIN_PROBABILITY_CHANGE"].bfill()
 
         return pbp

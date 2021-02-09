@@ -80,7 +80,7 @@ class AddExpectedShotValue(Task):
             The updated datasets.
         """
         pbp.loc[
-            pbp["EVENTGMSGTYPE"].isin(
+            pbp["EVENTMSGTYPE"].isin(
                 [EventTypes().FIELD_GOAL_MADE, EventTypes().FIELD_GOAL_MISSED]
             ),
             "FG_PCT"

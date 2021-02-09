@@ -24,6 +24,7 @@ class EventTypes:
     EJECTION: int = 11
     PERIOD_BEGIN: int = 12
     UNKNOWN: int = 13
+    REPLAY: int = 18
 
 class PlayByPlay(BaseRequest):
     """Get the play by play data for a game.
