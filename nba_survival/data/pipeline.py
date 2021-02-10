@@ -4,6 +4,7 @@ from typing import Optional
 
 import pandas as pd
 from prefect import case, Flow, Parameter
+from prefect.engine.state import State
 from prefect.tasks.control_flow import merge
 
 from nba_survival.data.tasks import (
@@ -192,7 +193,7 @@ def run_pipeline(
     mode: Optional[str] = "model",
     Season: Optional[str] = None,
     GameDate: Optional[str] = None
-) -> pd.DataFrame:
+) -> State:
     """Run the pipeline.
 
     Parameters
@@ -214,7 +215,8 @@ def run_pipeline(
     
     Returns
     -------
-    None
+    State
+        The output of ``flow.run``.
     """
     params = {
         "output_dir": output_dir,
@@ -228,6 +230,5 @@ def run_pipeline(
         params["GameDate"] = GameDate
     
     output = flow.run(parameters=params)
-    final = output.result[flow.get_tasks(name="Merge")[0]].result
 
-    return final
+    return output

@@ -1,8 +1,9 @@
 """Create a player rating pipeline."""
 
-from typing import Optional, Tuple
+from typing import Optional
 
 from prefect import case, Flow, Parameter
+from prefect.engine.state import State
 from prefect.tasks.control_flow import merge
 
 import pandas as pd
@@ -78,7 +79,7 @@ def run_pipeline(
     output_dir: str,
     GameID: str,
     filesystem: Optional[str] = "file",
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+) -> State:
     """Run the pipeline.
 
     Parameters
@@ -94,12 +95,8 @@ def run_pipeline(
     
     Returns
     -------
-    pd.DataFrame
-        The play-by-play dataset.
-    pd.DataFrame
-        The player-level boxscore.
-    pd.DataFrame
-        The aggregated player impact scores.
+    State
+        The output of ``flow.run``.
     """
     output = flow.run(
         parameters={
@@ -108,8 +105,5 @@ def run_pipeline(
             "filesystem": filesystem,
         }
     )
-    pbp = output.result[flow.get_tasks(name="Calculate sequence player impact")[0]].result
-    box = output.result[flow.get_tasks(name="Load boxscore data")[0]].result
-    agg = output.result[flow.get_tasks(name="Aggregate player impact")[0]].result
 
-    return pbp, box, agg
+    return output

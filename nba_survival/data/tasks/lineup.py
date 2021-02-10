@@ -69,48 +69,81 @@ class AddLineupPlusMinus(Task):
                 if row["EVENTMSGTYPE"] == EventTypes().SUBSTITUTION:
                     if not pd.isnull(row["HOMEDESCRIPTION"]):
                         self.logger.debug(
-                            f"At {row['PCTIMESTRING']} in period {row['PERIOD']}: {row['HOMEDESCRIPTION']}"
+                            f"Home team substitution at {row['PCTIMESTRING']} ({row['TIME']}) in "
+                            f"period {row['PERIOD']}: {row['HOMEDESCRIPTION']}"
                         )
                         # Get the updated lineup and plus minus value
-                        home_lineup, plusminus = self._substitution_event(
-                            lineup=home_lineup,
-                            lineup_stats=lineup_stats,
-                            row=row,
-                        )
-                        pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = plusminus
+                        try:
+                            home_lineup, plusminus = self._substitution_event(
+                                lineup=home_lineup,
+                                lineup_stats=lineup_stats,
+                                rotation=home_rotation,
+                                row=row,
+                            )
+                            pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = plusminus
+                        except (ValueError, KeyError):
+                            self.logger.warning("Setting the lineup plus minus to the net rating")
+                            pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = pbp.loc[
+                                index, "HOME_NET_RATING"
+                            ]
                     else:
                         self.logger.debug(
-                            f"At {row['PCTIMESTRING']} in period {row['PERIOD']}: {row['VISITORDESCRIPTION']}"
+                            f"Visiting team substitution at {row['PCTIMESTRING']} ({row['TIME']}) in "
+                            f"period {row['PERIOD']}: {row['VISITORDESCRIPTION']}"
                         )
                         # Get the updated lineup and plus minus value
-                        away_lineup, plusminus = self._substitution_event(
-                            lineup=away_lineup,
-                            lineup_stats=lineup_stats,
-                            row=row
-                        )
-                        pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = plusminus
+                        try:
+                            away_lineup, plusminus = self._substitution_event(
+                                lineup=away_lineup,
+                                lineup_stats=lineup_stats,
+                                rotation=away_rotation,
+                                row=row
+                            )
+                            pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = plusminus
+                        except (ValueError, KeyError):
+                            self.logger.warning("Setting the lineup plus minus to the net rating")
+                            pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = pbp.loc[
+                                index, "VISITOR_NET_RATING"
+                            ]
 
                 elif row["EVENTMSGTYPE"] == EventTypes().PERIOD_BEGIN:
-                    # Look in the home and visitor rotations for substitutions
-                    self.logger.debug(f"Looking for substitutions at the beginning of {row['PERIOD']}...")
-                    # Home team
-                    home_lineup, plusminus = self._period_begin_substitutions(
-                        gametime=row["TIME"],
-                        gameid=name,
-                        rotation=home_rotation,
-                        lineup=home_lineup,
-                        lineup_stats=lineup_stats,
+                    self.logger.debug(
+                        f"Looking for substitutions at the beginning of {row['PERIOD']} for the "
+                        "home team..."
                     )
-                    pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = plusminus
-                    # Away team
-                    away_lineup, plusminus = self._period_begin_substitutions(
-                        gametime=row["TIME"],
-                        gameid=name,
-                        rotation=away_rotation,
-                        lineup=away_lineup,
-                        lineup_stats=lineup_stats
+                    try:
+                        home_lineup, plusminus = self._period_begin_substitutions(
+                            gametime=row["TIME"],
+                            gameid=name,
+                            rotation=home_rotation,
+                            lineup=home_lineup,
+                            lineup_stats=lineup_stats,
+                        )
+                        pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = plusminus
+                    except (ValueError, KeyError):
+                        self.logger.warning("Setting the lineup plus minus to the net rating")
+                        pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = pbp.loc[
+                            index, "HOME_NET_RATING"
+                        ]
+
+                    self.logger.debug(
+                        f"Looking for substitutions at the beginning of {row['PERIOD']} for the "
+                        "visiting team..."
                     )
-                    pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = plusminus
+                    try:
+                        away_lineup, plusminus = self._period_begin_substitutions(
+                            gametime=row["TIME"],
+                            gameid=name,
+                            rotation=away_rotation,
+                            lineup=away_lineup,
+                            lineup_stats=lineup_stats,
+                        )
+                        pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = plusminus
+                    except (ValueError, KeyError):
+                        self.logger.warning("Setting the lineup plus minus to the net rating")
+                        pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = pbp.loc[
+                            index, "VISITOR_NET_RATING"
+                        ]
 
                 else:
                     continue
@@ -156,8 +189,8 @@ class AddLineupPlusMinus(Task):
             The original dataset with fixed ``IN_TIME_REAL`` and ``OUT_TIME_REAL``
             values.
         """
-        rotation["IN_TIME_REAL"] = np.round(rotation["IN_TIME_REAL"] / 10)
-        rotation["OUT_TIME_REAL"] = np.round(rotation["OUT_TIME_REAL"] / 10)
+        rotation["IN_TIME_REAL"] = np.ceil(rotation["IN_TIME_REAL"] / 10)
+        rotation["OUT_TIME_REAL"] = np.ceil(rotation["OUT_TIME_REAL"] / 10)
 
         return rotation
     
@@ -165,6 +198,7 @@ class AddLineupPlusMinus(Task):
         self,
         lineup: Set,
         lineup_stats: pd.DataFrame,
+        rotation: pd.DataFrame,
         row: pd.Series
     ) -> Tuple[Set, float]:
         """Adjust the lineup and get the plus minus.
@@ -175,6 +209,9 @@ class AddLineupPlusMinus(Task):
             The current set of players on the floor.
         lineup_stats: pd.DataFrame
             The 5-man lineup stats.
+        rotation : pd.DataFrame
+            The output from ``GameRotation.get_data("AwayTeam")`` or
+            ``GameRotation.get_data("HomeTeam")``.
         row : pd.Series
             Current substitution event in the play by play data.
         
@@ -185,6 +222,7 @@ class AddLineupPlusMinus(Task):
         float
             The updated lineup plus minus value
         """
+        plusminus = 0
         # Remove PLAYER1_ID
         self.logger.debug(f"Removing {row['PLAYER1_ID']}")
         lineup.remove(row["PLAYER1_ID"])
@@ -193,15 +231,14 @@ class AddLineupPlusMinus(Task):
         self.logger.debug(f"Adding {row['PLAYER2_ID']}")
         lineup.add(row["PLAYER2_ID"])
 
-        if len(lineup) != 5:
-            raise ValueError(f"Lineup has {len(lineup)} players instead of 5.")
-
         # Look for the lineup group in the lineup stats
         linestr = "-".join(sorted(str(item) for item in lineup))
         self.logger.debug(
             f"Looking for the following lineup group: {linestr}"
         )
-        plusminus = 0
+        if len(lineup) != 5:
+            self.logger.error(f"Lineup has {len(lineup)} players instead of 5.")
+            raise ValueError(f"Lineup has {len(lineup)} players instead of 5.")
         if not lineup_stats.loc[lineup_stats["GROUP_ID"] == linestr].empty:
             self.logger.debug(f"Found data for lineup group {linestr}")
             plusminus = lineup_stats.loc[
@@ -264,14 +301,14 @@ class AddLineupPlusMinus(Task):
                 )
                 lineup = lineup.difference(set(subout))
 
-        if len(lineup) != 5:
-            raise ValueError(f"Lineup has {len(lineup)} players instead of 5.")
-
         # Look for the lineup group in the lineup stats
         linestr = "-".join(sorted(str(item) for item in lineup))
         self.logger.debug(
             f"Looking for the following lineup group: {linestr}"
         )
+        if len(lineup) != 5:
+            self.logger.error(f"Lineup has {len(lineup)} players instead of 5.")
+            raise ValueError(f"Lineup has {len(lineup)} players instead of 5.")
         plusminus = 0
         if not lineup_stats.loc[lineup_stats["GROUP_ID"] == linestr].empty:
             self.logger.debug(f"Found data for lineup group {linestr}")
