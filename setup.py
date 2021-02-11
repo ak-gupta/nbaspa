@@ -13,6 +13,7 @@ with open('HISTORY.rst') as history_file:
 requirements = [
     'alive-progress>=1.6.2,<=1.6.2',
     'fsspec>=0.8.5,<=0.8.5',
+    'lifelines>=0.25.9,<=0.25.9',
     'pandas>=1.2.1,<=1.2.1',
     'prefect>=0.14.5,<=0.14.5',
     'ratelimit>=2.2.1,<=2.2.1',
