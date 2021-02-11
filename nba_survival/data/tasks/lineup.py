@@ -82,7 +82,10 @@ class AddLineupPlusMinus(Task):
                             )
                             pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = plusminus
                         except (ValueError, KeyError):
-                            self.logger.warning("Setting the lineup plus minus to the net rating")
+                            self.logger.warning(
+                                "Unable to find the lineup. Setting the lineup plus minus to the "
+                                "net rating"
+                            )
                             pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = pbp.loc[
                                 index, "HOME_NET_RATING"
                             ]
@@ -101,7 +104,10 @@ class AddLineupPlusMinus(Task):
                             )
                             pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = plusminus
                         except (ValueError, KeyError):
-                            self.logger.warning("Setting the lineup plus minus to the net rating")
+                            self.logger.warning(
+                                "Unable to find the lineup. Setting the lineup plus minus to the "
+                                "net rating"
+                            )
                             pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = pbp.loc[
                                 index, "VISITOR_NET_RATING"
                             ]
@@ -121,7 +127,10 @@ class AddLineupPlusMinus(Task):
                         )
                         pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = plusminus
                     except (ValueError, KeyError):
-                        self.logger.warning("Setting the lineup plus minus to the net rating")
+                        self.logger.warning(
+                            "Unable to find the lineup. Setting the lineup plus minus to the "
+                            "net rating"
+                        )
                         pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = pbp.loc[
                             index, "HOME_NET_RATING"
                         ]
@@ -140,7 +149,10 @@ class AddLineupPlusMinus(Task):
                         )
                         pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = plusminus
                     except (ValueError, KeyError):
-                        self.logger.warning("Setting the lineup plus minus to the net rating")
+                        self.logger.warning(
+                            "Unable to find the lineup. Setting the lineup plus minus to the "
+                            "net rating"
+                        )
                         pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = pbp.loc[
                             index, "VISITOR_NET_RATING"
                         ]
@@ -222,7 +234,6 @@ class AddLineupPlusMinus(Task):
         float
             The updated lineup plus minus value
         """
-        plusminus = 0
         # Remove PLAYER1_ID
         self.logger.debug(f"Removing {row['PLAYER1_ID']}")
         lineup.remove(row["PLAYER1_ID"])
@@ -244,6 +255,9 @@ class AddLineupPlusMinus(Task):
             plusminus = lineup_stats.loc[
                 lineup_stats["GROUP_ID"] == linestr, "PLUS_MINUS"
             ].values[0]
+        else:
+            self.logger.error("Unable to find lineup stats...")
+            raise ValueError("Unable to find lineup data...")
         
         return lineup, plusminus
     
@@ -309,11 +323,13 @@ class AddLineupPlusMinus(Task):
         if len(lineup) != 5:
             self.logger.error(f"Lineup has {len(lineup)} players instead of 5.")
             raise ValueError(f"Lineup has {len(lineup)} players instead of 5.")
-        plusminus = 0
         if not lineup_stats.loc[lineup_stats["GROUP_ID"] == linestr].empty:
             self.logger.debug(f"Found data for lineup group {linestr}")
             plusminus = lineup_stats.loc[
                 lineup_stats["GROUP_ID"] == linestr, "PLUS_MINUS"
             ].values[0]
+        else:
+            self.logger.error("Unable to find lineup data...")
+            raise ValueError("Unable to find lineup data...")
         
         return lineup, plusminus

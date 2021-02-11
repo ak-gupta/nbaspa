@@ -56,27 +56,31 @@ def generate_calls() -> List[Dict]:
 if __name__ == "__main__":
     CALLS = generate_calls()
     REPORT: List = []
-    ERRORS: int = 0
     try:
         for call in CALLS:
             output = run_pipeline(**call)
             if not output.is_successful():
-                REPORT.append(
-                    {"GameDate": call["GameDate"], "mode": call["mode"]}
-                )
-            elif call["mode"] == "model":
-                df = output.result[PIPELINE.get_tasks(name="Merge")[0]].result
-                grouped = df.groupby("GAME_ID")
-                for _, game in grouped:
-                    if (
-                        sum(game["HOME_LINEUP_PLUS_MINUS"] == game["HOME_NET_RATING"]) > 0
-                    ) or (
-                        sum(game["VISITOR_LINEUP_PLUS_MINUS"] == game["VISITOR_NET_RATING"]) > 0
-                    ):
-                        ERRORS += 1
+                scoreboard = output.result[
+                    PIPELINE.get_tasks(name="Load scoreboard data")[0]
+                ].result
+                if scoreboard["GameHeader"].empty:
+                    REPORT.append(
+                        {
+                            "GameDate": call["GameDate"],
+                            "mode": call["mode"],
+                            "reason": "No games"
+                        }
+                    )
+                else:
+                    REPORT.append(
+                        {
+                            "GameDate": call["GameDate"],
+                            "mode": call["mode"],
+                            "reason": "Unknown"
+                        }
+                    )
     except KeyboardInterrupt:
         pass
     finally:
-        LOG.warning(f"There were {ERRORS} games with errors in lineup plus minus generation")
         with open(Path("nba-data", "2018-19", "cleaning-report.json"), "w") as outfile:
             json.dump(REPORT, outfile, indent=4)

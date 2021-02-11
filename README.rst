@@ -47,7 +47,7 @@ dataset with the following variables:
 |                                  |              | | example, if the home team is leading 2-0, the value   |
 |                                  |              | | of this variable is 2.                                |
 +----------------------------------+--------------+---------------------------------------------------------+
-| ``HOME_LINEUP_PLUS_MINUS``       | Yes          | The plus minus of the current lineup for the home team. |
+| ``HOME_LINEUP_PLUS_MINUS``[*]_   | Yes          | The plus minus of the current lineup for the home team. |
 +----------------------------------+--------------+---------------------------------------------------------+
 | ``VISITOR_LINEUP_PLUS_MINUS``    | Yes          | | The plus minus of the current lineup for the visiting |
 |                                  |              | | team.                                                 |
@@ -83,6 +83,11 @@ dataset with the following variables:
 | ``VISITOR_GAMES_IN_LAST_7_DAYS`` | No           | | The number of games the visiting team has played in   |
 |                                  |              | | the last 7 days.                                      |
 +----------------------------------+--------------+---------------------------------------------------------+
+
+.. [*]::
+        
+        For both the home and visitor lineup plus minus, any missing rows will be imputed with the
+        team net rating.
 
 Player Impact Metric
 ~~~~~~~~~~~~~~~~~~~~

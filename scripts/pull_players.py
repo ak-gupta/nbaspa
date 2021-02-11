@@ -32,7 +32,7 @@ def generate_calls() -> List[Tuple]:
     # Get the shooting
     calls: List[str] = []
     for _, row in players_df.iterrows():
-        if int(row["TO_YEAR"]) >= 2018:
+        if int(row["TO_YEAR"]) >= 2017:
             calls += [
                 ("PlayerDashboardShooting", {"PlayerID": row["PERSON_ID"], "Season": "2018-19"}),
                 ("PlayerDashboardGeneral", {"PlayerID": row["PERSON_ID"], "Season": "2018-19"})
