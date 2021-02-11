@@ -1,5 +1,5 @@
 =====================
-NBA Survival Analysis
+NBA survival analysis
 =====================
 
 
@@ -25,71 +25,90 @@ Survival analysis-based win percentage
 Purpose
 -------
 
-Win Probability
+Win probability
 ~~~~~~~~~~~~~~~
 
 The purpose of the ``nba_survival`` package is to develop a Survival Analysis-based
 methodology for estimating Win Probability. This package will build and analyze a
 dataset with the following variables:
 
-+----------------------------------+--------------+---------------------------------------------------------+
-| Variable                         | Time-Varying | Description                                             |
-|                                  |              |                                                         |
-+==================================+==============+=========================================================+
-| ``WIN``                          | Yes          | | A boolean indicator of whether or not the home team   |
-|                                  |              | | won the game. This is the "event" that the survival   |
-|                                  |              | | analysis model will predict.                          |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``TIME``                         | Yes          | | Elapsed game time, in seconds. This is the time       |
-|                                  |              | | variable for the survival analysis model.             |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``SCOREMARGIN``                  | Yes          | | The scoring margin at time ``TIME`` in the game. For  |
-|                                  |              | | example, if the home team is leading 2-0, the value   |
-|                                  |              | | of this variable is 2.                                |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``HOME_LINEUP_PLUS_MINUS`` [*]_  | Yes          | The plus minus of the current lineup for the home team. |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``VISITOR_LINEUP_PLUS_MINUS``    | Yes          | | The plus minus of the current lineup for the visiting |
-|                                  |              | | team.                                                 |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``HOME_NET_RATING``              | No           | The net rating of the home team entering the game.      |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``VISITOR_NET_RATING``           | No           | The net rating of the visiting team entering the game.  |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``HOME_W_PCT``                   | No           | The win percentage of the home team entering the game.  |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``VISITOR_W_PCT``                | No           | | The win percentage of the visiting team entering the  |
-|                                  |              | | game.                                                 |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``LAST_GAME_WIN``                | No           | | A boolean indicator of whether or not the current     |
-|                                  |              | | home team won the last meeting between these two      |
-|                                  |              | | teams.                                                |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``HOME_GAMES_IN_LAST_3_DAYS``    | No           | | The number of games the home team has played in the   |
-|                                  |              | | last 3 days.                                          |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``VISITOR_GAMES_IN_LAST_3_DAYS`` | No           | | The number of games the visiting team has played in   |
-|                                  |              | | the last 3 days.                                      |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``HOME_GAMES_IN_LAST_5_DAYS``    | No           | | The number of games the home team has played in the   |
-|                                  |              | | last 5 days.                                          |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``VISITOR_GAMES_IN_LAST_5_DAYS`` | No           | | The number of games the visiting team has played in   |
-|                                  |              | | last 5 days.                                          |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``HOME_GAMES_IN_LAST_7_DAYS``    | No           | | The number of games the home team has played in the   |
-|                                  |              | | last 7 days.                                          |
-+----------------------------------+--------------+---------------------------------------------------------+
-| ``VISITOR_GAMES_IN_LAST_7_DAYS`` | No           | | The number of games the visiting team has played in   |
-|                                  |              | | the last 7 days.                                      |
-+----------------------------------+--------------+---------------------------------------------------------+
++------------------------------------+--------------+-------------------------------------------------------+
+| Variable                           | Time-Varying | Description                                           |
+|                                    |              |                                                       |
++====================================+==============+=======================================================+
+| ``WIN``                            | Yes          | | A boolean indicator of whether or not the home team |
+|                                    |              | | won the game. This is the "event" that the survival |
+|                                    |              | | analysis model will predict.                        |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``TIME``                           | Yes          | | Elapsed game time, in seconds. This is the time     |
+|                                    |              | | variable for the survival analysis model.           |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``SCOREMARGIN``                    | Yes          | | The scoring margin at time ``TIME`` in the game.    |
+|                                    |              | | For example, if the home team is leading 2-0, the   |
+|                                    |              | | value of this variable is 2.                        |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``HOME_LINEUP_PLUS_MINUS`` [*]_    | Yes          | | The plus minus of the current lineup for the home   |
+|                                    |              | | team.                                               |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``VISITOR_LINEUP_PLUS_MINUS`` [*]_ | Yes          | | The plus minus of the current lineup for the        |
+|                                    |              | | visiting team.                                      |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``HOME_NET_RATING``                | No           | The net rating of the home team entering the game.    |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``VISITOR_NET_RATING``             | No           | | The net rating of the visiting team entering the    |
+|                                    |              | | game.                                               |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``HOME_W_PCT``                     | No           | | The win percentage of the home team entering the    |
+|                                    |              | | game.                                               |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``VISITOR_W_PCT``                  | No           | | The win percentage of the visiting team entering    |
+|                                    |              | | the game.                                           |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``LAST_GAME_WIN``                  | No           | | A boolean indicator of whether or not the current   |
+|                                    |              | | home team won the last meeting between these two    |
+|                                    |              | | teams.                                              |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``HOME_GAMES_IN_LAST_3_DAYS``      | No           | | The number of games the home team has played in the |
+|                                    |              | | last 3 days.                                        |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``VISITOR_GAMES_IN_LAST_3_DAYS``   | No           | | The number of games the visiting team has played in |
+|                                    |              | | the last 3 days.                                    |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``HOME_GAMES_IN_LAST_5_DAYS``      | No           | | The number of games the home team has played in the |
+|                                    |              | | last 5 days.                                        |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``VISITOR_GAMES_IN_LAST_5_DAYS``   | No           | | The number of games the visiting team has played in |
+|                                    |              | | last 5 days.                                        |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``HOME_GAMES_IN_LAST_7_DAYS``      | No           | | The number of games the home team has played in the |
+|                                    |              | | last 7 days.                                        |
++------------------------------------+--------------+-------------------------------------------------------+
+| ``VISITOR_GAMES_IN_LAST_7_DAYS``   | No           | | The number of games the visiting team has played in |
+|                                    |              | | the last 7 days.                                    |
++------------------------------------+--------------+-------------------------------------------------------+
 
-.. [*]
-        
-        For both the home and visitor lineup plus minus, any missing rows will be imputed with the
-        team net rating.
+.. [*] For any rows where the lineup can't be parsed, the value will be the home team's net rating.
+.. [*] For any rows where the lineup can't be parsed, the value will be the visiting team's net rating.
 
-Player Impact Metric
+Model types
++++++++++++
+
+* The ``lifelines`` time-varying Cox proportional hazards model (see `here <https://lifelines.readthedocs.io/en/latest/Time%20varying%20survival%20regression.html>`_),
+* An XGBoost classification model [*]_ with a `custom objective function <https://xgboost.readthedocs.io/en/latest/tutorials/custom_metric_obj.html>`_
+  using `groups <https://discuss.xgboost.ai/t/customized-cox-proportional-hazard-loss-function-in-xgboost/891>`_ to mark individual games.
+
+.. [*] One model type, but we will use `hyperparameter tuning <http://hyperopt.github.io/hyperopt/>`_ to refine the model.
+
+Evaluating the models
++++++++++++++++++++++
+
+The primary metric we will use to measure performance is `AUROC <https://towardsdatascience.com/understanding-auc-roc-curve-68b2303cc9c5>`_,
+using the survival probability at time 0 as the input. Additionally, we will evaluate the
+`Concordance index and time-dependent AUROC <https://scikit-survival.readthedocs.io/en/latest/user_guide/evaluating-survival-models.html>`_.
+
+For benchmarking purposes, we will compare the survival analysis-based model to the NBA's win probability.
+
+Player impact metric
 ~~~~~~~~~~~~~~~~~~~~
 
 After establishing an effective model for win probability, we will investigate a player impact metric based
