@@ -84,7 +84,7 @@ dataset with the following variables:
 |                                  |              | | the last 7 days.                                      |
 +----------------------------------+--------------+---------------------------------------------------------+
 
-.. [*]::
+.. [*]
         
         For both the home and visitor lineup plus minus, any missing rows will be imputed with the
         team net rating.
