@@ -1,6 +1,7 @@
 """Lifelines training and prediction tasks."""
 
 from lifelines import CoxTimeVaryingFitter
+import numpy as np
 import pandas as pd
 from prefect import Task
 
@@ -57,3 +58,23 @@ class FitLifelinesModel(Task):
             show_progress=True,
             **kwargs
         )
+
+
+class PredictLifelines(Task):
+    """Get the partial hazard for an observation."""
+    def run(self, model: CoxTimeVaryingFitter, data: pd.DataFrame) -> np.ndarray:
+        """Get the partial hazard for an observation.
+
+        Parameters
+        ----------
+        model : CoxTimeVaryingFitter
+            The fitted model.
+        data : pd.DataFrame
+            The input dataframe.
+        
+        Returns
+        -------
+        np.ndarray
+            The predicted values.
+        """
+        return model.predict_partial_hazard(data)

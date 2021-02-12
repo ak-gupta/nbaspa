@@ -2,17 +2,20 @@
 
 from typing import List
 
-from .data import LifelinesData, SegmentData
+from .data import LifelinesData, SegmentData, CollapseData
 from .lifelines import (
     InitializeLifelines,
-    FitLifelinesModel
+    FitLifelinesModel,
+    PredictLifelines
 )
 from .metrics import ConcordanceIndex
 
 __all__: List[str] = [
     "LifelinesData",
     "SegmentData",
+    "CollapseData",
     "InitializeLifelines",
     "FitLifelinesModel",
-    "ConcordanceIndex"
+    "PredictLifelines",
+    "ConcordanceIndex",
 ]

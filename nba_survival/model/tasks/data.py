@@ -50,7 +50,7 @@ class SegmentData(Task):
     def run(
         self,
         data: pd.DataFrame,
-        splits: Optional[List[float]] = [0.8,],
+        splits: Optional[List[float]] = [0.85,],
         keys: Optional[List[str]] = ["train", "test"],
         seed: int = 42,
     ) -> Dict[str, pd.DataFrame]:
@@ -62,7 +62,7 @@ class SegmentData(Task):
         ----------
         data : pd.DataFrame
             The initial dataframe.
-        splits : list, optional (default [0.8])
+        splits : list, optional (default [0.85])
             The percentage of games that should be included in each output
             dataset. The length of this array should be one less than the
             number of keys
@@ -92,3 +92,35 @@ class SegmentData(Task):
             output[value] = data[data[META["id"]].isin(splits[index])].copy()
         
         return output
+
+
+class CollapseData(Task):
+    """Collapse data for hyperparameter tuning and evaluation."""
+    def run(self, data: pd.DataFrame, timestep: Optional[int] = 0) -> pd.DataFrame:
+        """Collapse data for hyperparameter tuning and evaluation.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            The ouptut of ``SurvivalData``.
+        timestep : int, optional (default 0)
+            The time step to use to create unique rows.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The collapsed data.
+        """
+        self.logger.info(f"Collapsing the data to time {timestep}")
+        shortform = data[data["start"] <= timestep].copy()
+        shortform = shortform.groupby(META["id"]).tail(n=1).copy()
+        if timestep == 0:
+            self.logger.info("Removing time-varying effects")
+            for col in META["dynamic"]:
+                shortform[col] = 0
+        # Add the final win predictor
+        shortform.set_index(META["id"], inplace=True)
+        shortform["WIN"] = data.groupby(META["id"])["WIN"].sum()
+        shortform.reset_index(inplace=True)
+
+        return shortform
