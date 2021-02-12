@@ -42,6 +42,9 @@ class PlayerDashboardBase(BaseRequest):
             **params
         )
     
+    def __str__(self) -> str:
+        return f"Player Dashboard: {self.params['PlayerID']}"
+    
     @property
     def defaults(self) -> Dict:
         """Default parameters for the endpoint.

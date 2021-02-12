@@ -82,5 +82,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     finally:
+        LOG.info("Creating cleaning report...")
         with open(Path("nba-data", "2018-19", "cleaning-report.json"), "w") as outfile:
             json.dump(REPORT, outfile, indent=4)

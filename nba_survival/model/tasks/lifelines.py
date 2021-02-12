@@ -4,7 +4,7 @@ from lifelines import CoxTimeVaryingFitter
 import pandas as pd
 from prefect import Task
 
-from nba_survival.model.tasks.meta import META
+from .meta import META
 
 class InitializeLifelines(Task):
     """Initialize a new ``lifelines`` model."""
@@ -26,7 +26,12 @@ class InitializeLifelines(Task):
 
 class FitLifelinesModel(Task):
     """Fit the lifelines model."""
-    def run(self, model: CoxTimeVaryingFitter, data: pd.DataFrame) -> CoxTimeVaryingFitter:
+    def run(
+        self,
+        model: CoxTimeVaryingFitter,
+        data: pd.DataFrame,
+        **kwargs
+    ) -> CoxTimeVaryingFitter:
         """Fit the lifelines model.
 
         Parameters
@@ -35,6 +40,8 @@ class FitLifelinesModel(Task):
             The initialized model.
         data : pd.DataFrame
             The ``lifelines`` format data.
+        **kwargs
+            Keyword arguments for the ``fit`` method.
         
         Returns
         -------
@@ -47,5 +54,6 @@ class FitLifelinesModel(Task):
             event_col=META["event"],
             start_col="start",
             stop_col="stop",
-            show_progress=True
+            show_progress=True,
+            **kwargs
         )

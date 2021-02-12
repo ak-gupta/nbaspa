@@ -323,6 +323,8 @@ class ShotZoneLoader(Task):
         """
         calls: List[str] = []
         for _, row in boxscore.iterrows():
+            if pd.isnull(row["MIN"]):
+                continue
             calls.append(
                 (
                     "PlayerDashboardShooting",
@@ -363,6 +365,8 @@ class GeneralShootingLoader(Task):
         """
         calls: List[str] = []
         for _, row in boxscore.iterrows():
+            if pd.isnull(row["MIN"]):
+                continue
             calls.append(
                 (
                     "PlayerDashboardGeneral",
@@ -418,6 +422,9 @@ class SaveData(Task):
         fs.mkdir(Path(output_dir, subdir))
         grouped = data.groupby("GAME_ID")
         for name, group in grouped:
+            if not name.startswith("002"):
+                self.logger.warning(f"{name} is not a regular season game. Skipping...")
+                continue
             fpath = Path(output_dir, subdir, f"data_{name}.csv")
             self.logger.info(f"Writing data for game {name} to {str(fpath)}")
             with fs.open(fpath, "wb") as buf:

@@ -94,19 +94,20 @@ Model types
 +++++++++++
 
 * The ``lifelines`` time-varying Cox proportional hazards model (see `here <https://lifelines.readthedocs.io/en/latest/Time%20varying%20survival%20regression.html>`_),
-* An XGBoost classification model [*]_ with a `custom objective function <https://xgboost.readthedocs.io/en/latest/tutorials/custom_metric_obj.html>`_
+* An XGBoost classification model with a `custom objective function <https://xgboost.readthedocs.io/en/latest/tutorials/custom_metric_obj.html>`_
   using `groups <https://discuss.xgboost.ai/t/customized-cox-proportional-hazard-loss-function-in-xgboost/891>`_ to mark individual games.
 
-.. [*] One model type, but we will use `hyperparameter tuning <http://hyperopt.github.io/hyperopt/>`_ to refine the model.
+Both models have hyperparameters that we will tune using `hyperopt <http://hyperopt.github.io/hyperopt/>`_.
 
 Evaluating the models
 +++++++++++++++++++++
 
-The primary metric we will use to measure performance is `AUROC <https://towardsdatascience.com/understanding-auc-roc-curve-68b2303cc9c5>`_,
-using the survival probability at time 0 as the input. Additionally, we will evaluate the
-`Concordance index and time-dependent AUROC <https://scikit-survival.readthedocs.io/en/latest/user_guide/evaluating-survival-models.html>`_.
+To evaluate the survival model, we will follow the advice of the `lifelines <https://lifelines.readthedocs.io/en/latest/Survival%20Regression.html#model-selection-based-on-predictive-power-and-fit>`_
+author. That is, we will evaluate the model efficacy using **Log-likelihood** and
+**Concordance index**. Additionally, we will layer in a time-dependent Concordance index
+based on the concept introduced in `scikit-survival <https://scikit-survival.readthedocs.io/en/latest/user_guide/evaluating-survival-models.html>`_.
 
-For benchmarking purposes, we will compare the survival analysis-based model to the NBA's win probability.
+We will benchmark the models against the NBA's win probability.
 
 Player impact metric
 ~~~~~~~~~~~~~~~~~~~~
