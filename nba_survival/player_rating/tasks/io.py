@@ -7,7 +7,7 @@ import fsspec
 import pandas as pd
 from prefect import Task
 
-from nba_survival.data.endpoints import BoxScoreTraditional, WinProbability
+from ...data.endpoints import BoxScoreTraditional, WinProbability
 
 
 class LoadRatingData(Task):

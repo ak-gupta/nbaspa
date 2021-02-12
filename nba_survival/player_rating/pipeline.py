@@ -8,7 +8,7 @@ from prefect.tasks.control_flow import merge
 
 import pandas as pd
 
-from nba_survival.player_rating.tasks import (
+from .tasks import (
     AddWinProbability,
     AggregateImpact,
     BoxScoreLoader,

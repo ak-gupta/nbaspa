@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from prefect import Task
 
-from nba_survival.data.endpoints.pbp import EventTypes
+from ...data.endpoints.pbp import EventTypes
 
 def _num_events_at_time(df: pd.DataFrame) -> Tuple[pd.Series, pd.Series]:
     """Get the number of events at each time.

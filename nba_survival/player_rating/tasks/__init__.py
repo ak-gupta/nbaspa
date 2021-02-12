@@ -2,17 +2,17 @@
 
 from typing import List
 
-from nba_survival.player_rating.tasks.impact import (
+from .impact import (
     AggregateImpact,
     CompoundPlayerImpact,
     SimplePlayerImpact
 )
-from nba_survival.player_rating.tasks.io import (
+from .io import (
     LoadRatingData,
     WinProbabilityLoader,
     BoxScoreLoader
 )
-from nba_survival.player_rating.tasks.win_prob import (
+from .win_prob import (
     AddWinProbability,
     ConvertNBAWinProbability,
     ConvertSurvivalWinProbability
