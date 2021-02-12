@@ -151,5 +151,9 @@ class HyperparameterTuning(Task):
             max_evals=max_evals,
             trials=trials
         )
+        self.logger.info(
+            f"The best model uses a ``penalizer`` value of {np.round(best['penalizer'], 3)} "
+            f"and a ``l1_ratio`` value of {np.round(best['l1_ratio'], 3)}"
+        )
 
         return {"best": best, "trials": trials}
