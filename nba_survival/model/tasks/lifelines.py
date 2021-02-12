@@ -1,20 +1,29 @@
 """Lifelines training and prediction tasks."""
 
+from typing import Dict, Optional
+
+from hyperopt import fmin, hp, STATUS_OK, tpe, Trials
 from lifelines import CoxTimeVaryingFitter
+from lifelines.utils import concordance_index
 import numpy as np
 import pandas as pd
 from prefect import Task
 
 from .meta import META
 
+DEFAULT_PARAM_SPACE: Dict = {
+    "penalizer": hp.uniform("penalizer", 0, 1),
+    "l1_ratio": hp.uniform("l1_ratio", 0, 1)
+}
+
 class InitializeLifelines(Task):
     """Initialize a new ``lifelines`` model."""
-    def run(self, **kwargs) -> CoxTimeVaryingFitter:
+    def run(self, params: Optional[Dict] = None) -> CoxTimeVaryingFitter:
         """Initialize a new ``lifelines`` model.
 
         Parameters
         ----------
-        **kwargs
+        params : dict, optional (default None)
             Keyword arguments for ``CoxTimeVaryingFitter``
         
         Returns
@@ -22,7 +31,7 @@ class InitializeLifelines(Task):
         CoxTimeVaryingFitter
             The initialized model.
         """
-        return CoxTimeVaryingFitter(**kwargs)
+        return CoxTimeVaryingFitter(**params or {})
 
 
 class FitLifelinesModel(Task):
@@ -78,3 +87,66 @@ class PredictLifelines(Task):
             The predicted values.
         """
         return model.predict_partial_hazard(data)
+
+
+class HyperparameterTuning(Task):
+    """Use ``hyperopt`` to choose ``lifelines`` hyperparameters."""
+    def run(
+        self,
+        train_data: pd.DataFrame,
+        tune_data: pd.DataFrame,
+        param_space: Dict = DEFAULT_PARAM_SPACE,
+        max_evals: Optional[int] = 100,
+    ) -> Dict:
+        """Hyperparameter tuning.
+
+        Parameters
+        ----------
+        train_data : pd.DataFrame
+            The training data.
+        tune_data : pd.DataFrame
+            Tuning data, generated using ``CollapseData``.
+        param_space : Dict, optional (default DEFAULT_PARAM_SPACE)
+            The space for the hyperparameters
+        max_exals : int, optional (default 100)
+            The number of evaluations for hyperparameter tuning.
+        
+        Returns
+        -------
+        Dict
+            A dictionary with two keys: ``best`` and ``trials``. Best contains the
+            best hyperparameter value and trials has the ``hyperopt.Trials`` object.
+        """
+        # Create an internal function for fitting, training, evaluating
+        def func(params):
+            model = CoxTimeVaryingFitter(**params)
+            model.fit(
+                train_data,
+                id_col=META["id"],
+                event_col=META["event"],
+                start_col="start",
+                stop_col="stop",
+                show_progress=True,
+            )
+            predt = model.predict_partial_hazard(tune_data)
+
+            return {
+                "loss": -concordance_index(
+                    tune_data["start"],
+                    -predt,
+                    tune_data[META["event"]]
+                ),
+                "status": STATUS_OK
+            }
+        
+        # Run the hyperparameter tuning
+        trials = Trials()
+        best = fmin(
+            func,
+            param_space,
+            algo=tpe.suggest,
+            max_evals=max_evals,
+            trials=trials
+        )
+
+        return {"best": best, "trials": trials}

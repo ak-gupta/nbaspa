@@ -9,7 +9,7 @@ from prefect import Task
 
 from .meta import META
 
-class LifelinesData(Task):
+class SurvivalData(Task):
     """Create time-varying data in the ``lifelines`` format."""
     def run(self, data: pd.DataFrame) -> pd.DataFrame:
         """Create time-varying data in the ``lifelines`` format.
