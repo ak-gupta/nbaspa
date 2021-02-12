@@ -58,7 +58,7 @@ class FitLifelinesModel(Task):
         CoxTimeVaryingFitter
             The fitted model.
         """
-        return model.fit(
+        model = model.fit(
             data,
             id_col=META["id"],
             event_col=META["event"],
@@ -67,6 +67,9 @@ class FitLifelinesModel(Task):
             show_progress=True,
             **kwargs
         )
+        model.print_summary()
+
+        return model
 
 
 class PredictLifelines(Task):

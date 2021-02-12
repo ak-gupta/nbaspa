@@ -84,7 +84,7 @@ class SegmentData(Task):
         np.random.shuffle(games)
         # Split
         splits = np.split(
-            games, [int(len(games) * perc) for perc in splits]
+            games, [int(len(games) * sum(splits[:(index + 1)])) for index in range(len(splits))]
         )
         output: Dict = {}
         for index, value in enumerate(keys):
@@ -98,6 +98,9 @@ class CollapseData(Task):
     """Collapse data for hyperparameter tuning and evaluation."""
     def run(self, data: pd.DataFrame, timestep: Optional[int] = 0) -> pd.DataFrame:
         """Collapse data for hyperparameter tuning and evaluation.
+
+        We will take the input data from time value ``timestep`` but evaluate
+        the metric using the final time to event.
 
         Parameters
         ----------
@@ -118,9 +121,10 @@ class CollapseData(Task):
             self.logger.info("Removing time-varying effects")
             for col in META["dynamic"]:
                 shortform[col] = 0
-        # Add the final win predictor
+        # Add the final win predictor and time to event/censoring
         shortform.set_index(META["id"], inplace=True)
         shortform["WIN"] = data.groupby(META["id"])["WIN"].sum()
+        shortform["start"] = data.groupby(META["id"])["stop"].max()
         shortform.reset_index(inplace=True)
 
         return shortform
