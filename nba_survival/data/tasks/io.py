@@ -7,9 +7,9 @@ import fsspec
 import pandas as pd
 from prefect import Task
 
-from nba_survival.data import NBADataFactory
-import nba_survival.data.endpoints as endpoints
-from nba_survival.data.endpoints.parameters import ParameterValues
+from ..factory import NBADataFactory
+import ..endpoints as endpoints
+from ..endpoints.parameters import ParameterValues
 
 class GenericLoader(Task):
     """Load the data from a given endpoint.

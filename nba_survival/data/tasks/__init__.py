@@ -2,8 +2,8 @@
 
 from typing import List
 
-from nba_survival.data.tasks.gamelog import AddWinPercentage, GamesInLastXDays
-from nba_survival.data.tasks.io import (
+from .gamelog import AddWinPercentage, GamesInLastXDays
+from .io import (
     GenericLoader,
     PlayByPlayLoader,
     GameLogLoader,
@@ -15,13 +15,13 @@ from nba_survival.data.tasks.io import (
     GeneralShootingLoader,
     SaveData,
 )
-from nba_survival.data.tasks.lineup import AddLineupPlusMinus
-from nba_survival.data.tasks.margin import FillMargin
-from nba_survival.data.tasks.net_rating import AddNetRating
-from nba_survival.data.tasks.scoreboard import AddLastMeetingResult, AddTeamID
-from nba_survival.data.tasks.shotchart import AddExpectedShotValue, AddShotDetail
-from nba_survival.data.tasks.target import CreateTarget
-from nba_survival.data.tasks.time import DeDupeTime, SurvivalTime
+from .lineup import AddLineupPlusMinus
+from .margin import FillMargin
+from .net_rating import AddNetRating
+from .scoreboard import AddLastMeetingResult, AddTeamID
+from .shotchart import AddExpectedShotValue, AddShotDetail
+from .target import CreateTarget
+from .time import DeDupeTime, SurvivalTime
 
 __all__: List[str] = [
     "AddWinPercentage",

@@ -7,7 +7,7 @@ from prefect import case, Flow, Parameter
 from prefect.engine.state import State
 from prefect.tasks.control_flow import merge
 
-from nba_survival.data.tasks import (
+from .tasks import (
     AddWinPercentage,
     GenericLoader,
     PlayByPlayLoader,
@@ -31,7 +31,7 @@ from nba_survival.data.tasks import (
     DeDupeTime,
     SurvivalTime
 )
-from nba_survival.data.endpoints.parameters import DefaultParameters
+from .endpoints.parameters import DefaultParameters
 
 
 def gen_pipeline() -> Flow:

@@ -5,8 +5,8 @@ Create a class for reading data from the play-by-play endpoint.
 
 from typing import Dict, Optional
 
-from nba_survival.data.endpoints.base import BaseRequest
-from nba_survival.data.endpoints.parameters import DefaultParameters
+from .base import BaseRequest
+from .parameters import DefaultParameters
 
 class EventTypes:
     """Play-by-play event types."""

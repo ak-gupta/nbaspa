@@ -5,8 +5,8 @@ Get the NBA Win probability metric.
 
 from typing import List, Dict, Optional
 
-from nba_survival.data.endpoints.base import BaseRequest
-from nba_survival.data.endpoints.parameters import DefaultParameters
+from .base import BaseRequest
+from .parameters import DefaultParameters
 
 class WinProbability(BaseRequest):
     """Get the NBA win probability metric.

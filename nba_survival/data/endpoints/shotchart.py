@@ -5,8 +5,8 @@ Create a class for getting shot chart data.
 
 from typing import Dict, Optional
 
-from nba_survival.data.endpoints.base import BaseRequest
-from nba_survival.data.endpoints.parameters import DefaultParameters
+from .base import BaseRequest
+from .parameters import DefaultParameters
 
 class ShotChart(BaseRequest):
     """Retrieve shot chart data for a player/game.

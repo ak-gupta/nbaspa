@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from prefect import Task
 
-from nba_survival.data.endpoints.pbp import EventTypes
+from ..endpoints.pbp import EventTypes
 
 
 class AddLineupPlusMinus(Task):

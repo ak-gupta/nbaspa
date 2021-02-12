@@ -5,8 +5,8 @@ Create various classes for retrieving BoxScore data.
 
 from typing import Dict, List, Optional
 
-from nba_survival.data.endpoints.base import BaseRequest
-from nba_survival.data.endpoints.parameters import DefaultParameters
+from .base import BaseRequest
+from .parameters import DefaultParameters
 
 class BoxScoreBase(BaseRequest):
     """Get boxscore data.

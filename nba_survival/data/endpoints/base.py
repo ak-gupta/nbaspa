@@ -16,7 +16,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from nba_survival.data.endpoints.parameters import ParameterValues
+from .parameters import ParameterValues
 
 LOG = logging.getLogger(__name__)
 

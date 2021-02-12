@@ -10,8 +10,8 @@ from alive_progress import alive_bar
 import pandas as pd
 from ratelimit import limits, sleep_and_retry
 
-import nba_survival.data.endpoints as endpoints
-from nba_survival.data.endpoints.base import BaseRequest
+import .endpoints as endpoints
+from .endpoints.base import BaseRequest
 
 LOG = logging.getLogger(__name__)
 

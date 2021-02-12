@@ -2,7 +2,7 @@
 
 from typing import List
 
-from nba_survival.data.endpoints.boxscore import (
+from .boxscore import (
     BoxScoreTraditional,
     BoxScoreAdvanced,
     BoxScoreFourFactors,
@@ -10,19 +10,19 @@ from nba_survival.data.endpoints.boxscore import (
     BoxScoreScoring,
     BoxScoreUsage
 )
-from nba_survival.data.endpoints.lineup import TeamLineups
-from nba_survival.data.endpoints.pbp import PlayByPlay
-from nba_survival.data.endpoints.player import (
+from .lineup import TeamLineups
+from .pbp import PlayByPlay
+from .player import (
     AllPlayers,
     PlayerDashboardGeneral,
     PlayerDashboardShooting
 )
-from nba_survival.data.endpoints.rotation import GameRotation
-from nba_survival.data.endpoints.scoreboard import Scoreboard
-from nba_survival.data.endpoints.shotchart import ShotChart
-from nba_survival.data.endpoints.synergy import SynergyPlayType
-from nba_survival.data.endpoints.team import TeamStats, TeamGameLog
-from nba_survival.data.endpoints.winprobability import WinProbability
+from .rotation import GameRotation
+from .scoreboard import Scoreboard
+from .shotchart import ShotChart
+from .synergy import SynergyPlayType
+from .team import TeamStats, TeamGameLog
+from .winprobability import WinProbability
 
 __all__: List[str] = [
     "BoxScoreTraditional",

@@ -6,8 +6,8 @@ Create a class for reading scoreboard data from the NBA API.
 from datetime import datetime
 from typing import Dict, List
 
-from nba_survival.data.endpoints.base import BaseRequest
-from nba_survival.data.endpoints.parameters import DefaultParameters
+from .base import BaseRequest
+from .parameters import DefaultParameters
 
 class Scoreboard(BaseRequest):
     """Get the scoreboard for a given date."""

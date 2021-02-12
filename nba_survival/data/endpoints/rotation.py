@@ -5,8 +5,8 @@ Create a class for retrieving the rotation data.
 
 from typing import Dict, List, Optional
 
-from nba_survival.data.endpoints.base import BaseRequest
-from nba_survival.data.endpoints.parameters import DefaultParameters
+from .base import BaseRequest
+from .parameters import DefaultParameters
 
 class GameRotation(BaseRequest):
     """Get rotation data.
