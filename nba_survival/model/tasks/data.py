@@ -27,7 +27,7 @@ class LifelinesData(Task):
         # Create the short form data
         shortform = data.groupby(META["id"]).tail(1)[
             [META["id"]] + [META["duration"]] + [META["event"]] + META["static"]
-        ]
+        ].copy()
         base = to_long_format(shortform, duration_col=META["duration"])
         # Create the longform data
         longform = add_covariate_to_timeline(
@@ -50,7 +50,7 @@ class SegmentData(Task):
     def run(
         self,
         data: pd.DataFrame,
-        splits: Optional[List[float]] = [0.8, 0.2],
+        splits: Optional[List[float]] = [0.8,],
         keys: Optional[List[str]] = ["train", "test"],
         seed: int = 42,
     ) -> Dict[str, pd.DataFrame]:
@@ -62,9 +62,10 @@ class SegmentData(Task):
         ----------
         data : pd.DataFrame
             The initial dataframe.
-        splits : list, optional (default [0.8, 0.2])
+        splits : list, optional (default [0.8])
             The percentage of games that should be included in each output
-            dataset.
+            dataset. The length of this array should be one less than the
+            number of keys
         keys : list, optional (default ["train", "test"])
             The dictionary keys for the output.
         seed : int, optional (default 42)
@@ -80,12 +81,14 @@ class SegmentData(Task):
 
         # Get an array of the unique GAME_ID values
         games = np.unique(data[META["id"]])
+        np.random.shuffle(games)
         # Split
         splits = np.split(
             games, [int(len(games) * perc) for perc in splits]
         )
         output: Dict = {}
         for index, value in enumerate(keys):
+            self.logger.info(f"Dataset ``{value}`` has {len(splits[index])} rows")
             output[value] = data[data[META["id"]].isin(splits[index])].copy()
         
         return output
