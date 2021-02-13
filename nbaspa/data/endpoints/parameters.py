@@ -5,7 +5,7 @@ Define default parameters for the endpoints.
 
 from dataclasses import dataclass
 import datetime
-from typing import Any, Set
+from typing import Any, Dict, Set
 
 # Get some system date-based variables
 TODAY = datetime.datetime.now()
@@ -16,6 +16,17 @@ if TODAY.month > 8:
 else:
     CURRENT_SEASON = str(TODAY.year - 1) + "-" + str(TODAY.year)[2:]
     CURRENT_SEASON_YEAR = str(TODAY.year - 1)
+
+SEASONS: Dict = {
+    "2017-18": {
+        "START": datetime.datetime.strptime("2017-10-17", "%Y-%m-%d"),
+        "END": datetime.datetime.strptime("2018-04-11", "%Y-%m-%d")
+    },
+    "2018-19": {
+        "START": datetime.datetime.strptime("2018-10-16", "%Y-%m-%d"),
+        "END": datetime.datetime.strptime("2019-04-10", "%Y-%m-%d")
+    }
+}
 
 @dataclass
 class DefaultParameters:

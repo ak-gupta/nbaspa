@@ -57,8 +57,8 @@ setup(
     zip_safe=False,
     entry_points={
         "console_scripts": [
-            "nbaspa-download=nbaspa.cli:download",
-            "nbaspa-clean=nbaspa.cli:clean"
+            "nbaspa-download=nbaspa.data.scripts.download:download",
+            "nbaspa-clean=nbaspa.data.scripts.clean:clean"
         ],
     },
 )
