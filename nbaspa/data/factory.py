@@ -10,7 +10,7 @@ from alive_progress import alive_bar
 import pandas as pd
 from ratelimit import limits, sleep_and_retry
 
-import .endpoints as endpoints
+import nbaspa.data.endpoints as endpoints
 from .endpoints.base import BaseRequest
 
 LOG = logging.getLogger(__name__)

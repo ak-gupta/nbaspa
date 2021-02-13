@@ -12,6 +12,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'alive-progress>=1.6.2,<=1.6.2',
+    'Click>=7.1.2,<=7.1.2',
     'fsspec>=0.8.5,<=0.8.5',
     'hyperopt>=0.2.5,<=0.2.5',
     'lifelines>=0.25.9,<=0.25.9',
@@ -54,4 +55,10 @@ setup(
     url='https://github.com/ak-gupta/nbaspa',
     version='0.1.0',
     zip_safe=False,
+    entry_points={
+        "console_scripts": [
+            "nbaspa-download=nbaspa.cli:download",
+            "nbaspa-clean=nbaspa.cli:clean"
+        ],
+    },
 )

@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import List, Dict
 
-from nba_survival.data.pipeline import gen_pipeline, run_pipeline
+from nbaspa.data.pipeline import gen_pipeline, run_pipeline
 
 LOG = logging.getLogger(__name__)
 

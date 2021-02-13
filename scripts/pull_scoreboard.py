@@ -5,7 +5,7 @@ import datetime
 import logging
 from typing import List, Tuple
 
-from nba_survival.data import NBADataFactory
+from nbaspa.data import NBADataFactory
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 

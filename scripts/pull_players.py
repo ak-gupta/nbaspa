@@ -4,8 +4,8 @@ import sys
 import logging
 from typing import List, Tuple
 
-from nba_survival.data import NBADataFactory
-from nba_survival.data.endpoints import AllPlayers
+from nbaspa.data import NBADataFactory
+from nbaspa.data.endpoints import AllPlayers
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 

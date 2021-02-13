@@ -8,7 +8,7 @@ import pandas as pd
 from prefect import Task
 
 from ..factory import NBADataFactory
-import ..endpoints as endpoints
+import nbaspa.data.endpoints as endpoints
 from ..endpoints.parameters import ParameterValues
 
 class GenericLoader(Task):
