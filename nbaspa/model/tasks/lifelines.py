@@ -64,7 +64,6 @@ class FitLifelinesModel(Task):
             event_col=META["event"],
             start_col="start",
             stop_col="stop",
-            show_progress=True,
             **kwargs
         )
         model.print_summary()
@@ -100,6 +99,7 @@ class HyperparameterTuning(Task):
         tune_data: pd.DataFrame,
         param_space: Dict = DEFAULT_PARAM_SPACE,
         max_evals: Optional[int] = 100,
+        **kwargs
     ) -> Dict:
         """Hyperparameter tuning.
 
@@ -108,11 +108,14 @@ class HyperparameterTuning(Task):
         train_data : pd.DataFrame
             The training data.
         tune_data : pd.DataFrame
-            Tuning data, generated using ``CollapseData``.
+            Tuning data.
         param_space : Dict, optional (default DEFAULT_PARAM_SPACE)
             The space for the hyperparameters
         max_exals : int, optional (default 100)
             The number of evaluations for hyperparameter tuning.
+        **kwargs
+            Any constant keyword arguments to pass to the ``CoxTimeVaryingFitter``
+            initialization
         
         Returns
         -------
@@ -122,14 +125,13 @@ class HyperparameterTuning(Task):
         """
         # Create an internal function for fitting, training, evaluating
         def func(params):
-            model = CoxTimeVaryingFitter(**params)
+            model = CoxTimeVaryingFitter(**params, **kwargs)
             model.fit(
                 train_data,
                 id_col=META["id"],
                 event_col=META["event"],
                 start_col="start",
                 stop_col="stop",
-                show_progress=True,
             )
             predt = model.predict_partial_hazard(tune_data)
 
@@ -151,6 +153,7 @@ class HyperparameterTuning(Task):
             max_evals=max_evals,
             trials=trials
         )
+        best = {**best, **kwargs}
         self.logger.info(
             f"The best model uses a ``penalizer`` value of {np.round(best['penalizer'], 3)} "
             f"and a ``l1_ratio`` value of {np.round(best['l1_ratio'], 3)}"

@@ -88,16 +88,23 @@ class SegmentData(Task):
         )
         output: Dict = {}
         for index, value in enumerate(keys):
-            self.logger.info(f"Dataset ``{value}`` has {len(splits[index])} rows")
             output[value] = data[data[META["id"]].isin(splits[index])].copy()
-        
+            self.logger.info(
+                f"Dataset ``{value}`` has {len(splits[index])} games with {len(output[value])} rows"
+            )
+
         return output
 
 
 class CollapseData(Task):
-    """Collapse data for hyperparameter tuning and evaluation."""
-    def run(self, data: pd.DataFrame, timestep: Optional[int] = 0) -> pd.DataFrame:
-        """Collapse data for hyperparameter tuning and evaluation.
+    """Collapse data for evaluation."""
+    def run(
+        self,
+        data: pd.DataFrame,
+        timestep: Optional[int] = 0,
+        tail: Optional[bool] = True
+    ) -> pd.DataFrame:
+        """Collapse data for evaluation.
 
         We will take the input data from time value ``timestep`` but evaluate
         the metric using the final time to event.
@@ -108,23 +115,30 @@ class CollapseData(Task):
             The ouptut of ``SurvivalData``.
         timestep : int, optional (default 0)
             The time step to use to create unique rows.
+        tail : bool, optional (default True)
+            Whether to return the final row for each game or not
         
         Returns
         -------
         pd.DataFrame
             The collapsed data.
         """
-        self.logger.info(f"Collapsing the data to time {timestep}")
-        shortform = data[data["start"] <= timestep].copy()
-        shortform = shortform.groupby(META["id"]).tail(n=1).copy()
-        if timestep == 0:
-            self.logger.info("Removing time-varying effects")
-            for col in META["dynamic"]:
-                shortform[col] = 0
-        # Add the final win predictor and time to event/censoring
-        shortform.set_index(META["id"], inplace=True)
-        shortform["WIN"] = data.groupby(META["id"])["WIN"].sum()
-        shortform["start"] = data.groupby(META["id"])["stop"].max()
-        shortform.reset_index(inplace=True)
+        if tail:
+            final_row = data.groupby(META["id"]).tail(n=1).copy()
 
-        return shortform
+            return final_row
+        else:
+            self.logger.info(f"Collapsing the data to time {timestep}")
+            shortform = data[data["start"] <= timestep].copy()
+            shortform = shortform.groupby(META["id"]).tail(n=1).copy()
+            if timestep == 0:
+                self.logger.info("Removing time-varying effects")
+                for col in META["dynamic"]:
+                    shortform[col] = 0
+            # Add the final win predictor and time to event/censoring
+            shortform.set_index(META["id"], inplace=True)
+            shortform["WIN"] = data.groupby(META["id"])["WIN"].sum()
+            shortform["start"] = data.groupby(META["id"])["stop"].max()
+            shortform.reset_index(inplace=True)
+
+            return shortform
