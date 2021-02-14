@@ -57,7 +57,7 @@ class DeDupeTime(Task):
             self.logger.info(f"De-duping ``TIME`` for game {name}")
             dupes = (
                 group
-                .sort_values(by=["WCTIMESTRING", "EVENTNUM"], ascending=True)
+                .sort_values(by=["TIME", "EVENTNUM"], ascending=True)
                 .duplicated(subset="TIME", keep="last")
             )
             pbp.drop(dupes[dupes == True].index, inplace=True)
