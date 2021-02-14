@@ -100,6 +100,42 @@ class PlayByPlayLoader(Task):
         return factory.get_data()
 
 
+class WinProbabilityLoader(Task):
+    """Load the NBA win probability for each game in a day."""
+    def run(
+        self,
+        header: pd.DataFrame,
+        output_dir: str,
+        filesystem: Optional[str] = "file",
+    ) -> pd.DataFrame:
+        """Load the NBA win probability for each game in a day.
+
+        Parameters
+        ----------
+        header : pd.DataFrame
+            The output of ``Scoreboard.get_data("GameHeader")``.
+        output_dir : str
+            The directory containing the data.
+        filesystem : str, optional (default "file")
+            The name of the ``fsspec`` implementation to use.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The output dataset.
+        """
+        calls: List[str] = []
+        for _, row in header.iterrows():
+            calls.append(
+                ("WinProbability", {"GameID": row["GAME_ID"]})
+            )
+        
+        # Create the factory and load the data
+        factory = NBADataFactory(calls=calls, output_dir=output_dir, filesystem=filesystem)
+        factory.load()
+
+        return factory.get_data("WinProbPBP")
+
 class GameLogLoader(Task):
     """Get team game logs."""
 

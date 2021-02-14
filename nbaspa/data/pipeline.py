@@ -11,6 +11,7 @@ from .tasks import (
     AddWinPercentage,
     GenericLoader,
     PlayByPlayLoader,
+    WinProbabilityLoader,
     GameLogLoader,
     LineupLoader,
     RotationLoader,
@@ -22,6 +23,7 @@ from .tasks import (
     GamesInLastXDays,
     AddLineupPlusMinus,
     FillMargin,
+    AddNBAWinProbability,
     AddNetRating,
     AddLastMeetingResult,
     AddTeamID,
@@ -52,6 +54,7 @@ def gen_pipeline() -> Flow:
         loader="Scoreboard", name="Load scoreboard data"
     )
     pbp_loader = PlayByPlayLoader(name="Load play-by-play data")
+    wprob_loader = WinProbabilityLoader(name="Load NBA win probability")
     teamstats_loader = GenericLoader(
         loader="TeamStats", name="Load team estimated metrics"
     )
@@ -64,6 +67,7 @@ def gen_pipeline() -> Flow:
     gshooting_loader = GeneralShootingLoader(name="Load player-level overall shooting dashboards")
     # Transformation tasks
     survtime_task = SurvivalTime(name="Add survival time")
+    wprob_task = AddNBAWinProbability(name="Add NBA win probability")
     margin_task = FillMargin(name="Backfill margin")
     target_task = CreateTarget(name="Add target label")
     team_id_task = AddTeamID(name="Add team ID and game date")
@@ -101,6 +105,11 @@ def gen_pipeline() -> Flow:
             output_dir=output_dir,
             filesystem=filesystem,
         )
+        wprob = wprob_loader(
+            header=scoreboard["GameHeader"],
+            output_dir=output_dir,
+            filesystem=filesystem,
+        )
         stats = teamstats_loader(
             output_dir=output_dir,
             filesystem=filesystem,
@@ -113,7 +122,8 @@ def gen_pipeline() -> Flow:
         )
         # Base transformations
         survtime = survtime_task(pbp=pbp)
-        margin = margin_task(pbp=survtime)
+        nbawin = wprob_task(pbp=survtime, winprob=wprob)
+        margin = margin_task(pbp=nbawin)
         target = target_task(pbp=margin)
         team_id = team_id_task(pbp=target, header=scoreboard["GameHeader"])
         rating = rating_task(pbp=team_id, stats=stats["default"])

@@ -6,6 +6,7 @@ from .gamelog import AddWinPercentage, GamesInLastXDays
 from .io import (
     GenericLoader,
     PlayByPlayLoader,
+    WinProbabilityLoader,
     GameLogLoader,
     LineupLoader,
     RotationLoader,
@@ -17,6 +18,7 @@ from .io import (
 )
 from .lineup import AddLineupPlusMinus
 from .margin import FillMargin
+from .nba_win_prob import AddNBAWinProbability
 from .net_rating import AddNetRating
 from .scoreboard import AddLastMeetingResult, AddTeamID
 from .shotchart import AddExpectedShotValue, AddShotDetail
@@ -27,6 +29,7 @@ __all__: List[str] = [
     "AddWinPercentage",
     "GenericLoader",
     "PlayByPlayLoader",
+    "WinProbabilityLoader",
     "GameLogLoader",
     "LineupLoader",
     "RotationLoader",
@@ -38,6 +41,7 @@ __all__: List[str] = [
     "GamesInLastXDays",
     "AddLineupPlusMinus",
     "FillMargin",
+    "AddNBAWinProbability",
     "AddNetRating",
     "AddLastMeetingResult",
     "AddTeamID",
