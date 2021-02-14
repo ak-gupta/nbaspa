@@ -23,7 +23,9 @@ class AddLineupPlusMinus(Task):
 
         Adds the following columns:
 
+        * ``HOME_LINEUP``
         * ``HOME_LINEUP_PLUS_MINUS``
+        * ``VISITOR_LINEUP``
         * ``VISITOR_LINEUP_PLUS_MINUS``
 
         Parameters
@@ -50,7 +52,9 @@ class AddLineupPlusMinus(Task):
         away_rotation = self._fix_rotation_time(away_rotation)
 
         # Initialize the plus minus value
+        pbp["HOME_LINEUP"] = None
         pbp["HOME_LINEUP_PLUS_MINUS"] = np.nan
+        pbp["VISITOR_LINEUP"] = None
         pbp["VISITOR_LINEUP_PLUS_MINUS"] = np.nan
         # Ensure the event type is an integer
         pbp["EVENTMSGTYPE"] = pbp["EVENTMSGTYPE"].astype(int)
@@ -81,14 +85,25 @@ class AddLineupPlusMinus(Task):
                                 row=row,
                             )
                             pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = plusminus
-                        except (ValueError, KeyError):
+                            pbp.loc[index, "HOME_LINEUP"] = "-".join(sorted(str(pid) for pid in home_lineup))
+                        except ValueError:
                             self.logger.warning(
-                                "Unable to find the lineup. Setting the lineup plus minus to the "
+                                "Unable to find lineup stats. Setting the lineup plus minus to the "
                                 "net rating"
                             )
                             pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = pbp.loc[
                                 index, "HOME_NET_RATING"
                             ]
+                            pbp.loc[index, "HOME_LINEUP"] = "-".join(sorted(str(pid) for pid in home_lineup))
+                        except KeyError:
+                            self.logger.warning(
+                                "Invalid lineup present. Setting the lineup plus minus to the "
+                                "net rating"
+                            )
+                            pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = pbp.loc[
+                                index, "HOME_NET_RATING"
+                            ]
+                            pbp.loc[index, "HOME_LINEUP"] = "INVALID LINEUP"
                     else:
                         self.logger.debug(
                             f"Visiting team substitution at {row['PCTIMESTRING']} ({row['TIME']}) in "
@@ -103,14 +118,25 @@ class AddLineupPlusMinus(Task):
                                 row=row
                             )
                             pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = plusminus
-                        except (ValueError, KeyError):
+                            pbp.loc[index, "VISITOR_LINEUP"] = "-".join(sorted(str(pid) for pid in away_lineup))
+                        except ValueError:
                             self.logger.warning(
-                                "Unable to find the lineup. Setting the lineup plus minus to the "
+                                "Unable to find lineup stats. Setting the lineup plus minus to the "
                                 "net rating"
                             )
                             pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = pbp.loc[
                                 index, "VISITOR_NET_RATING"
                             ]
+                            pbp.loc[index, "VISITOR_LINEUP"] = "-".join(sorted(str(pid) for pid in away_lineup))
+                        except KeyError:
+                            self.logger.warning(
+                                "Invalid lineup present. Setting the lineup plus minus to the "
+                                "net rating"
+                            )
+                            pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = pbp.loc[
+                                index, "VISITOR_NET_RATING"
+                            ]
+                            pbp.loc[index, "VISITOR_LINEUP"] = "INVALID LINEUP"
 
                 elif row["EVENTMSGTYPE"] == EventTypes().PERIOD_BEGIN:
                     self.logger.debug(
@@ -126,14 +152,25 @@ class AddLineupPlusMinus(Task):
                             lineup_stats=lineup_stats,
                         )
                         pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = plusminus
-                    except (ValueError, KeyError):
+                        pbp.loc[index, "HOME_LINEUP"] = "-".join(sorted(str(pid) for pid in home_lineup))
+                    except ValueError:
                         self.logger.warning(
-                            "Unable to find the lineup. Setting the lineup plus minus to the "
+                            "Unable to find lineup stats. Setting the lineup plus minus to the "
                             "net rating"
                         )
                         pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = pbp.loc[
                             index, "HOME_NET_RATING"
                         ]
+                        pbp.loc[index, "HOME_LINEUP"] = "-".join(sorted(str(pid) for pid in home_lineup))
+                    except KeyError:
+                        self.logger.warning(
+                            "Invalid lineup present. Setting the lineup plus minus to the "
+                            "net rating"
+                        )
+                        pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = pbp.loc[
+                            index, "HOME_NET_RATING"
+                        ]
+                        pbp.loc[index, "HOME_LINEUP"] = "INVALID LINEUP"
 
                     self.logger.debug(
                         f"Looking for substitutions at the beginning of {row['PERIOD']} for the "
@@ -148,20 +185,33 @@ class AddLineupPlusMinus(Task):
                             lineup_stats=lineup_stats,
                         )
                         pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = plusminus
-                    except (ValueError, KeyError):
+                        pbp.loc[index, "VISITOR_LINEUP"] = "-".join(sorted(str(pid) for pid in away_lineup))
+                    except ValueError:
                         self.logger.warning(
-                            "Unable to find the lineup. Setting the lineup plus minus to the "
+                            "Unable to find lineup stats. Setting the lineup plus minus to the "
                             "net rating"
                         )
                         pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = pbp.loc[
                             index, "VISITOR_NET_RATING"
                         ]
+                        pbp.loc[index, "VISITOR_LINEUP"] = "-".join(sorted(str(pid) for pid in away_lineup))
+                    except KeyError:
+                        self.logger.warning(
+                            "Invalid lineup present. Setting the lineup plus minus to the "
+                            "net rating"
+                        )
+                        pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = pbp.loc[
+                            index, "VISITOR_NET_RATING"
+                        ]
+                        pbp.loc[index, "VISITOR_LINEUP"] = "INVALID LINEUP"
 
                 else:
                     continue
         
-        # Fill the ratings
+        # Fill the columns
+        pbp["HOME_LINEUP"] = pbp.groupby("GAME_ID")["HOME_LINEUP"].ffill()
         pbp["HOME_LINEUP_PLUS_MINUS"] = pbp.groupby("GAME_ID")["HOME_LINEUP_PLUS_MINUS"].ffill()
+        pbp["VISITOR_LINEUP"] = pbp.groupby("GAME_ID")["VISITOR_LINEUP"].ffill()
         pbp["VISITOR_LINEUP_PLUS_MINUS"] = pbp.groupby("GAME_ID")["VISITOR_LINEUP_PLUS_MINUS"].ffill()
 
         return pbp
@@ -249,15 +299,14 @@ class AddLineupPlusMinus(Task):
         )
         if len(lineup) != 5:
             self.logger.error(f"Lineup has {len(lineup)} players instead of 5.")
-            raise ValueError(f"Lineup has {len(lineup)} players instead of 5.")
+            raise KeyError(f"Lineup has {len(lineup)} players instead of 5.")
         if not lineup_stats.loc[lineup_stats["GROUP_ID"] == linestr].empty:
             self.logger.debug(f"Found data for lineup group {linestr}")
             plusminus = lineup_stats.loc[
-                lineup_stats["GROUP_ID"] == linestr, "PLUS_MINUS"
+                lineup_stats["GROUP_ID"] == linestr, "E_NET_RATING"
             ].values[0]
         else:
-            self.logger.error("Unable to find lineup stats...")
-            raise ValueError("Unable to find lineup data...")
+            raise ValueError("Unable to find lineup stats...")
         
         return lineup, plusminus
     
@@ -322,14 +371,13 @@ class AddLineupPlusMinus(Task):
         )
         if len(lineup) != 5:
             self.logger.error(f"Lineup has {len(lineup)} players instead of 5.")
-            raise ValueError(f"Lineup has {len(lineup)} players instead of 5.")
+            raise KeyError(f"Lineup has {len(lineup)} players instead of 5.")
         if not lineup_stats.loc[lineup_stats["GROUP_ID"] == linestr].empty:
             self.logger.debug(f"Found data for lineup group {linestr}")
             plusminus = lineup_stats.loc[
-                lineup_stats["GROUP_ID"] == linestr, "PLUS_MINUS"
+                lineup_stats["GROUP_ID"] == linestr, "E_NET_RATING"
             ].values[0]
         else:
-            self.logger.error("Unable to find lineup data...")
-            raise ValueError("Unable to find lineup data...")
+            raise ValueError("Unable to find lineup stats...")
         
         return lineup, plusminus

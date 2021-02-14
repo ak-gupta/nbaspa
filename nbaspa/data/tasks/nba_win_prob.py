@@ -42,7 +42,7 @@ class AddNBAWinProbability(Task):
             left_on=("GAME_ID", "EVENTNUM"),
             right_index=True,
             how="left"
-        )[filtered_wprob.name]
+        )["HOME_PCT"]
         # Create a variable representing the change in win probability
         pbp.loc[
             ~pd.isnull(pbp["NBA_WIN_PROB"]), "NBA_WIN_PROB_CHANGE"

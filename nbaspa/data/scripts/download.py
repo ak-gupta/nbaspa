@@ -79,7 +79,8 @@ def teams(output_dir, season):
                 "TeamLineups",
                 {
                     "TeamID": team,
-                    "Season": season
+                    "Season": season,
+                    "MeasureType": "Advanced"
                 }
             ),
             (

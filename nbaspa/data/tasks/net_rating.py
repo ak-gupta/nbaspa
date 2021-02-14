@@ -14,6 +14,8 @@ class AddNetRating(Task):
         * ``VISITOR_NET_RATING``
         * ``HOME_OFF_RATING``
         * ``VISITOR_OFF_RATING``
+        * ``HOME_PACE``
+        * ``VISITOR_PACE``
 
         Parameters
         ----------
@@ -28,21 +30,23 @@ class AddNetRating(Task):
             The updated datasets.
         """
         home = pbp.merge(
-            stats[["TEAM_ID", "E_NET_RATING", "E_OFF_RATING"]],
+            stats[["TEAM_ID", "E_NET_RATING", "E_OFF_RATING", "E_PACE"]],
             left_on="HOME_TEAM_ID",
             right_on="TEAM_ID",
             how="left"
         )
         pbp["HOME_NET_RATING"] = home["E_NET_RATING"]
         pbp["HOME_OFF_RATING"] = home["E_OFF_RATING"]
+        pbp["HOME_PACE"] = home["E_PACE"]
 
         visitor = pbp.merge(
-            stats[["TEAM_ID", "E_NET_RATING", "E_OFF_RATING"]],
+            stats[["TEAM_ID", "E_NET_RATING", "E_OFF_RATING", "E_PACE"]],
             left_on="VISITOR_TEAM_ID",
             right_on="TEAM_ID",
             how="left"
         )
         pbp["VISITOR_NET_RATING"] = visitor["E_NET_RATING"]
         pbp["VISITOR_OFF_RATING"] = visitor["E_OFF_RATING"]
+        pbp["VISITOR_PACE"] = visitor["E_PACE"]
 
         return pbp
