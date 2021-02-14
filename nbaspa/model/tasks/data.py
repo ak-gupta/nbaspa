@@ -11,13 +11,17 @@ from .meta import META
 
 class SurvivalData(Task):
     """Create time-varying data in the ``lifelines`` format."""
-    def run(self, data: pd.DataFrame) -> pd.DataFrame:
+    def run(
+        self, data: pd.DataFrame, timevarying: Optional[List[str]] = META["dynamic"],
+    ) -> pd.DataFrame:
         """Create time-varying data in the ``lifelines`` format.
 
         Parameters
         ----------
         data : pd.DataFrame
             The cleaned play-by-play data.
+        timevarying : list, optional (default META["duration"])
+            The list of time-varying columns.
         
         Returns
         -------
@@ -32,7 +36,7 @@ class SurvivalData(Task):
         # Create the longform data
         longform = add_covariate_to_timeline(
             base,
-            data[[META["id"]] + [META["duration"]] + META["dynamic"]],
+            data[[META["id"]] + [META["duration"]] + timevarying],
             duration_col=META["duration"],
             id_col=META["id"],
             event_col=META["event"]
