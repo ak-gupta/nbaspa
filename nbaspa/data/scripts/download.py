@@ -110,7 +110,7 @@ def players(output_dir, season):
     # Get the shooting
     calls: List[str] = []
     for _, row in players_df.iterrows():
-        if int(row["TO_YEAR"]) >= int(season[0:4]):
+        if int(row["TO_YEAR"]) >= int(season[0:4]) and int(row["FROM_YEAR"]) <= int(season[0:4]):
             calls += [
                 ("PlayerDashboardShooting", {"PlayerID": row["PERSON_ID"], "Season": season}),
                 ("PlayerDashboardGeneral", {"PlayerID": row["PERSON_ID"], "Season": season})

@@ -101,8 +101,7 @@ class CollapseData(Task):
     def run(
         self,
         data: pd.DataFrame,
-        timestep: Optional[int] = 0,
-        tail: Optional[bool] = True
+        timestep: Optional[int] = None,
     ) -> pd.DataFrame:
         """Collapse data for evaluation.
 
@@ -113,17 +112,16 @@ class CollapseData(Task):
         ----------
         data : pd.DataFrame
             The ouptut of ``SurvivalData``.
-        timestep : int, optional (default 0)
-            The time step to use to create unique rows.
-        tail : bool, optional (default True)
-            Whether to return the final row for each game or not
+        timestep : int, optional (default None)
+            The time step to use to create unique rows. If ``None``, the final row
+            for each game will be used.
         
         Returns
         -------
         pd.DataFrame
             The collapsed data.
         """
-        if tail:
+        if timestep is None:
             final_row = data.groupby(META["id"]).tail(n=1).copy()
 
             return final_row
@@ -135,10 +133,9 @@ class CollapseData(Task):
                 self.logger.info("Removing time-varying effects")
                 for col in META["dynamic"]:
                     shortform[col] = 0
-            # Add the final win predictor and time to event/censoring
+            # Add the final win predictor
             shortform.set_index(META["id"], inplace=True)
             shortform["WIN"] = data.groupby(META["id"])["WIN"].sum()
-            shortform["start"] = data.groupby(META["id"])["stop"].max()
             shortform.reset_index(inplace=True)
 
             return shortform

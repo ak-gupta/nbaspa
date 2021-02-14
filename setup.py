@@ -16,10 +16,13 @@ requirements = [
     'fsspec>=0.8.5,<=0.8.5',
     'hyperopt>=0.2.5,<=0.2.5',
     'lifelines>=0.25.9,<=0.25.9',
+    'matplotlib>=3.3.4,<=3.3.4',
     'pandas>=1.2.1,<=1.2.1',
     'prefect>=0.14.5,<=0.14.5',
     'ratelimit>=2.2.1,<=2.2.1',
     'requests>=2.25.1,<=2.25.1',
+    'scikit-learn>=0.24.1,<=0.24.1',
+    'seaborn>=0.11.1,<=0.11.1',
 ]
 
 setup_requirements = ['pytest-runner', ]
@@ -29,7 +32,7 @@ test_requirements = ['pytest>=3', ]
 setup(
     author="Akshay Gupta",
     author_email='akshaykgupta@protonmail.com',
-    python_requires='>=3.5',
+    python_requires='>=3.8',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',

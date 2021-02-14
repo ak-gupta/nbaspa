@@ -23,5 +23,6 @@ META: Dict = {
     ],
     "duration": "TIME",
     "event": "WIN",
-    "id": "GAME_ID"
+    "id": "GAME_ID",
+    "probability": "WIN_PROB"
 }

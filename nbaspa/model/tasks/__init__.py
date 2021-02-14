@@ -6,10 +6,10 @@ from .data import SurvivalData, SegmentData, CollapseData
 from .lifelines import (
     InitializeLifelines,
     FitLifelinesModel,
-    PredictLifelines,
-    HyperparameterTuning
 )
-from .metrics import ConcordanceIndex
+from .metrics import ConcordanceIndex, AUROC, PlotMetric
+from .predict import PredictLifelines, WinProbability, PlotProbability
+from .tuning import LifelinesTuning, PlotTuning
 
 __all__: List[str] = [
     "SurvivalData",
@@ -19,5 +19,10 @@ __all__: List[str] = [
     "FitLifelinesModel",
     "PredictLifelines",
     "ConcordanceIndex",
-    "HyperparameterTuning"
+    "AUROC",
+    "PlotMetric",
+    "WinProbability",
+    "PlotProbability",
+    "LifelinesTuning",
+    "PlotTuning"
 ]
