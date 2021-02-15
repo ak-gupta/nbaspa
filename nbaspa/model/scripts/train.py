@@ -1,0 +1,148 @@
+"""Train and evaluate the model."""
+
+import logging
+from pathlib import Path
+import sys
+
+import click
+import numpy as np
+import pandas as pd
+import prefect
+from prefect import Flow, unmapped
+from prefect.engine.results import LocalResult
+from prefect.engine.serializers import JSONSerializer
+
+from ...serializers import Plot
+from ..tasks import (
+    SurvivalData,
+    SegmentData,
+    CollapseData,
+    LifelinesTuning,
+    PlotTuning,
+    InitializeLifelines,
+    FitLifelinesModel,
+    PredictLifelines,
+    ConcordanceIndex,
+    WinProbability,
+    AUROC,
+    PlotMetric
+)
+
+LOG = logging.getLogger(__name__)
+
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+
+@click.group()
+def build():
+    pass
+
+@build.command()
+@click.option("--data-dir", help="Path to the data directory.")
+def train(data_dir):
+    """Train the survival analysis model.
+
+    The model training will involve
+
+    * Loading the ``model-data`` from ``data_dir``,
+    * Segmenting the data into ``train``, ``test``, and ``tune``,
+    * Tuning the data using ``hyperopt``,
+    * Fitting the model using the best parameters from hyperparameter tuning,
+    * Calculate the Concordance index for the model with the test data,
+    * Calculate the AUROC for the model and the NBA win probability using various
+      time values, and
+    * Plot the AUROC over game-time.
+
+    The following objects will be saved to the ``models`` folder within ``data_dir``:
+
+    * ``tuning.pkl``: The output from hyperparameter tuning,
+    * ``model.pkl``: The fitted model object,
+    * ``train.csv``: The training data for the model,
+    * ``test.csv``: The test data for the model,
+    * ``tune.csv``: The tune data for the model,
+    * ``hyperparameter-tuning.png``: A visualization of the hyperparameter tuning output, and
+    * ``AUROC over gametime.png``: A visualization of AUROC over gametime.
+    """
+    # First, read in the model data
+    LOG.info(f"Reading the model data from {data_dir}")
+    basedata = pd.concat(
+        pd.read_csv(fpath, sep="|", dtype={"GAME_ID": str}, index_col=0)
+        for fpath in Path(data_dir).glob("*/model-data/data_*.csv")
+    ).reset_index(drop=True)
+    # Create a time range for AUROC calculation -- start to the end of the fourth quarter
+    times = np.linspace(0, 2880, 25)
+    # Initialize tasks
+    format_data = SurvivalData(name="Convert input data to ranged form")
+    segdata = SegmentData(name="Split data")
+    tune_data = CollapseData(name="Create tuning data")
+    test_data = CollapseData(name="Create test data")
+    test_auc_data = CollapseData(name="Create AUROC test data")
+    tuning = LifelinesTuning(
+        name="Run Hyperparameter tuning",
+        checkpoint=True,
+        result=LocalResult(
+            dir=".",
+            location="{data_dir}/models/{today}/tuning.pkl",
+        )
+    )
+    tuneplots = PlotTuning(
+        name="Hyperparameter tuning visualization",
+        checkpoint=True,
+        result=LocalResult(
+            serializer=Plot(),
+            dir=".",
+            location="{data_dir}/models/{today}/hyperparameter-tuning.png"
+        )
+    )
+    model = InitializeLifelines(name="Initialize Cox PH model")
+    trained = FitLifelinesModel(
+        name="Train Cox PH model",
+        checkpoint=True,
+        result=LocalResult(
+            dir=".",
+            location="{data_dir}/models/{today}/model.pkl"
+        )
+    )
+    hazpred = PredictLifelines(name="Calculate partial hazard function")
+    concordance = ConcordanceIndex(name="Calculate C-index")
+    calc_sprob = WinProbability(name="Calculate win probability")
+    nba_wprob = WinProbability(name="Calculate NBA win probability")
+    sprob_auc = AUROC(name="Calculate Cox PH AUROC")
+    wprob_auc = AUROC(name="Calculate NBA AUROC")
+    metricplot = PlotMetric(
+        name="AUROC over gametime",
+        checkpoint=True,
+        result=LocalResult(
+            serializer=Plot(),
+            dir=".",
+            location="{data_dir}/models/{today}/auroc.png"
+        )
+    )
+    # Generate the flow
+    with Flow(name="Train Cox model") as flow:
+        # Format the data and segment into train, tune, test
+        alldata = format_data(basedata)
+        data = segdata(alldata, splits=[0.6, 0.25], keys=["train", "tune", "test"])
+        # Collapse data to the final row so we can calculate Concordance
+        tune = tune_data(data["tune"])
+        test = test_data(data["test"])
+        test_auc = test_auc_data.map(data=unmapped(data["test"]), timestep=times)
+        # Run hyperparameter tuning
+        params = tuning(data["train"], tune)
+        tuneplots(params["trials"])
+        # Fit the model
+        model_obj = model(params["best"])
+        fitted = trained(model=model_obj, data=data["train"])
+        # Get the final Concordance
+        predt = hazpred(model=fitted, data=test)
+        concordance(data=test, predt=predt)
+        # Calculate win probability at various times in the game -- benchmark with NBA
+        sprob = calc_sprob.map(model=unmapped(fitted), data=test_auc)
+        wprob = nba_wprob.map(model=unmapped("nba"), data=test_auc)
+        # Get the AUROC based on Cox PH model output -- benchmark with NBA
+        metric = sprob_auc.map(data=sprob)
+        metric_benchmark = wprob_auc.map(data=wprob, mode=unmapped("benchmark"))
+        # Plot the AUROC over game-time
+        metricplot(times=times, metric="AUROC", survival=metric, nba=metric_benchmark)
+    
+    with prefect.context(data_dir=data_dir):
+        flow.run()

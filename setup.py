@@ -61,7 +61,8 @@ setup(
     entry_points={
         "console_scripts": [
             "nbaspa-download=nbaspa.data.scripts.download:download",
-            "nbaspa-clean=nbaspa.data.scripts.clean:clean"
+            "nbaspa-clean=nbaspa.data.scripts.clean:clean",
+            "nbaspa-model=nbaspa.model.scripts.train:build"
         ],
     },
 )
