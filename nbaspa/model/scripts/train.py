@@ -38,7 +38,17 @@ def build():
 
 @build.command()
 @click.option("--data-dir", help="Path to the data directory.")
-def train(data_dir):
+@click.option(
+    "--splits",
+    nargs=2,
+    type=click.Tuple([float, float]),
+    default=(0.6, 0.25),
+    help="Percentage splits for training, tuning, and test data"
+)
+@click.option(
+    "--max-evals", default=100, type=int, help="Number of hyperparameter tuning iterations"
+)
+def train(data_dir, splits, max_evals):
     """Train the survival analysis model.
 
     The model training will involve
@@ -121,13 +131,13 @@ def train(data_dir):
     with Flow(name="Train Cox model") as flow:
         # Format the data and segment into train, tune, test
         alldata = format_data(basedata)
-        data = segdata(alldata, splits=[0.6, 0.25], keys=["train", "tune", "test"])
+        data = segdata(alldata, splits=splits, keys=["train", "tune", "test"])
         # Collapse data to the final row so we can calculate Concordance
         tune = tune_data(data["tune"])
         test = test_data(data["test"])
         test_auc = test_auc_data.map(data=unmapped(data["test"]), timestep=times)
         # Run hyperparameter tuning
-        params = tuning(data["train"], tune)
+        params = tuning(data["train"], tune, max_evals=max_evals)
         tuneplots(params["trials"])
         # Fit the model
         model_obj = model(params["best"])
