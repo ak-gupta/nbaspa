@@ -15,6 +15,8 @@ requirements = [
     'Click>=7.1.2,<=7.1.2',
     'fsspec>=0.8.5,<=0.8.5',
     'hyperopt>=0.2.5,<=0.2.5',
+    'jax>=0.2.9,<=0.2.9',
+    'jaxlib>=0.1.61,<=0.1.61',
     'lifelines>=0.25.9,<=0.25.9',
     'matplotlib>=3.3.4,<=3.3.4',
     'pandas>=1.2.1,<=1.2.1',
@@ -23,6 +25,7 @@ requirements = [
     'requests>=2.25.1,<=2.25.1',
     'scikit-learn>=0.24.1,<=0.24.1',
     'seaborn>=0.11.1,<=0.11.1',
+    'xgboost>=1.3.3,<=1.3.3'
 ]
 
 setup_requirements = ['pytest-runner', ]

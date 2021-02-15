@@ -37,7 +37,7 @@ def scoreboard(output_dir, season):
 @download.command()
 @click.option("--output-dir", help="Path to the output directory.")
 @click.option("--season", type=str, help="The season to download")
-def game(output_dir, season):
+def games(output_dir, season):
     """Download the game data."""
     calls: List[str] = []
     for n in range(int((SEASONS[season]["END"] - SEASONS[season]["START"]).days) + 1):
