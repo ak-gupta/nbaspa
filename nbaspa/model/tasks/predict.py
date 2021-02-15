@@ -2,11 +2,9 @@
 
 from lifelines import CoxTimeVaryingFitter
 from lifelines.utils import interpolate_at_times
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from prefect import Task
-import seaborn as sns
 
 from .meta import META
 
@@ -50,6 +48,8 @@ class WinProbability(Task):
         """
         if isinstance(model, CoxTimeVaryingFitter):
             return self._run_lifelines(model=model, data=data)
+        elif isinstance(model, str) and model == "nba":
+            return data
         else:
             self.logger.error("No method specified for this model type")
             raise NotImplementedError("No method specified for this model type")
@@ -75,39 +75,6 @@ class WinProbability(Task):
         vals = model.predict_partial_hazard(data)
         c0 = interpolate_at_times(model.baseline_cumulative_hazard_, data["stop"].values)
         # Survival is the negative exponent of the cumulative hazard
-        data[META["probability"]] = 1 - np.exp(-(c0 * vals.values))
+        data[META["survival"]] = 1 - np.exp(-(c0 * vals.values))
 
         return data
-
-
-class PlotProbability(Task):
-    """Plot the survival probability against the margin of the game."""
-    def run(self, data: pd.DataFrame):
-        """Plot the survival probability against the margin.
-
-        Parameters
-        ----------
-        data : pd.DataFrame
-            The output from ``SurvivalProbability.run()``.
-        
-        Returns
-        -------
-        """
-        with sns.axes_style("dark"):
-            fig, ax = plt.subplots(figsize=(10, 10))
-            probplot = sns.scatterplot(
-                x="SCOREMARGIN",
-                y=META["probability"],
-                hue=META["event"],
-                data=data,
-                legend=True,
-                ax=ax
-            )
-            probplot.set(
-                title=f"Survival probability versus game margin",
-                xlabel="Margin (positive value means home team is winning)",
-                ylabel="Survival Probability"
-            )
-            probplot.legend().set_title("Home team win")
-        
-        return fig

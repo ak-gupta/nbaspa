@@ -7,9 +7,10 @@ from .lifelines import (
     InitializeLifelines,
     FitLifelinesModel,
 )
-from .metrics import ConcordanceIndex, AUROC, PlotMetric
-from .predict import PredictLifelines, WinProbability, PlotProbability
-from .tuning import LifelinesTuning, PlotTuning
+from .metrics import ConcordanceIndex, AUROC
+from .predict import PredictLifelines, WinProbability
+from .tuning import LifelinesTuning
+from .visualization import PlotMetric, PlotProbability, PlotTuning
 
 __all__: List[str] = [
     "SurvivalData",

@@ -5,11 +5,9 @@ from typing import Dict, Optional
 from hyperopt import fmin, hp, STATUS_OK, tpe, Trials
 from lifelines import CoxTimeVaryingFitter
 from lifelines.utils import concordance_index
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from prefect import Task
-import seaborn as sns
 
 from .meta import META
 
@@ -87,49 +85,3 @@ class LifelinesTuning(Task):
         )
 
         return {"best": best, "trials": trials}
-
-
-class PlotTuning(Task):
-    """Create ``matplotlib`` plots to visualize hyperparameter tuning."""
-    def run(self, trials: Trials):
-        """Create ``matplotlib`` plots to visualize hyperparameter tuning.
-
-        Parameters
-        ----------
-        trials : Trials
-            The ``hyperopt.Trials`` object.
-        
-        Returns
-        -------
-        """
-        # Get the parameters
-        params = set(trials.trials[0]["misc"]["vals"].keys())
-        # Parse trials object
-        data = {
-            "trial": [trial["tid"] for trial in trials.trials],
-            "loss": [trial["result"]["loss"] for trial in trials.trials]
-        }
-        for param in params:
-            data[param] = [trial["misc"]["vals"][param][0] for trial in trials.trials]
-        
-        df = pd.DataFrame(data)
-        df["best"] = False
-        df.loc[df["loss"] == df["loss"].min(), "best"] = True
-        
-        # Create the plotting object
-        fig = plt.figure(figsize=(10, 10))
-        gridsize = int(np.ceil(np.sqrt(len(params))))
-        gs = fig.add_gridspec(gridsize, gridsize)
-        with sns.axes_style("dark"):
-            ax = fig.add_subplot(gs[0, 0])
-            sns.scatterplot(x="trial", y="loss", hue="best", legend=False, data=df, ax=ax)
-            for idx, param in enumerate(params):
-                if idx < gridsize - 1:
-                    rowidx = 0
-                else:
-                    rowidx = idx % gridsize
-                ax = fig.add_subplot(gs[rowidx, (idx + 1) % gridsize])
-                sns.scatterplot(x="trial", y=param, hue="best", legend=False, data=df, ax=ax)
-        fig.tight_layout()
-
-        return fig

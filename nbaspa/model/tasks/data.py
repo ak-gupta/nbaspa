@@ -11,17 +11,13 @@ from .meta import META
 
 class SurvivalData(Task):
     """Create time-varying data in the ``lifelines`` format."""
-    def run(
-        self, data: pd.DataFrame, timevarying: Optional[List[str]] = META["dynamic"],
-    ) -> pd.DataFrame:
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:
         """Create time-varying data in the ``lifelines`` format.
 
         Parameters
         ----------
         data : pd.DataFrame
             The cleaned play-by-play data.
-        timevarying : list, optional (default META["duration"])
-            The list of time-varying columns.
         
         Returns
         -------
@@ -36,7 +32,9 @@ class SurvivalData(Task):
         # Create the longform data
         longform = add_covariate_to_timeline(
             base,
-            data[[META["id"]] + [META["duration"]] + timevarying],
+            data[
+                [META["id"]] + [META["duration"]] + META["dynamic"]
+            ],
             duration_col=META["duration"],
             id_col=META["id"],
             event_col=META["event"]
@@ -45,6 +43,13 @@ class SurvivalData(Task):
         longform.drop(
             longform[longform["start"] == longform["stop"]].index, inplace=True
         )
+        # Add the NBA win probability to the dataset
+        longform[META["benchmark"]] = longform.merge(
+            data,
+            left_on=("GAME_ID", "stop"),
+            right_on=("GAME_ID", "TIME"),
+            how="left"
+        )[META["benchmark"]]
 
         return longform
 

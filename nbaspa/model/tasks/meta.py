@@ -24,5 +24,6 @@ META: Dict = {
     "duration": "TIME",
     "event": "WIN",
     "id": "GAME_ID",
-    "probability": "WIN_PROB"
+    "survival": "WIN_PROB",
+    "benchmark": "NBA_WIN_PROB"
 }

@@ -52,7 +52,9 @@ class FitLifelinesModel(Task):
             The fitted model.
         """
         model = model.fit(
-            data,
+            data[
+                [META["id"], META["event"]] + ["start", "stop"] + META["static"] + META["dynamic"]
+            ],
             id_col=META["id"],
             event_col=META["event"],
             start_col="start",
