@@ -48,11 +48,13 @@ def build():
 @click.option(
     "--max-evals", default=100, type=int, help="Number of hyperparameter tuning iterations"
 )
-def train(data_dir, splits, max_evals):
+@click.option("--seed", default=42, type=int, help="Random seed for segmentation and tuning")
+def train(data_dir, splits, max_evals, seed):
     """Train the survival analysis model.
 
     The model training will involve
 
+    \b
     * Loading the ``model-data`` from ``data_dir``,
     * Segmenting the data into ``train``, ``test``, and ``tune``,
     * Tuning the data using ``hyperopt``,
@@ -64,6 +66,7 @@ def train(data_dir, splits, max_evals):
 
     The following objects will be saved to the ``models`` folder within ``data_dir``:
 
+    \b
     * ``tuning.pkl``: The output from hyperparameter tuning,
     * ``model.pkl``: The fitted model object,
     * ``train.csv``: The training data for the model,
@@ -131,13 +134,15 @@ def train(data_dir, splits, max_evals):
     with Flow(name="Train Cox model") as flow:
         # Format the data and segment into train, tune, test
         alldata = format_data(basedata)
-        data = segdata(alldata, splits=splits, keys=["train", "tune", "test"])
+        data = segdata(alldata, splits=splits, keys=["train", "tune", "test"], seed=seed)
         # Collapse data to the final row so we can calculate Concordance
         tune = tune_data(data["tune"])
         test = test_data(data["test"])
         test_auc = test_auc_data.map(data=unmapped(data["test"]), timestep=times)
         # Run hyperparameter tuning
-        params = tuning(data["train"], tune, max_evals=max_evals)
+        params = tuning(
+            train_data=data["train"], tune_data=tune, max_evals=max_evals, seed=seed
+        )
         tuneplots(params["trials"])
         # Fit the model
         model_obj = model(params["best"])

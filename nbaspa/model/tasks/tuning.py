@@ -24,6 +24,7 @@ class LifelinesTuning(Task):
         tune_data: pd.DataFrame,
         param_space: Dict = DEFAULT_PARAM_SPACE,
         max_evals: Optional[int] = 100,
+        seed: Optional[int] = 42,
         **kwargs
     ) -> Dict:
         """Hyperparameter tuning.
@@ -38,6 +39,8 @@ class LifelinesTuning(Task):
             The space for the hyperparameters
         max_exals : int, optional (default 100)
             The number of evaluations for hyperparameter tuning.
+        seed : int, optional (default 42)
+            The random seed for hyperparameter tuning.
         **kwargs
             Any constant keyword arguments to pass to the ``CoxTimeVaryingFitter``
             initialization
@@ -76,7 +79,8 @@ class LifelinesTuning(Task):
             param_space,
             algo=tpe.suggest,
             max_evals=max_evals,
-            trials=trials
+            trials=trials,
+            rstate=np.random.RandomState(42)
         )
         best = {**best, **kwargs}
         self.logger.info(
