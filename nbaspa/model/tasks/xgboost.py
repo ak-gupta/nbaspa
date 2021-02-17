@@ -2,8 +2,6 @@
 
 from typing import Dict, Tuple
 
-import jax
-import jax.numpy as jnp
 import numpy as np
 import pandas as pd
 from prefect import Task
@@ -11,115 +9,124 @@ import xgboost as xgb
 
 from .meta import META
 
-def _cox_obs_loglik(
-    predt: jnp.ndarray,
-    stop: jnp.ndarray,
-    failuretime: jnp.ndarray
-) -> float:
-    """Get the cox partial log-likelihood for an observation.
-
-    Parameters
-    ----------
-    predt : jnp.ndarray
-        The predicted partial hazard value for each event.
-    stop : jnp.ndarray
-        The end (inclusive) for the covariate values within the subject.
-    failuretime : int
-        The index of the failure time in each array.
-    
-    Returns
-    -------
-    float
-        The partial likelihood for each observation.
-    """
-    if predt[stop == stop[failuretime]].shape[0] > 0:
-        return jnp.log(predt[failuretime]) - jnp.log(jnp.sum(predt[stop == stop[failuretime]]))
-    else:
-        return jnp.array([0], dtype=float)
-
-# Define the gradient and hessian
-_cox_obs_gradient = jax.grad(_cox_obs_loglik)
-_cox_obs_hessian = jax.grad(_cox_obs_gradient)
-
-def _cox_gradient(
-    predt: jnp.ndarray,
-    stop: jnp.ndarray,
-    event: jnp.ndarray,
-    group: jnp.ndarray,
-    games: jnp.ndarray,
+def _ncox_loglik(
+    predt: np.ndarray,
+    label: np.ndarray,
+    stop: np.ndarray,
+    group: np.ndarray,
 ) -> np.ndarray:
-    """Get the cox partial log-likelihood.
+    """Get the negative log-likelihood.
 
-    This will produce an array with one entry per subject.
-    
     Parameters
     ----------
-    predt : jnp.ndarray
-        The predicted partial hazard value for each event.
-    stop : jnp.ndarray
-        The end (inclusive) for the covariate values within the subject.
-    event : jnp.ndarray
-        A boolean column indicating whether or not the row is associated with an event.
-    group : jnp.ndarray
-        A categorical array indicating the subject
-    games : jnp.ndarray
-        The unique games
+    predt : np.ndarray
+        The array of predicted values from the model.
+    label : np.ndarray
+        A boolean array of event labels.
+    stop : np.ndarray
+        A array of the right (inclusive) time range value for covariate values.
+    group : np.ndarray
+        The game indicator for each observation.
     
     Returns
     -------
     np.ndarray
-        An array of the partial log likelihood values for each subject
+        The observation-level negative log likelihood values.
     """
-    # Get the failure times
-    loglik = np.zeros(len(predt))
-    # Loop through each subject and assign
-    for subject in games:
-        ftime = np.argwhere(group == subject)[-1][0]
-        if event[ftime] == 0:
-            continue
-        loglik += np.array(_cox_obs_gradient(predt, stop=stop, failuretime=ftime))
+    # Get the unique games
+    games = np.unique(group)
+    # Get the array index for every failure time (last row with game value)
+    ftimes = np.array(
+        [np.argwhere(group == game)[-1][0] for game in games]
+    )
+    # Get the sum -- each entry in the array has to be the sum of exponentiated predicted
+    # values for the game at the failure time.
+    exp_sum = np.ones(len(predt))
+    for index, ftime in enumerate(ftimes):
+        # Get the predicted value at failure time
+        exp_sum[index] = np.sum(np.exp(predt[stop == stop[ftime]]))
     
-    return loglik
+    return label * (predt - np.log(exp_sum))
 
-def _cox_hessian(
-    predt: jnp.ndarray,
-    stop: jnp.ndarray,
-    event: jnp.ndarray,
-    group: jnp.ndarray,
-    games: jnp.ndarray,
+def _ncox_gradient(
+    predt: np.ndarray,
+    label: np.ndarray,
+    stop: np.ndarray,
+    group: np.ndarray,
 ) -> np.ndarray:
-    """Get the cox partial log-likelihood.
+    """Get the negative gradient.
 
-    This will produce an array with one entry per subject.
-    
     Parameters
     ----------
-    predt : jnp.ndarray
-        The predicted partial hazard value for each event.
-    stop : jnp.ndarray
-        The end (inclusive) for the covariate values within the subject.
-    event : jnp.ndarray
-        A boolean column indicating whether or not the row is associated with an event.
-    group : jnp.ndarray
-        A categorical array indicating the subject
-    games : jnp.ndarray
-        The unique games
+    predt : np.ndarray
+        The array of predicted values from the model.
+    label : np.ndarray
+        A boolean array of event labels.
+    stop : np.ndarray
+        A array of the right (inclusive) time range value for covariate values.
+    group : np.ndarray
+        The game indicator for each observation.
     
     Returns
     -------
     np.ndarray
-        An array of the partial log likelihood values for each subject
+        The observation-level negative gradient values.
     """
-    # Get the failure times
-    loglik = np.zeros(len(predt))
-    # Loop through each subject and assign
-    for subject in games:
-        ftime = np.argwhere(group == subject)[-1][0]
-        if event[ftime] == 0:
-            continue
-        loglik += np.array(_cox_obs_hessian(predt, stop=stop, failuretime=ftime))
+    # Get the unique games
+    games = np.unique(group)
+    # Get the array index for every failure time (last row with game value)
+    ftimes = np.array(
+        [np.argwhere(group == game)[-1][0] for game in games]
+    )
+    # Get the sum -- each entry in the array has to be the sum of exponentiated predicted
+    # values for the game at the failure time.
+    exp_sum = np.ones(len(predt))
+    for index, ftime in enumerate(ftimes):
+        # Get the predicted value at failure time
+        exp_sum[index] = np.sum(np.exp(predt[stop == stop[ftime]]))
     
-    return loglik
+    return label * ((np.exp(predt) / exp_sum) - 1)
+
+def _ncox_hessian(
+    predt: np.ndarray,
+    label: np.ndarray,
+    stop: np.ndarray,
+    group: np.ndarray,
+) -> np.ndarray:
+    """Get the negative hessian.
+
+    Parameters
+    ----------
+    predt : np.ndarray
+        The array of predicted values from the model.
+    label : np.ndarray
+        A boolean array of event labels.
+    stop : np.ndarray
+        A array of the right (inclusive) time range value for covariate values.
+    group : np.ndarray
+        The game indicator for each observation.
+    
+    Returns
+    -------
+    np.ndarray
+        The observation-level negative hessian values.
+    """
+    # Get the unique games
+    games = np.unique(group)
+    # Get the array index for every failure time (last row with game value)
+    ftimes = np.array(
+        [np.argwhere(group == game)[-1][0] for game in games]
+    )
+    # Get the sum -- each entry in the array has to be the sum of exponentiated predicted
+    # values for the game at the failure time.
+    exp_sum = np.ones(len(predt))
+    for index, ftime in enumerate(ftimes):
+        # Get the predicted value at failure time
+        exp_sum[index] = np.sum(np.exp(predt[stop == stop[ftime]]))
+    
+    return (
+        label * ((np.exp(predt) / exp_sum) - ((np.exp(predt) ** 2) / (exp_sum ** 2)))
+    )
 
 class FitXGBoost(Task):
     """Fit the XGBoost model."""
@@ -142,50 +149,25 @@ class FitXGBoost(Task):
         """
         # Get the game identifiers since they aren't easily defined in ``xgb.DMatrix``
         group = pd.get_dummies(train_data[META["id"]]).values.argmax(1)
-        games = np.unique(group)
 
-        # Define the objective function internally
-        def objective(
-            predt: np.ndarray, dtrain: xgb.DMatrix
-        ) -> Tuple[np.ndarray, np.ndarray]:
-            event = jnp.array(dtrain.get_label())
-            stop = jnp.array(dtrain.get_float_info("label_upper_bound"))
-
-            self.logger.info("Calculating the gradient...")
-            gradient = _cox_gradient(
-                predt=jnp.array(predt),
-                stop=stop,
-                event=event,
-                group=group,
-                games=games,
-            )
-            self.logger.info("Calculating the Hessian...")
-            hess = _cox_hessian(
-                predt=jnp.array(predt),
-                stop=stop,
-                event=event,
-                group=group,
-                games=games,
-            )
-
-            return gradient, hess
-        
-        # Define the metric to use for evaluation
-        def nloglik(predt: np.ndarray, dtrain: xgb.DMatrix) -> Tuple[str, float]:
-            event = dtrain.get_label()
-            start = dtrain.get_float_info("label_lower_bound")
+        # Define a custom objective
+        def objective(predt: np.ndarray, dtrain: xgb.DMatrix) -> np.ndarray:
+            """Cox custom objective function."""
+            label = dtrain.get_label()
             stop = dtrain.get_float_info("label_upper_bound")
 
-            self.logger.info("Calculating the partial log-likelihood...")
+            grad = _ncox_gradient(predt=predt, label=label, stop=stop, group=group)
+            hess = _ncox_hessian(predt=predt, label=label, stop=stop, group=group)
 
-            return (
-                "partial-nloglik",
-                -np.sum(
-                    _coxloglik(
-                        predt=predt, start=start, stop=stop, event=event, group=group
-                    )
-                )
-            )
+            return grad, hess
+        
+        # Define the evaluation metric
+        def eval_metric(predt: np.ndarray, dtrain: xgb.DMatrix) -> np.ndarray:
+            """Cox custom evaluation metric."""
+            label = dtrain.get_label()
+            stop = dtrain.get_float_info("label_upper_bound")
+
+            return "cox-nloglik", np.sum(_ncox_loglik(predt=predt, label=label, stop=stop, group=group))
         
         # Train the model
         params.update(
@@ -201,7 +183,7 @@ class FitXGBoost(Task):
             params,
             dtrain,
             obj=objective,
-            feval=nloglik,
+            feval=eval_metric,
             evals=[(dtrain, "train")],
             **kwargs
         )
