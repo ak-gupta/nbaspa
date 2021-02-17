@@ -21,7 +21,7 @@ from ..tasks import (
     PlotTuning,
     InitializeLifelines,
     FitLifelinesModel,
-    PredictLifelines,
+    Predict,
     ConcordanceIndex,
     WinProbability,
     AUROC,
@@ -115,7 +115,7 @@ def train(data_dir, splits, max_evals, seed):
             location="{data_dir}/models/{today}/model.pkl"
         )
     )
-    hazpred = PredictLifelines(name="Calculate partial hazard function")
+    hazpred = Predict(name="Calculate partial hazard function")
     concordance = ConcordanceIndex(name="Calculate C-index")
     calc_sprob = WinProbability(name="Calculate win probability")
     nba_wprob = WinProbability(name="Calculate NBA win probability")

@@ -8,7 +8,7 @@ from .lifelines import (
     FitLifelinesModel,
 )
 from .metrics import ConcordanceIndex, AUROC
-from .predict import PredictLifelines, WinProbability
+from .predict import Predict, WinProbability
 from .tuning import LifelinesTuning
 from .visualization import PlotMetric, PlotProbability, PlotTuning
 
@@ -18,7 +18,7 @@ __all__: List[str] = [
     "CollapseData",
     "InitializeLifelines",
     "FitLifelinesModel",
-    "PredictLifelines",
+    "Predict",
     "ConcordanceIndex",
     "AUROC",
     "PlotMetric",
