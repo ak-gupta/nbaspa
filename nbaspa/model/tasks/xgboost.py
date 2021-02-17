@@ -1,6 +1,5 @@
 """Tasks for XGBoost."""
 
-import logging
 from typing import Dict, Tuple
 
 import jax
@@ -12,14 +11,42 @@ import xgboost as xgb
 
 from .meta import META
 
-LOG = logging.getLogger(__name__)
-
-def _coxloglik(
+def _cox_obs_loglik(
     predt: jnp.ndarray,
-    start: jnp.ndarray,
+    stop: jnp.ndarray,
+    failuretime: jnp.ndarray
+) -> float:
+    """Get the cox partial log-likelihood for an observation.
+
+    Parameters
+    ----------
+    predt : jnp.ndarray
+        The predicted partial hazard value for each event.
+    stop : jnp.ndarray
+        The end (inclusive) for the covariate values within the subject.
+    failuretime : int
+        The index of the failure time in each array.
+    
+    Returns
+    -------
+    float
+        The partial likelihood for each observation.
+    """
+    if predt[stop == stop[failuretime]].shape[0] > 0:
+        return jnp.log(predt[failuretime]) - jnp.log(jnp.sum(predt[stop == stop[failuretime]]))
+    else:
+        return jnp.array([0], dtype=float)
+
+# Define the gradient and hessian
+_cox_obs_gradient = jax.grad(_cox_obs_loglik)
+_cox_obs_hessian = jax.grad(_cox_obs_gradient)
+
+def _cox_gradient(
+    predt: jnp.ndarray,
     stop: jnp.ndarray,
     event: jnp.ndarray,
-    group: jnp.ndarray
+    group: jnp.ndarray,
+    games: jnp.ndarray,
 ) -> np.ndarray:
     """Get the cox partial log-likelihood.
 
@@ -29,55 +56,70 @@ def _coxloglik(
     ----------
     predt : jnp.ndarray
         The predicted partial hazard value for each event.
-    start : jnp.ndarray
-        The start (exclusive) for the covariate values within the subject.
     stop : jnp.ndarray
         The end (inclusive) for the covariate values within the subject.
     event : jnp.ndarray
         A boolean column indicating whether or not the row is associated with an event.
     group : jnp.ndarray
         A categorical array indicating the subject
+    games : jnp.ndarray
+        The unique games
     
     Returns
     -------
     np.ndarray
         An array of the partial log likelihood values for each subject
     """
-    LOG.info("Calculating the partial likelihood...")
-    subjects = jnp.unique(group)
     # Get the failure times
-    failuretimes = jnp.array(
-        [jnp.argwhere(group == subject)[-1][0] for subject in subjects]
-    )
-    loglik = jnp.zeros(len(subjects))
+    loglik = np.zeros(len(predt))
     # Loop through each subject and assign
-    counter = 0
-    for index in range(len(subjects)):
-        # Keep the partial log likelihood at 0 for censored subjects
-        if event[failuretimes[index]] == 0:
-            counter += 1
+    for subject in games:
+        ftime = np.argwhere(group == subject)[-1][0]
+        if event[ftime] == 0:
             continue
-        # Get the log likelihood
-        ftime_predt: float = 0
-        for subindex in range(len(subjects)):
-            if stop[failuretimes[subindex]] < stop[failuretimes[index]]:
-                continue
-            # Get the min time
-            predt_idx = jnp.argwhere(
-                (start > failuretimes[index]) & (group == subjects[subindex])
-            )[0][0]
-            ftime_predt += predt[predt_idx]
-        
-        jax.ops.index_update(
-            loglik,
-            counter,
-            jnp.log(predt[failuretimes[index]]) - jnp.log(ftime_predt)
-        )
-
-        counter += 1
+        loglik += np.array(_cox_obs_gradient(predt, stop=stop, failuretime=ftime))
     
     return loglik
 
+def _cox_hessian(
+    predt: jnp.ndarray,
+    stop: jnp.ndarray,
+    event: jnp.ndarray,
+    group: jnp.ndarray,
+    games: jnp.ndarray,
+) -> np.ndarray:
+    """Get the cox partial log-likelihood.
+
+    This will produce an array with one entry per subject.
+    
+    Parameters
+    ----------
+    predt : jnp.ndarray
+        The predicted partial hazard value for each event.
+    stop : jnp.ndarray
+        The end (inclusive) for the covariate values within the subject.
+    event : jnp.ndarray
+        A boolean column indicating whether or not the row is associated with an event.
+    group : jnp.ndarray
+        A categorical array indicating the subject
+    games : jnp.ndarray
+        The unique games
+    
+    Returns
+    -------
+    np.ndarray
+        An array of the partial log likelihood values for each subject
+    """
+    # Get the failure times
+    loglik = np.zeros(len(predt))
+    # Loop through each subject and assign
+    for subject in games:
+        ftime = np.argwhere(group == subject)[-1][0]
+        if event[ftime] == 0:
+            continue
+        loglik += np.array(_cox_obs_hessian(predt, stop=stop, failuretime=ftime))
+    
+    return loglik
 
 class FitXGBoost(Task):
     """Fit the XGBoost model."""
@@ -100,24 +142,30 @@ class FitXGBoost(Task):
         """
         # Get the game identifiers since they aren't easily defined in ``xgb.DMatrix``
         group = pd.get_dummies(train_data[META["id"]]).values.argmax(1)
-        # Define the gradient and hessian
-        self.logger.info("Using ``jax`` to get the gradient and hessian...")
-        gradfunc = jax.grad(_coxloglik)
-        hessfunc = jax.grad(gradfunc)
+        games = np.unique(group)
 
         # Define the objective function internally
         def objective(
             predt: np.ndarray, dtrain: xgb.DMatrix
         ) -> Tuple[np.ndarray, np.ndarray]:
             event = jnp.array(dtrain.get_label())
-            start = jnp.array(dtrain.get_float_info("label_lower_bound"))
             stop = jnp.array(dtrain.get_float_info("label_upper_bound"))
 
-            gradient = gradfunc(
-                jnp.array(predt), start=start, stop=stop, event=event, group=jnp.array(group)
+            self.logger.info("Calculating the gradient...")
+            gradient = _cox_gradient(
+                predt=jnp.array(predt),
+                stop=stop,
+                event=event,
+                group=group,
+                games=games,
             )
-            hess = hessfunc(
-                jnp.array(predt), start=start, stop=stop, event=event, group=jnp.array(group)
+            self.logger.info("Calculating the Hessian...")
+            hess = _cox_hessian(
+                predt=jnp.array(predt),
+                stop=stop,
+                event=event,
+                group=group,
+                games=games,
             )
 
             return gradient, hess
@@ -126,7 +174,9 @@ class FitXGBoost(Task):
         def nloglik(predt: np.ndarray, dtrain: xgb.DMatrix) -> Tuple[str, float]:
             event = dtrain.get_label()
             start = dtrain.get_float_info("label_lower_bound")
-            stop = dtrain.get_float_info("label_upper_bound") 
+            stop = dtrain.get_float_info("label_upper_bound")
+
+            self.logger.info("Calculating the partial log-likelihood...")
 
             return (
                 "partial-nloglik",
