@@ -9,8 +9,9 @@ from .lifelines import (
 )
 from .metrics import ConcordanceIndex, AUROC
 from .predict import Predict, WinProbability
-from .tuning import LifelinesTuning
+from .tuning import LifelinesTuning, XGBoostTuning
 from .visualization import PlotMetric, PlotProbability, PlotTuning
+from .xgboost import FitXGBoost
 
 __all__: List[str] = [
     "SurvivalData",
@@ -25,5 +26,7 @@ __all__: List[str] = [
     "WinProbability",
     "PlotProbability",
     "LifelinesTuning",
-    "PlotTuning"
+    "XGBoostTuning",
+    "PlotTuning",
+    "FitXGBoost"
 ]
