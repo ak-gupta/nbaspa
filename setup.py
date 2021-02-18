@@ -42,7 +42,7 @@ setup(
     description="Survival analysis-based win percentage",
     install_requires=requirements,
     extras_require={
-        "docs": ["sphinx", "sphinx_rtd_theme"]
+        "docs": ["sphinx", "sphinx-material"]
     },
     license="MIT license",
     long_description=readme + "\n\n" + history,
