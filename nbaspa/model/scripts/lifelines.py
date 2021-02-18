@@ -1,4 +1,4 @@
-"""Train and evaluate the model."""
+"""Train and evaluate the lifelines model."""
 
 import logging
 from pathlib import Path
@@ -94,7 +94,7 @@ def train(data_dir, splits, max_evals, seed):
         checkpoint=True,
         result=LocalResult(
             dir=".",
-            location="{data_dir}/models/{today}/tuning.pkl",
+            location="{data_dir}/models/lifelines/{today}/tuning.pkl",
         )
     )
     tuneplots = PlotTuning(
@@ -103,7 +103,7 @@ def train(data_dir, splits, max_evals, seed):
         result=LocalResult(
             serializer=Plot(),
             dir=".",
-            location="{data_dir}/models/{today}/hyperparameter-tuning.png"
+            location="{data_dir}/models/lifelines/{today}/hyperparameter-tuning.png"
         )
     )
     model = InitializeLifelines(name="Initialize Cox PH model")
@@ -112,7 +112,7 @@ def train(data_dir, splits, max_evals, seed):
         checkpoint=True,
         result=LocalResult(
             dir=".",
-            location="{data_dir}/models/{today}/model.pkl"
+            location="{data_dir}/models/lifelines/{today}/model.pkl"
         )
     )
     hazpred = Predict(name="Calculate partial hazard function")
@@ -127,7 +127,7 @@ def train(data_dir, splits, max_evals, seed):
         result=LocalResult(
             serializer=Plot(),
             dir=".",
-            location="{data_dir}/models/{today}/auroc.png"
+            location="{data_dir}/models/lifelines/{today}/auroc.png"
         )
     )
     # Generate the flow
