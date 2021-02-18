@@ -20,6 +20,8 @@ class Plot(Serializer):
         
         Returns
         -------
+        bytes
+            The byte-stream
         """
         value.tight_layout()
         buf = io.BytesIO()
@@ -41,6 +43,8 @@ class Plot(Serializer):
         
         Returns
         -------
+        Figure
+            The figure object
         """
         fig, ax = plt.subplots()
         np_array = np.frombuffer(value, dtype=np.uint8)

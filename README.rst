@@ -4,23 +4,18 @@ NBA survival analysis
 
 
 .. image:: https://img.shields.io/pypi/v/nba_survival.svg
-        :target: https://pypi.python.org/pypi/nba_survival
+        :target: https://pypi.python.org/pypi/nbaspa
 
-.. image:: https://img.shields.io/travis/ak-gupta/nba_survival.svg
-        :target: https://travis-ci.com/ak-gupta/nba_survival
-
-.. image:: https://readthedocs.org/projects/nba-survival/badge/?version=latest
-        :target: https://nba-survival.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/nbaspa/badge/?version=latest
+        :target: https://nbaspa.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
-
-
 
 
 Survival analysis-based win percentage
 
 
 * Free software: MIT license
-* Documentation: https://nba-survival.readthedocs.io.
+* Documentation: https://nbaspa.readthedocs.io.
 
 Purpose
 -------
