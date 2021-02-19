@@ -1,17 +1,33 @@
-Welcome to NBA Survival Analysis's documentation!
-======================================
+==================================
+Welcome to nbaspa's documentation!
+==================================
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contents
 
-   readme
    installation
    usage
-   modules
    contributing
-   authors
-   history
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Model methodology
+
+   _methodology/model/modelfit
+   _methodology/model/features
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Survival probability added (SPA)
+
+   _methodology/impact/metric
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference
+
+   api/modules
 
 Indices and tables
 ==================
