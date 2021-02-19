@@ -12,11 +12,13 @@ Survival analysis-based win percentage and player impact
 * Free software: MIT license
 * Documentation: https://nbaspa.readthedocs.io.
 
+-------
 Purpose
 -------
 
 Coming soon.
 
+-------
 Credits
 -------
 

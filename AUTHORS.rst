@@ -2,11 +2,13 @@
 Credits
 =======
 
+----------------
 Development Lead
 ----------------
 
-* Akshay Gupta <akshaykgupta@protonmail.com>
+* Akshay Gupta <akgcodes@gmail.com>
 
+------------
 Contributors
 ------------
 
