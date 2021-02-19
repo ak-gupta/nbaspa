@@ -2,17 +2,12 @@
 NBA survival analysis
 =====================
 
-
-.. image:: https://img.shields.io/pypi/v/nba_survival.svg
-        :target: https://pypi.python.org/pypi/nbaspa
-
 .. image:: https://readthedocs.org/projects/nbaspa/badge/?version=latest
         :target: https://nbaspa.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
 
-Survival analysis-based win percentage
-
+Survival analysis-based win percentage and player impact
 
 * Free software: MIT license
 * Documentation: https://nbaspa.readthedocs.io.
@@ -20,16 +15,7 @@ Survival analysis-based win percentage
 Purpose
 -------
 
-Win Probability
-~~~~~~~~~~~~~~~
-
-Player impact metric
-~~~~~~~~~~~~~~~~~~~~
-
-Features
---------
-
-* TODO
+Coming soon.
 
 Credits
 -------
