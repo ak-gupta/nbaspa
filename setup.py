@@ -42,7 +42,7 @@ setup(
     description="Survival analysis-based win percentage",
     install_requires=requirements,
     extras_require={
-        "docs": ["sphinx", "sphinx-material"],
+        "docs": ["sphinx", "furo"],
         "qa": ["pip-tools"],
     },
     license="MIT license",
