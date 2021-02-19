@@ -12,6 +12,7 @@ from .meta import META
 
 class FitXGBoost(Task):
     """Fit the XGBoost model."""
+
     def run(
         self,
         train_data: pd.DataFrame,
@@ -36,7 +37,7 @@ class FitXGBoost(Task):
             Seed.
         **kwargs
             Keyword arguments for ``xgb.train``.
-        
+
         Returns
         -------
         xgb.Booster
@@ -46,31 +47,21 @@ class FitXGBoost(Task):
         self.logger.info("Converting training data to ``xgb.DMatrix``")
         train = train_data.copy()
         train.loc[train[META["event"]] == 0, "stop"] = -train["stop"]
-        dtrain = xgb.DMatrix(
-            train[META["static"] + META["dynamic"]], train["stop"]
-        )
-        evals = [(dtrain, "train"),]
+        dtrain = xgb.DMatrix(train[META["static"] + META["dynamic"]], train["stop"])
+        evals = [
+            (dtrain, "train"),
+        ]
         if stopping_data is not None:
             self.logger.info("Converting stopping data to ``xgb.DMatrix``")
             stop = stopping_data.copy()
             stop.loc[stop[META["event"]] == 0, "stop"] = -stop["stop"]
-            dstop = xgb.DMatrix(
-                stop[META["static"] + META["dynamic"]], stop["stop"]
-            )
+            dstop = xgb.DMatrix(stop[META["static"] + META["dynamic"]], stop["stop"])
             evals.append((dstop, "stopping"))
 
         self.logger.info("Training the model...")
-        initial_params = {
-            "objective": "survival:cox",
-            "seed": seed
-        }
+        initial_params = {"objective": "survival:cox", "seed": seed}
         initial_params.update(params)
-        model = xgb.train(
-            initial_params,
-            dtrain,
-            evals=evals,
-            **kwargs
-        )
+        model = xgb.train(initial_params, dtrain, evals=evals, **kwargs)
         self.logger.info("Model training complete...")
 
         return model

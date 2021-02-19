@@ -6,8 +6,10 @@ Ensures the margin value is non-null.
 import pandas as pd
 from prefect import Task
 
+
 class FillMargin(Task):
     """Ensure the margin is non-null."""
+
     def run(self, pbp: pd.DataFrame) -> pd.DataFrame:
         """Ensure the margin is non-null.
 
@@ -15,7 +17,7 @@ class FillMargin(Task):
         ----------
         pbp : pd.DataFrame
             The output from ``SurvivalTime``.
-        
+
         Returns
         -------
         pd.DataFrame

@@ -11,8 +11,10 @@ This module creates Prefect tasks for retrieving
 import pandas as pd
 from prefect import Task
 
+
 class AddTeamID(Task):
     """Add the team identifiers and game date."""
+
     def run(self, pbp: pd.DataFrame, header: pd.DataFrame) -> pd.DataFrame:
         """Add the team identifiers and game date.
 
@@ -28,7 +30,7 @@ class AddTeamID(Task):
             The output of ``PlayByPlay.get_data()``.
         header : pd.DataFrame
             The output of ``Scoreboard.get_data("GameHeader")``.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -37,7 +39,7 @@ class AddTeamID(Task):
         pbp = pbp.merge(
             header[["GAME_ID", "GAME_DATE_EST", "HOME_TEAM_ID", "VISITOR_TEAM_ID"]],
             on="GAME_ID",
-            how="left"
+            how="left",
         )
         pbp["GAME_DATE_EST"] = pd.to_datetime(pbp["GAME_DATE_EST"])
 
@@ -46,6 +48,7 @@ class AddTeamID(Task):
 
 class AddLastMeetingResult(Task):
     """Add the last meeting result."""
+
     def run(self, pbp: pd.DataFrame, last_meeting: pd.DataFrame) -> pd.DataFrame:
         """Add an indicator to show who won the last meeting.
 
@@ -59,7 +62,7 @@ class AddLastMeetingResult(Task):
             The output from ``AddTeamID``.
         last_meeting : pd.DataFrame
             The output from ``Scoreboard.get_data("LastMeeting")``.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -67,14 +70,18 @@ class AddLastMeetingResult(Task):
         """
         # Assign a new variable with the winning team ID from the last meeting
         last_meeting.loc[
-            last_meeting["LAST_GAME_HOME_TEAM_POINTS"] > last_meeting["LAST_GAME_VISITOR_TEAM_POINTS"],
-            "LAST_GAME_TEAM_ID"
+            last_meeting["LAST_GAME_HOME_TEAM_POINTS"]
+            > last_meeting["LAST_GAME_VISITOR_TEAM_POINTS"],
+            "LAST_GAME_TEAM_ID",
         ] = last_meeting["LAST_GAME_HOME_TEAM_ID"]
         last_meeting.loc[
-            last_meeting["LAST_GAME_HOME_TEAM_POINTS"] < last_meeting["LAST_GAME_VISITOR_TEAM_POINTS"],
-            "LAST_GAME_TEAM_ID"
+            last_meeting["LAST_GAME_HOME_TEAM_POINTS"]
+            < last_meeting["LAST_GAME_VISITOR_TEAM_POINTS"],
+            "LAST_GAME_TEAM_ID",
         ] = last_meeting["LAST_GAME_VISITOR_TEAM_ID"]
-        last_meeting["LAST_GAME_TEAM_ID"] = last_meeting["LAST_GAME_TEAM_ID"].astype(int)
+        last_meeting["LAST_GAME_TEAM_ID"] = last_meeting["LAST_GAME_TEAM_ID"].astype(
+            int
+        )
         # Merge with the pbp dataframe
         pbp = pbp.merge(
             last_meeting[["GAME_ID", "LAST_GAME_TEAM_ID"]], on="GAME_ID", how="left"

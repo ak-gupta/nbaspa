@@ -13,6 +13,7 @@ from .meta import META
 
 class Predict(Task):
     """Get the partial hazard for an observation."""
+
     def run(self, model, data: pd.DataFrame) -> np.ndarray:
         """Get the partial hazard for an observation.
 
@@ -22,7 +23,7 @@ class Predict(Task):
             The fitted model.
         data : pd.DataFrame
             The input dataframe.
-        
+
         Returns
         -------
         np.ndarray
@@ -46,14 +47,14 @@ class Predict(Task):
             The fitted model.
         data : pd.DataFrame
             The input dataframe.
-        
+
         Returns
         -------
         np.ndarray
             The predicted values.
         """
         return model.predict_partial_hazard(data)
-    
+
     @staticmethod
     def _run_xgboost(model: xgb.Booster, data: pd.DataFrame) -> np.ndarray:
         """Get the partial hazard for an observation.
@@ -64,7 +65,7 @@ class Predict(Task):
             The fitted model.
         data : pd.DataFrame
             The input dataframe.
-        
+
         Returns
         -------
         np.ndarray
@@ -77,6 +78,7 @@ class Predict(Task):
 
 class WinProbability(Task):
     """Retrieve the win probability."""
+
     def run(self, model, data: pd.DataFrame) -> pd.DataFrame:
         """Retrieve the win probability.
 
@@ -86,7 +88,7 @@ class WinProbability(Task):
             The fitted model.
         data : pd.DataFrame
             The input dataset to be evaluated.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -103,10 +105,7 @@ class WinProbability(Task):
             raise NotImplementedError("No method specified for this model type")
 
     @staticmethod
-    def _run_lifelines(
-        model: CoxTimeVaryingFitter,
-        data: pd.DataFrame
-    ) -> pd.DataFrame:
+    def _run_lifelines(model: CoxTimeVaryingFitter, data: pd.DataFrame) -> pd.DataFrame:
         """Retrieve the win probability.
 
         Parameters
@@ -115,7 +114,7 @@ class WinProbability(Task):
             The fitted model.
         data : pd.DataFrame
             The input dataset to be evaluated.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -123,17 +122,16 @@ class WinProbability(Task):
         """
         # Get the cumulative hazard -- copying from ``lifelines.fitters.SemiParametericPHFitter``
         vals = model.predict_partial_hazard(data)
-        c0 = interpolate_at_times(model.baseline_cumulative_hazard_, data["stop"].values)
+        c0 = interpolate_at_times(
+            model.baseline_cumulative_hazard_, data["stop"].values
+        )
         # Survival is the negative exponent of the cumulative hazard
         data[META["survival"]] = 1 - np.exp(-(c0 * vals.values))
 
         return data
-    
+
     @staticmethod
-    def _run_xgboost(
-        model: xgb.Booster,
-        data: pd.DataFrame
-    ) -> pd.DataFrame:
+    def _run_xgboost(model: xgb.Booster, data: pd.DataFrame) -> pd.DataFrame:
         """Retrieve the win probability.
 
         Parameters
@@ -142,7 +140,7 @@ class WinProbability(Task):
             The fitted XGBoost model.
         data : pd.DataFrame
             The input dataset to be evaluated.
-        
+
         Returns
         -------
         np.ndarray
@@ -152,11 +150,13 @@ class WinProbability(Task):
         # First, get the partial hazard values
         hazard = model.predict(xgb.DMatrix(data[META["static"] + META["dynamic"]]))
         # Get the unique failure times
-        unique_death_times = np.unique(data.loc[data[META["event"]] == 1, "stop"].values)
+        unique_death_times = np.unique(
+            data.loc[data[META["event"]] == 1, "stop"].values
+        )
         baseline_hazard_ = pd.DataFrame(
             np.zeros_like(unique_death_times),
             index=unique_death_times,
-            columns=["baseline hazard"]
+            columns=["baseline hazard"],
         )
 
         for t in unique_death_times:

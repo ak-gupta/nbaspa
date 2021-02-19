@@ -10,12 +10,13 @@ import pandas as pd
 from .base import BaseRequest
 from .parameters import DefaultParameters
 
+
 class TeamStats(BaseRequest):
     """Get team stats."""
 
     endpoint: str = "teamestimatedmetrics"
     filename: str = "data_{Season}.json"
-    
+
     @property
     def defaults(self) -> Dict:
         """Default parameter values for the endpoint.
@@ -30,7 +31,7 @@ class TeamStats(BaseRequest):
             "SeasonType": DefaultParameters.SeasonType,
             "LeagueID": DefaultParameters.LeagueID,
         }
-    
+
     def get_data(self, dataset_type: Optional[str] = "default") -> pd.DataFrame:
         """Get a tabular dataset.
 
@@ -38,7 +39,7 @@ class TeamStats(BaseRequest):
         ----------
         dataset_type : str, optional (default "default")
             The dataset type.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -46,22 +47,19 @@ class TeamStats(BaseRequest):
         """
         return pd.DataFrame.from_records(
             self._raw_data["resultSet"]["rowSet"],
-            columns=self._raw_data["resultSet"]["headers"]
+            columns=self._raw_data["resultSet"]["headers"],
         )
 
 
 class TeamGameLog(BaseRequest):
     """Get team game logs.
-    
+
     Parameters
     ----------
     TeamID : int
         The team identifier.
     **params
         Parameters for ``BaseRequest``
-    
-    Attributes
-    ----------
     """
 
     endpoint: str = "teamgamelog"
@@ -74,10 +72,11 @@ class TeamGameLog(BaseRequest):
         filesystem: Optional[str] = "file",
         **params
     ):
+        """Init method."""
         super().__init__(
             output_dir=output_dir, filesystem=filesystem, TeamID=TeamID, **params
         )
-    
+
     @property
     def defaults(self) -> Dict:
         """Default parameters for the endpoint.

@@ -8,15 +8,11 @@ from .boxscore import (
     BoxScoreFourFactors,
     BoxScoreMisc,
     BoxScoreScoring,
-    BoxScoreUsage
+    BoxScoreUsage,
 )
 from .lineup import TeamLineups
 from .pbp import PlayByPlay
-from .player import (
-    AllPlayers,
-    PlayerDashboardGeneral,
-    PlayerDashboardShooting
-)
+from .player import AllPlayers, PlayerDashboardGeneral, PlayerDashboardShooting
 from .rotation import GameRotation
 from .scoreboard import Scoreboard
 from .shotchart import ShotChart
@@ -42,5 +38,5 @@ __all__: List[str] = [
     "SynergyPlayType",
     "TeamStats",
     "TeamGameLog",
-    "WinProbability"
+    "WinProbability",
 ]

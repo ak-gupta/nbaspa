@@ -20,13 +20,14 @@ else:
 SEASONS: Dict = {
     "2017-18": {
         "START": datetime.datetime.strptime("2017-10-17", "%Y-%m-%d"),
-        "END": datetime.datetime.strptime("2018-04-11", "%Y-%m-%d")
+        "END": datetime.datetime.strptime("2018-04-11", "%Y-%m-%d"),
     },
     "2018-19": {
         "START": datetime.datetime.strptime("2018-10-16", "%Y-%m-%d"),
-        "END": datetime.datetime.strptime("2019-04-10", "%Y-%m-%d")
-    }
+        "END": datetime.datetime.strptime("2019-04-10", "%Y-%m-%d"),
+    },
 }
+
 
 @dataclass
 class DefaultParameters:
@@ -91,6 +92,7 @@ class DefaultParameters:
     PlayType: str = ""
     GroupQuantity: str = "5"
 
+
 class ParameterValues:
     """Define the possible parameter values."""
 
@@ -100,7 +102,9 @@ class ParameterValues:
 
         This package is specific to the NBA, so only enable NBA.
         """
-        return {"00",}
+        return {
+            "00",
+        }
 
     # DATETIME VARIABLES
 
@@ -108,12 +112,12 @@ class ParameterValues:
     def GameDate(self) -> Any:
         """Game date."""
         pass
-    
+
     @property
     def Season(self) -> Any:
         """The season."""
         pass
-    
+
     @property
     def SeasonYear(self) -> Any:
         """The year.
@@ -121,25 +125,22 @@ class ParameterValues:
         Allow all values.
         """
         pass
-    
+
     @property
     def SeasonType(self) -> Set[str]:
         """Season type to retrieve."""
-        return {
-            "Regular Season",
-            "Playoffs"
-        }
-    
+        return {"Regular Season", "Playoffs"}
+
     @property
     def DayOffset(self) -> Any:
         """Offset the game date."""
         pass
-    
+
     @property
     def IsOnlyCurrentSeason(self) -> Set[str]:
         """Restrict to the current season."""
         pass
-    
+
     @property
     def Month(self) -> Set[str]:
         """Get the month.
@@ -152,15 +153,13 @@ class ParameterValues:
     @property
     def SeasonSegment(self) -> Set[str]:
         """Whether to retrieve the entire season or segment using the All-star break."""
-        return {
-            "", "Pre All-Star", "Post All-Star"
-        }
+        return {"", "Pre All-Star", "Post All-Star"}
 
     @property
     def DateFrom(self) -> Any:
         """Start of the data pull."""
         pass
-    
+
     @property
     def DateTo(self) -> Any:
         """End of the data pull."""
@@ -168,8 +167,9 @@ class ParameterValues:
 
     @property
     def LastNGames(self) -> Any:
+        """Number of games to consider."""
         pass
-    
+
     @property
     def PORound(self) -> Set[str]:
         """The playoff round.
@@ -177,19 +177,15 @@ class ParameterValues:
         0 indicates all rounds, 1 retrieves the first round, etc.
         """
         return {0, 1, 2, 3, 4}
-    
+
     @property
     def GameScope(self) -> Set[str]:
         """General datetime restriction."""
-        return {
-            "Season",
-            "Last 10",
-            "Yesterday",
-            "Finals"
-        }
-    
+        return {"Season", "Last 10", "Yesterday", "Finals"}
+
     @property
     def RookieYear(self) -> Any:
+        """Unknown."""
         pass
 
     # WITHIN GAME RESTRICTIONS
@@ -200,15 +196,13 @@ class ParameterValues:
 
         0 indicates the entire game, 1 indicates the first quarter, etc.
         """
-        return {
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-        }
-    
+        return {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
     @property
     def StartPeriod(self) -> Set[str]:
         """Restrict the start of the data pull."""
         return self.Period
-    
+
     @property
     def EndPeriod(self) -> Set[str]:
         """Restrict the end of the data pull."""
@@ -216,13 +210,9 @@ class ParameterValues:
 
     @property
     def GameSegment(self) -> Set[str]:
-        return {
-            "",
-            "First Half",
-            "Second Half",
-            "Overtime"
-        }
-    
+        """The portion of the game to retrieve."""
+        return {"", "First Half", "Second Half", "Overtime"}
+
     @property
     def ShotClockRange(self) -> Set[str]:
         """Restrict to shot clock situations."""
@@ -233,9 +223,9 @@ class ParameterValues:
             "18-15 Early",
             "15-7 Average",
             "7-4 Late",
-            "4-0 Very Late"
+            "4-0 Very Late",
         }
-    
+
     @property
     def ClutchTime(self) -> Set[str]:
         """Get data for clutch time."""
@@ -249,23 +239,20 @@ class ParameterValues:
             "Last 4 Minutes",
             "Last 5 Minutes",
         }
-    
+
     @property
     def AheadBehind(self) -> Set[str]:
         """Restrict based on score status."""
-        return {
-            "",
-            "Ahead or Behind",
-            "Ahead or Tied",
-            "Behind or Tied"
-        }
-    
+        return {"", "Ahead or Behind", "Ahead or Tied", "Behind or Tied"}
+
     @property
     def PointDiff(self) -> Any:
+        """Unknown."""
         pass
 
     @property
     def ContextFilter(self) -> Any:
+        """Unknown."""
         pass
 
     # UNKNOWN
@@ -274,12 +261,12 @@ class ParameterValues:
     def StartRange(self) -> Any:
         """Unknown."""
         pass
-    
+
     @property
     def EndRange(self) -> Any:
         """Unknown."""
         pass
-    
+
     @property
     def RangeType(self) -> Any:
         """Unknown."""
@@ -302,7 +289,7 @@ class ParameterValues:
             "Opponent",
             "Usage",
         }
-    
+
     @property
     def PerMode(self) -> Set[str]:
         """The type of team or player data to retrieve."""
@@ -319,7 +306,7 @@ class ParameterValues:
             "Per100Possessions",
             "Per100Plays",
         }
-    
+
     @property
     def ContextMeasure(self) -> Set[str]:
         """Context measure for selectors."""
@@ -336,65 +323,62 @@ class ParameterValues:
             "PTS_2ND_CHANCE",
             "PTS_FB",
             "PTS_OFF_TOV",
-            "TS_PCT"
+            "TS_PCT",
         }
-    
+
     @property
     def PlusMinus(self) -> Any:
         """Unknown."""
         pass
-    
+
     @property
     def PaceAdjust(self) -> Any:
         """Unknown."""
         pass
-    
+
     @property
     def Rank(self) -> Any:
         """Unknown."""
         pass
-    
+
     @property
     def Outcome(self) -> Set[str]:
-        return {
-            "", "W", "L"
-        }
-    
+        """Segment call on game outcome."""
+        return {"", "W", "L"}
+
     @property
     def Location(self) -> Set[str]:
-        return {
-            "", "Home", "Away"
-        }
-    
+        """Segment call on game location."""
+        return {"", "Home", "Away"}
+
     @property
     def GameID(self) -> Any:
+        """Game identifier."""
         pass
 
     @property
     def TeamID(self) -> Set[str]:
         """Unique team-level identifier."""
-        return set([0] + [
-            idval for idval in range(1610612737, 1610612767)
-        ])
-    
+        return set([0] + [idval for idval in range(1610612737, 1610612767)])
+
     @property
     def OpponentTeamID(self) -> Set[str]:
         """Opponent TeamID."""
         return self.TeamID
-    
+
     @property
     def VsConference(self) -> Set[str]:
-        return {
-            "", "East", "West"
-        }
-    
+        """The conference of the opposing team."""
+        return {"", "East", "West"}
+
     @property
     def Conference(self) -> Set[str]:
         """The conference."""
         return self.VsConference
-    
+
     @property
     def VsDivision(self) -> Set[str]:
+        """The division of the opposing team."""
         return {
             "",
             "Atlantic",
@@ -402,9 +386,9 @@ class ParameterValues:
             "Northwest",
             "Pacific",
             "Southeast",
-            "Southwest"
+            "Southwest",
         }
-    
+
     @property
     def Division(self) -> Set[str]:
         """Which division to retrieve."""
@@ -414,46 +398,42 @@ class ParameterValues:
     def Scope(self) -> Set[str]:
         """Get all players or just rookies."""
         return {"S", "Rookies"}
-    
+
     @property
     def PlayerID(self) -> Any:
         """Get a specific player."""
         pass
-    
+
     @property
     def PlayerExperience(self) -> Set[str]:
         """General filter for player experience."""
-        return {
-            "", "Rookie", "Sophomore", "Veteran"
-        }
-    
+        return {"", "Rookie", "Sophomore", "Veteran"}
+
     @property
     def Position(self) -> Any:
         """Filter for position."""
         return {"", "F", "C", "G"}
-    
+
     @property
     def PlayerPosition(self) -> Set[str]:
         """Filter for position."""
         return self.Position
-    
+
     @property
     def StarterBench(self) -> Set[str]:
         """Filter for starters and bench players."""
-        return {
-            "", "Starters", "Bench"
-        }
-    
+        return {"", "Starters", "Bench"}
+
     @property
     def PlayerOrTeam(self) -> Set[str]:
         """Filter to return player or team."""
         return {"T", "P"}
-    
+
     @property
     def TypeGrouping(self) -> Set[str]:
         """Choose offensive or defensive possessions."""
         return {"", "defensive", "offensive"}
-    
+
     @property
     def PlayType(self) -> Set[str]:
         """Choose a play type."""
@@ -469,9 +449,10 @@ class ParameterValues:
             "PRRollman",
             "OffRebound",
             "Spotup",
-            "Transition"
+            "Transition",
         }
-    
+
     @property
     def GroupQuantity(self) -> Any:
+        """Number of players to include."""
         pass

@@ -9,6 +9,7 @@ from typing import Dict, List
 from .base import BaseRequest
 from .parameters import DefaultParameters
 
+
 class Scoreboard(BaseRequest):
     """Get the scoreboard for a given date."""
 
@@ -41,7 +42,7 @@ class Scoreboard(BaseRequest):
             "LeagueID": DefaultParameters.LeagueID,
             "DayOffset": DefaultParameters.DayOffset,
         }
-    
+
     @property
     def datasets(self) -> List[str]:
         """Datasets returned by the API.
@@ -61,5 +62,5 @@ class Scoreboard(BaseRequest):
             "Available",
             "TeamLeaders",
             "TicketLinks",
-            "WinProbability"
+            "WinProbability",
         ]

@@ -6,7 +6,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from prefect.engine.serializers import Serializer
 
+
 class Plot(Serializer):
+    """Serializing ``matplotlib`` figures to bytes."""
+
     def serialize(self, value):
         """Serialize the plot to bytes.
 
@@ -14,7 +17,7 @@ class Plot(Serializer):
         ----------
         value
             The input plot
-        
+
         Returns
         -------
         bytes
@@ -29,7 +32,7 @@ class Plot(Serializer):
         buf.close()
 
         return data
-    
+
     def deserialize(self, value):
         """Recover the plot from bytes.
 
@@ -37,7 +40,7 @@ class Plot(Serializer):
         ----------
         value
             The byte-stream
-        
+
         Returns
         -------
         Figure

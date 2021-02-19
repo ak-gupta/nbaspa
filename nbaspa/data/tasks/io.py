@@ -11,6 +11,7 @@ from ..factory import NBADataFactory
 import nbaspa.data.endpoints as endpoints
 from ..endpoints.parameters import ParameterValues
 
+
 class GenericLoader(Task):
     """Load the data from a given endpoint.
 
@@ -21,23 +22,25 @@ class GenericLoader(Task):
         subpackage.
     **kwargs
         Keyword arguments for ``prefect.Task``.
-    
+
     Attributes
     ----------
     _loader : BaseRequest
         The object that will load the data.
     """
+
     def __init__(self, loader: str, **kwargs):
+        """Init method."""
         self._loader = getattr(endpoints, loader)
 
         super().__init__(**kwargs)
-    
+
     def run(
         self,
         output_dir: str,
         filesystem: Optional[str] = "file",
         dataset_type: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> Union[pd.DataFrame, Dict[str, pd.DataFrame]]:
         """Retrieve the data.
 
@@ -49,7 +52,7 @@ class GenericLoader(Task):
             The name of the ``fsspec`` filesystem to use.
         **kwargs
             Keyword arguments for initializating the ``_loader``.
-        
+
         Returns
         -------
         Dict
@@ -65,6 +68,7 @@ class GenericLoader(Task):
 
 class PlayByPlayLoader(Task):
     """Load the play-by-data for a given day."""
+
     def run(
         self,
         header: pd.DataFrame,
@@ -81,7 +85,7 @@ class PlayByPlayLoader(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -89,12 +93,12 @@ class PlayByPlayLoader(Task):
         """
         calls: List[str] = []
         for _, row in header.iterrows():
-            calls.append(
-                ("PlayByPlay", {"GameID": row["GAME_ID"]})
-            )
-        
+            calls.append(("PlayByPlay", {"GameID": row["GAME_ID"]}))
+
         # Create the factory and load the data
-        factory = NBADataFactory(calls=calls, output_dir=output_dir, filesystem=filesystem)
+        factory = NBADataFactory(
+            calls=calls, output_dir=output_dir, filesystem=filesystem
+        )
         factory.load()
 
         return factory.get_data()
@@ -102,6 +106,7 @@ class PlayByPlayLoader(Task):
 
 class WinProbabilityLoader(Task):
     """Load the NBA win probability for each game in a day."""
+
     def run(
         self,
         header: pd.DataFrame,
@@ -118,7 +123,7 @@ class WinProbabilityLoader(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` implementation to use.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -126,15 +131,16 @@ class WinProbabilityLoader(Task):
         """
         calls: List[str] = []
         for _, row in header.iterrows():
-            calls.append(
-                ("WinProbability", {"GameID": row["GAME_ID"]})
-            )
-        
+            calls.append(("WinProbability", {"GameID": row["GAME_ID"]}))
+
         # Create the factory and load the data
-        factory = NBADataFactory(calls=calls, output_dir=output_dir, filesystem=filesystem)
+        factory = NBADataFactory(
+            calls=calls, output_dir=output_dir, filesystem=filesystem
+        )
         factory.load()
 
         return factory.get_data("WinProbPBP")
+
 
 class GameLogLoader(Task):
     """Get team game logs."""
@@ -157,7 +163,7 @@ class GameLogLoader(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -169,8 +175,10 @@ class GameLogLoader(Task):
                 continue
 
             calls.append(("TeamGameLog", {"TeamID": team, "Season": season}))
-        
-        factory = NBADataFactory(calls=calls, output_dir=output_dir, filesystem=filesystem)
+
+        factory = NBADataFactory(
+            calls=calls, output_dir=output_dir, filesystem=filesystem
+        )
         factory.load()
 
         return factory.get_data()
@@ -197,7 +205,7 @@ class LineupLoader(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -209,8 +217,10 @@ class LineupLoader(Task):
                 continue
 
             calls.append(("TeamLineups", {"TeamID": team, "Season": season}))
-        
-        factory = NBADataFactory(calls=calls, output_dir=output_dir, filesystem=filesystem)
+
+        factory = NBADataFactory(
+            calls=calls, output_dir=output_dir, filesystem=filesystem
+        )
         factory.load()
 
         return factory.get_data("Lineups")
@@ -218,6 +228,7 @@ class LineupLoader(Task):
 
 class RotationLoader(Task):
     """Load the team rotations for all games in a given day."""
+
     def run(
         self,
         header: pd.DataFrame,
@@ -234,7 +245,7 @@ class RotationLoader(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
-        
+
         Returns
         -------
         Dict
@@ -242,22 +253,23 @@ class RotationLoader(Task):
         """
         calls: List[str] = []
         for _, row in header.iterrows():
-            calls.append(
-                ("GameRotation", {"GameID": row["GAME_ID"]})
-            )
-        
+            calls.append(("GameRotation", {"GameID": row["GAME_ID"]}))
+
         # Create the factory and load the data
-        factory = NBADataFactory(calls=calls, output_dir=output_dir, filesystem=filesystem)
+        factory = NBADataFactory(
+            calls=calls, output_dir=output_dir, filesystem=filesystem
+        )
         factory.load()
 
         return {
             "HomeTeam": factory.get_data(dataset_type="HomeTeam"),
-            "AwayTeam": factory.get_data(dataset_type="AwayTeam")
+            "AwayTeam": factory.get_data(dataset_type="AwayTeam"),
         }
 
 
 class ShotChartLoader(Task):
     """Load the shotcharts for all games in a given day."""
+
     def run(
         self,
         header: pd.DataFrame,
@@ -277,7 +289,7 @@ class ShotChartLoader(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -285,12 +297,12 @@ class ShotChartLoader(Task):
         """
         calls: List[str] = []
         for _, row in header.iterrows():
-            calls.append(
-                ("ShotChart", {"GameID": row["GAME_ID"], "Season": season})
-            )
-        
+            calls.append(("ShotChart", {"GameID": row["GAME_ID"], "Season": season}))
+
         # Create the factory and load the data
-        factory = NBADataFactory(calls=calls, output_dir=output_dir, filesystem=filesystem)
+        factory = NBADataFactory(
+            calls=calls, output_dir=output_dir, filesystem=filesystem
+        )
         factory.load()
 
         return factory.get_data()
@@ -298,6 +310,7 @@ class ShotChartLoader(Task):
 
 class BoxScoreLoader(Task):
     """Load all boxscores for games in in a given day."""
+
     def run(
         self,
         header: pd.DataFrame,
@@ -314,7 +327,7 @@ class BoxScoreLoader(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -322,12 +335,12 @@ class BoxScoreLoader(Task):
         """
         calls: List[str] = []
         for _, row in header.iterrows():
-            calls.append(
-                ("BoxScoreTraditional", {"GameID": row["GAME_ID"]})
-            )
-        
+            calls.append(("BoxScoreTraditional", {"GameID": row["GAME_ID"]}))
+
         # Create the factory and load the data
-        factory = NBADataFactory(calls=calls, output_dir=output_dir, filesystem=filesystem)
+        factory = NBADataFactory(
+            calls=calls, output_dir=output_dir, filesystem=filesystem
+        )
         factory.load()
 
         return factory.get_data("PlayerStats")
@@ -335,6 +348,7 @@ class BoxScoreLoader(Task):
 
 class ShotZoneLoader(Task):
     """Load the shot zone data for each player in each game."""
+
     def run(
         self,
         boxscore: pd.DataFrame,
@@ -351,7 +365,7 @@ class ShotZoneLoader(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -364,12 +378,14 @@ class ShotZoneLoader(Task):
             calls.append(
                 (
                     "PlayerDashboardShooting",
-                    {"PlayerID": row["PLAYER_ID"], "Season": "2018-19"}
+                    {"PlayerID": row["PLAYER_ID"], "Season": "2018-19"},
                 )
             )
 
         # Create the factory and load the data
-        factory = NBADataFactory(calls=calls, output_dir=output_dir, filesystem=filesystem)
+        factory = NBADataFactory(
+            calls=calls, output_dir=output_dir, filesystem=filesystem
+        )
         factory.load()
 
         return factory.get_data("ShotAreaPlayerDashboard")
@@ -377,6 +393,7 @@ class ShotZoneLoader(Task):
 
 class GeneralShootingLoader(Task):
     """Load the general shooting data for each player in each game."""
+
     def run(
         self,
         boxscore: pd.DataFrame,
@@ -393,7 +410,7 @@ class GeneralShootingLoader(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -406,12 +423,14 @@ class GeneralShootingLoader(Task):
             calls.append(
                 (
                     "PlayerDashboardGeneral",
-                    {"PlayerID": row["PLAYER_ID"], "Season": "2018-19"}
+                    {"PlayerID": row["PLAYER_ID"], "Season": "2018-19"},
                 )
             )
 
         # Create the factory and load the data
-        factory = NBADataFactory(calls=calls, output_dir=output_dir, filesystem=filesystem)
+        factory = NBADataFactory(
+            calls=calls, output_dir=output_dir, filesystem=filesystem
+        )
         factory.load()
 
         return factory.get_data("OverallPlayerDashboard")
@@ -419,12 +438,13 @@ class GeneralShootingLoader(Task):
 
 class SaveData(Task):
     """Save the game data."""
+
     def run(
         self,
         data: pd.DataFrame,
         output_dir: str,
         filesystem: Optional[str] = "file",
-        mode: Optional[str] = "model"
+        mode: Optional[str] = "model",
     ):
         """Save the game data.
 
@@ -441,7 +461,7 @@ class SaveData(Task):
         mode : str, optional (default "model")
             The type of clean data to save. If ``model``, save to the directory
             ``model-data``. If ``rating``, save to ``rating-data``.
-        
+
         Returns
         -------
         None

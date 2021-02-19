@@ -31,17 +31,13 @@ from .tasks import (
     AddShotDetail,
     CreateTarget,
     DeDupeTime,
-    SurvivalTime
+    SurvivalTime,
 )
 from .endpoints.parameters import DefaultParameters
 
 
 def gen_pipeline() -> Flow:
     """Generate the prefect flow.
-
-    Parameters
-    ----------
-    None
 
     Returns
     -------
@@ -50,9 +46,7 @@ def gen_pipeline() -> Flow:
     """
     # Initialize the tasks
     # Loader tasks
-    scoreboard_loader = GenericLoader(
-        loader="Scoreboard", name="Load scoreboard data"
-    )
+    scoreboard_loader = GenericLoader(loader="Scoreboard", name="Load scoreboard data")
     pbp_loader = PlayByPlayLoader(name="Load play-by-play data")
     wprob_loader = WinProbabilityLoader(name="Load NBA win probability")
     teamstats_loader = GenericLoader(
@@ -64,7 +58,9 @@ def gen_pipeline() -> Flow:
     shotchart_loader = ShotChartLoader(name="Load shotchart data")
     box_loader = BoxScoreLoader(name="Load boxscore data")
     shotzone_loader = ShotZoneLoader(name="Load player-level shot zone dashboards")
-    gshooting_loader = GeneralShootingLoader(name="Load player-level overall shooting dashboards")
+    gshooting_loader = GeneralShootingLoader(
+        name="Load player-level overall shooting dashboards"
+    )
     # Transformation tasks
     survtime_task = SurvivalTime(name="Add survival time")
     wprob_task = AddNBAWinProbability(name="Add NBA win probability")
@@ -98,7 +94,7 @@ def gen_pipeline() -> Flow:
             output_dir=output_dir,
             filesystem=filesystem,
             dataset_type=None,
-            GameDate=gamedate
+            GameDate=gamedate,
         )
         pbp = pbp_loader(
             header=scoreboard["GameHeader"],
@@ -118,7 +114,7 @@ def gen_pipeline() -> Flow:
         boxscore = box_loader(
             header=scoreboard["GameHeader"],
             output_dir=output_dir,
-            filesystem=filesystem
+            filesystem=filesystem,
         )
         # Base transformations
         survtime = survtime_task(pbp=pbp)
@@ -136,9 +132,7 @@ def gen_pipeline() -> Flow:
                 filesystem=filesystem,
             )
             shotzonedashboard = shotzone_loader(
-                boxscore=boxscore,
-                output_dir=output_dir,
-                filesystem=filesystem
+                boxscore=boxscore, output_dir=output_dir, filesystem=filesystem
             )
             shooting = gshooting_loader(
                 boxscore=boxscore,
@@ -179,19 +173,14 @@ def gen_pipeline() -> Flow:
                 pbp=last7,
                 lineup_stats=lineup_stats,
                 home_rotation=rotation["HomeTeam"],
-                away_rotation=rotation["AwayTeam"]
+                away_rotation=rotation["AwayTeam"],
             )
             deduped = dedupe_task(pbp=lineup)
         # Save
         final = merge(expected_val, deduped)
         with case(save_data, True):
-            persist(
-                data=final,
-                output_dir=output_dir,
-                filesystem=filesystem,
-                mode=mode
-            )
-    
+            persist(data=final, output_dir=output_dir, filesystem=filesystem, mode=mode)
+
     return flow
 
 
@@ -202,7 +191,7 @@ def run_pipeline(
     filesystem: Optional[str] = "file",
     mode: Optional[str] = "model",
     Season: Optional[str] = None,
-    GameDate: Optional[str] = None
+    GameDate: Optional[str] = None,
 ) -> State:
     """Run the pipeline.
 
@@ -222,7 +211,7 @@ def run_pipeline(
         The ``Season`` value to use.
     GameDate : str, optional (default None)
         The ``GameDate`` value to use, in MM/DD/YYYY format.
-    
+
     Returns
     -------
     State
@@ -232,13 +221,13 @@ def run_pipeline(
         "output_dir": output_dir,
         "filesystem": filesystem,
         "save_data": save_data,
-        "mode": mode
+        "mode": mode,
     }
     if Season is not None:
         params["Season"] = Season
     if GameDate is not None:
         params["GameDate"] = GameDate
-    
+
     output = flow.run(parameters=params)
 
     return output

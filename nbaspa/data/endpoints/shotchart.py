@@ -8,6 +8,7 @@ from typing import Dict, Optional
 from .base import BaseRequest
 from .parameters import DefaultParameters
 
+
 class ShotChart(BaseRequest):
     """Retrieve shot chart data for a player/game.
 
@@ -17,9 +18,6 @@ class ShotChart(BaseRequest):
         The game identifier
     **params
         Parameters for ``BaseRequest``
-    
-    Attributes
-    ----------
     """
 
     endpoint: str = "shotchartdetail"
@@ -32,13 +30,11 @@ class ShotChart(BaseRequest):
         filesystem: Optional[str] = "file",
         **params
     ):
+        """Init method."""
         super().__init__(
-            output_dir=output_dir,
-            filesystem=filesystem,
-            GameID=GameID,
-            **params
+            output_dir=output_dir, filesystem=filesystem, GameID=GameID, **params
         )
-    
+
     @property
     def defaults(self) -> Dict:
         """Default parameters values for the endpoint.

@@ -14,7 +14,7 @@ from .meta import META
 
 DEFAULT_LIFELINES_SPACE: Dict = {
     "penalizer": hp.uniform("penalizer", 0, 1),
-    "l1_ratio": hp.uniform("l1_ratio", 0, 1)
+    "l1_ratio": hp.uniform("l1_ratio", 0, 1),
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
@@ -26,8 +26,10 @@ DEFAULT_XGBOOST_SPACE: Dict = {
     "min_child_weight": hp.quniform("min_child_weight", 0, 10, 1),
 }
 
+
 class LifelinesTuning(Task):
     """Use ``hyperopt`` to choose ``lifelines`` hyperparameters."""
+
     def run(
         self,
         train_data: pd.DataFrame,
@@ -35,7 +37,7 @@ class LifelinesTuning(Task):
         param_space: Optional[Dict] = DEFAULT_LIFELINES_SPACE,
         max_evals: Optional[int] = 100,
         seed: Optional[int] = 42,
-        **kwargs
+        **kwargs,
     ) -> Dict:
         """Hyperparameter tuning.
 
@@ -54,7 +56,7 @@ class LifelinesTuning(Task):
         **kwargs
             Any constant keyword arguments to pass to the ``CoxTimeVaryingFitter``
             initialization
-        
+
         Returns
         -------
         Dict
@@ -75,13 +77,11 @@ class LifelinesTuning(Task):
 
             return {
                 "loss": -concordance_index(
-                    tune_data["stop"],
-                    -predt,
-                    tune_data[META["event"]]
+                    tune_data["stop"], -predt, tune_data[META["event"]]
                 ),
-                "status": STATUS_OK
+                "status": STATUS_OK,
             }
-        
+
         # Run the hyperparameter tuning
         trials = Trials()
         best = fmin(
@@ -90,7 +90,7 @@ class LifelinesTuning(Task):
             algo=tpe.suggest,
             max_evals=max_evals,
             trials=trials,
-            rstate=np.random.RandomState(seed)
+            rstate=np.random.RandomState(seed),
         )
         best = {**best, **kwargs}
         self.logger.info(
@@ -103,6 +103,7 @@ class LifelinesTuning(Task):
 
 class XGBoostTuning(Task):
     """Use ``hyperopt`` to choose ``xgboost`` hyperparameters."""
+
     def run(
         self,
         train_data: pd.DataFrame,
@@ -111,7 +112,7 @@ class XGBoostTuning(Task):
         stopping_data: Optional[pd.DataFrame] = None,
         max_evals: Optional[int] = 100,
         seed: Optional[int] = 42,
-        **kwargs
+        **kwargs,
     ) -> Dict:
         """Hyper parameter tuning.
 
@@ -140,24 +141,20 @@ class XGBoostTuning(Task):
         self.logger.info("Converting training data to ``xgb.DMatrix``")
         train = train_data.copy()
         train.loc[train[META["event"]] == 0, "stop"] = -train["stop"]
-        dtrain = xgb.DMatrix(
-            train[META["static"] + META["dynamic"]], train["stop"]
-        )
-        evals = [(dtrain, "train"),]
+        dtrain = xgb.DMatrix(train[META["static"] + META["dynamic"]], train["stop"])
+        evals = [
+            (dtrain, "train"),
+        ]
         if stopping_data is not None:
             self.logger.info("Converting stopping data to ``xgb.DMatrix``")
             stop = stopping_data.copy()
             stop.loc[stop[META["event"]] == 0, "stop"] = -stop["stop"]
-            dstop = xgb.DMatrix(
-                stop[META["static"] + META["dynamic"]], stop["stop"]
-            )
+            dstop = xgb.DMatrix(stop[META["static"] + META["dynamic"]], stop["stop"])
             evals.append((dstop, "stopping"))
-        
+
         tune = tune_data.copy()
         tune.loc[tune[META["event"]] == 0, "stop"] = -tune["stop"]
-        dtune = xgb.DMatrix(
-            tune[META["static"] + META["dynamic"]], tune["stop"]
-        )
+        dtune = xgb.DMatrix(tune[META["static"] + META["dynamic"]], tune["stop"])
 
         # Create an internal function for fitting, trainin, evaluating
         def func(params):
@@ -173,19 +170,17 @@ class XGBoostTuning(Task):
                 },
                 dtrain,
                 evals=evals,
-                **kwargs
+                **kwargs,
             )
             predt = model.predict(dtune)
 
             return {
                 "loss": -concordance_index(
-                    tune_data["stop"],
-                    -predt,
-                    tune_data[META["event"]]
+                    tune_data["stop"], -predt, tune_data[META["event"]]
                 ),
-                "status": STATUS_OK
+                "status": STATUS_OK,
             }
-        
+
         # Run the hyperparameter tuning
         trials = Trials()
         best = fmin(
@@ -194,7 +189,7 @@ class XGBoostTuning(Task):
             algo=tpe.suggest,
             max_evals=max_evals,
             trials=trials,
-            rstate=np.random.RandomState(seed)
+            rstate=np.random.RandomState(seed),
         )
         for param in ["max_depth", "reg_alpha", "min_child_weight"]:
             best[param] = int(best[param])

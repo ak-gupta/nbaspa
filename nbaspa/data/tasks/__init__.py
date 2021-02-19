@@ -49,5 +49,5 @@ __all__: List[str] = [
     "AddShotDetail",
     "CreateTarget",
     "DeDupeTime",
-    "SurvivalTime"
+    "SurvivalTime",
 ]

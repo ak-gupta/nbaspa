@@ -24,16 +24,19 @@ from ..tasks import (
     ConcordanceIndex,
     WinProbability,
     AUROC,
-    PlotMetric
+    PlotMetric,
 )
 
 LOG = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
+
 @click.group()
 def build():
+    """CLI group."""
     pass
+
 
 @build.command()
 @click.option("--data-dir", help="Path to the data directory.")
@@ -42,14 +45,19 @@ def build():
     nargs=3,
     type=click.Tuple([float, float, float]),
     default=(0.6, 0.2, 0.1),
-    help="Percentage splits for training, tuning, stopping, and test data"
+    help="Percentage splits for training, tuning, stopping, and test data",
 )
 @click.option(
-    "--max-evals", default=100, type=int, help="Number of hyperparameter tuning iterations"
+    "--max-evals",
+    default=100,
+    type=int,
+    help="Number of hyperparameter tuning iterations",
 )
-@click.option("--seed", default=42, type=int, help="Random seed for segmentation and tuning")
+@click.option(
+    "--seed", default=42, type=int, help="Random seed for segmentation and tuning"
+)
 def train(data_dir, splits, max_evals, seed):
-    """Train the survival analysis model.
+    r"""Train the survival analysis model.
 
     The model training will involve
 
@@ -96,7 +104,7 @@ def train(data_dir, splits, max_evals, seed):
         result=LocalResult(
             dir=".",
             location="{data_dir}/models/xgboost/{today}/tuning.pkl",
-        )
+        ),
     )
     tuneplots = PlotTuning(
         name="Hyperparameter tuning visualization",
@@ -104,16 +112,15 @@ def train(data_dir, splits, max_evals, seed):
         result=LocalResult(
             serializer=Plot(),
             dir=".",
-            location="{data_dir}/models/xgboost/{today}/hyperparameter-tuning.png"
-        )
+            location="{data_dir}/models/xgboost/{today}/hyperparameter-tuning.png",
+        ),
     )
     trained = FitXGBoost(
         name="Train Cox PH model",
         checkpoint=True,
         result=LocalResult(
-            dir=".",
-            location="{data_dir}/models/xgboost/{today}/model.pkl"
-        )
+            dir=".", location="{data_dir}/models/xgboost/{today}/model.pkl"
+        ),
     )
     hazpred = Predict(name="Calculate partial hazard function")
     concordance = ConcordanceIndex(name="Calculate C-index")
@@ -127,14 +134,16 @@ def train(data_dir, splits, max_evals, seed):
         result=LocalResult(
             serializer=Plot(),
             dir=".",
-            location="{data_dir}/models/xgboost/{today}/auroc.png"
-        )
+            location="{data_dir}/models/xgboost/{today}/auroc.png",
+        ),
     )
     # Generate the flow
     with Flow(name="Train Cox model") as flow:
         # Format the data and segment into train, tune, test
         alldata = format_data(basedata)
-        data = segdata(alldata, splits=splits, keys=["train", "tune", "stop", "test"], seed=seed)
+        data = segdata(
+            alldata, splits=splits, keys=["train", "tune", "stop", "test"], seed=seed
+        )
         # Collapse data to the final row so we can calculate Concordance
         train = train_data(data["train"])
         tune = tune_data(data["tune"])
@@ -149,7 +158,7 @@ def train(data_dir, splits, max_evals, seed):
             early_stopping_rounds=5,
             num_boost_round=1000,
             max_evals=max_evals,
-            seed=seed
+            seed=seed,
         )
         tuneplots(params["trials"])
         # Fit the model
@@ -171,6 +180,6 @@ def train(data_dir, splits, max_evals, seed):
         metric_benchmark = wprob_auc.map(data=wprob, mode=unmapped("benchmark"))
         # Plot the AUROC over game-time
         metricplot(times=times, metric="AUROC", survival=metric, nba=metric_benchmark)
-    
+
     with prefect.context(data_dir=data_dir):
         flow.run()

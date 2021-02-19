@@ -24,6 +24,7 @@ SESSION = requests.Session()
 RETRIES = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
 SESSION.mount("http://", HTTPAdapter(max_retries=RETRIES))
 
+
 class BaseRequest:
     """Base class for getting data from the NBA API.
 
@@ -37,7 +38,7 @@ class BaseRequest:
         The ``fsspec`` filesystem to use if reading/writing files.
     **params
         Parameters for the request
-    
+
     Attributes
     ----------
     data : pd.DataFrame
@@ -45,7 +46,7 @@ class BaseRequest:
     _raw_data : Dict
         The raw output JSON from the endpoint.
     """
-    
+
     base_url: str = "https://stats.nba.com/stats"
     headers = {
         "Host": "stats.nba.com",
@@ -67,8 +68,9 @@ class BaseRequest:
         self,
         output_dir: Optional[str] = None,
         filesystem: Optional[str] = "file",
-        **params
+        **params,
     ):
+        """Init method."""
         self.output_dir = output_dir
         self.fs = fsspec.filesystem(filesystem)
         self.params = params
@@ -82,7 +84,7 @@ class BaseRequest:
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         None
@@ -96,7 +98,7 @@ class BaseRequest:
             self.fs.mkdir(Path(self.output_dir, self.endpoint))
             with self.fs.open(self.fpath, "w") as outfile:
                 json.dump(self._raw_data, outfile, indent=4)
-    
+
     def _get(self):
         """Retrieve data from the API.
 
@@ -125,7 +127,7 @@ class BaseRequest:
         ----------
         dataset_type : str, optional (default "default")
             The dataset type.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -140,9 +142,9 @@ class BaseRequest:
 
         return pd.DataFrame.from_records(
             self._raw_data["resultSets"][idx]["rowSet"],
-            columns=self._raw_data["resultSets"][idx]["headers"]
+            columns=self._raw_data["resultSets"][idx]["headers"],
         )
-    
+
     def load(self):
         """Load data from JSON.
 
@@ -158,7 +160,7 @@ class BaseRequest:
             LOG.info(f"Reading existing file {str(self.fpath)}...")
             with self.fs.open(self.fpath) as infile:
                 self._raw_data = json.load(infile)
-    
+
     def exists(self) -> bool:
         """Check whether the file exists.
 
@@ -174,14 +176,14 @@ class BaseRequest:
 
     @property
     def defaults(self) -> Dict:
-        """Default parameters for the endpoint.
+        """Standard parameters for the endpoint.
 
         Returns
         -------
         Dict
             Default values for each request parameter.
         """
-    
+
     @property
     def datasets(self) -> List[str]:
         """Datasets returned by the API.
@@ -192,7 +194,7 @@ class BaseRequest:
             Datasets returned by the API.
         """
         return ["default"]
-    
+
     @property
     def fpath(self) -> Path:
         """Define the filepath.
@@ -202,13 +204,11 @@ class BaseRequest:
         Path
             The path object.
         """
-        return Path(
-            self.output_dir, self.endpoint, self.filename.format(**self.params)
-        )
-    
+        return Path(self.output_dir, self.endpoint, self.filename.format(**self.params))
+
     @property
     def params(self) -> Dict:
-        """The request parameters.
+        """Request parameters.
 
         Returns
         -------
@@ -216,7 +216,7 @@ class BaseRequest:
             The request parameters
         """
         return self.__params
-    
+
     @params.setter
     def params(self, value: Dict):
         """Set the request parameters by updating the defaults."""
@@ -226,7 +226,5 @@ class BaseRequest:
         for param, submitted in value.items():
             if getattr(allowed_values, param) is not None:
                 if submitted not in getattr(allowed_values, param):
-                    raise ValueError(
-                        f"{submitted} is an invalid value for {param}"
-                    )
+                    raise ValueError(f"{submitted} is an invalid value for {param}")
         self.__params.update(value)

@@ -14,16 +14,12 @@ META: Dict = {
         "HOME_GAMES_IN_LAST_7_DAYS",
         "VISITOR_GAMES_IN_LAST_3_DAYS",
         "VISITOR_GAMES_IN_LAST_5_DAYS",
-        "VISITOR_GAMES_IN_LAST_7_DAYS"
+        "VISITOR_GAMES_IN_LAST_7_DAYS",
     ],
-    "dynamic": [
-        "SCOREMARGIN",
-        "HOME_LINEUP_PLUS_MINUS",
-        "VISITOR_LINEUP_PLUS_MINUS"
-    ],
+    "dynamic": ["SCOREMARGIN", "HOME_LINEUP_PLUS_MINUS", "VISITOR_LINEUP_PLUS_MINUS"],
     "duration": "TIME",
     "event": "WIN",
     "id": "GAME_ID",
     "survival": "WIN_PROB",
-    "benchmark": "NBA_WIN_PROB"
+    "benchmark": "NBA_WIN_PROB",
 }

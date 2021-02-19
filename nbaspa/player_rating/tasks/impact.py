@@ -8,6 +8,7 @@ from prefect import Task
 
 from ...data.endpoints.pbp import EventTypes
 
+
 def _num_events_at_time(df: pd.DataFrame) -> Tuple[pd.Series, pd.Series]:
     """Get the number of events at each time.
 
@@ -15,7 +16,7 @@ def _num_events_at_time(df: pd.DataFrame) -> Tuple[pd.Series, pd.Series]:
     ----------
     pbp : pd.DataFrame
         The clean player-rating play-by-play data.
-    
+
     Returns
     -------
     pd.Series
@@ -43,9 +44,10 @@ def _num_events_at_time(df: pd.DataFrame) -> Tuple[pd.Series, pd.Series]:
 
     return sizes, rowfilter
 
+
 class SimplePlayerImpact(Task):
     """Add player impact to the data.
-    
+
     This class will only calculate player impact for time periods in the game
     with a single event.
     """
@@ -66,7 +68,7 @@ class SimplePlayerImpact(Task):
         ----------
         pbp : pd.DataFrame
             The output from ``AddWinProbability``.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -103,7 +105,7 @@ class SimplePlayerImpact(Task):
         pbp = self._ast_impact(df=pbp)
 
         return pbp
-    
+
     def _single_event_times(self, df: pd.DataFrame) -> List[int]:
         """Get the time stamps with one event.
 
@@ -113,7 +115,7 @@ class SimplePlayerImpact(Task):
             The play-by-play data.
         event_type : str
             The event type to get from ``EventTypes``.
-        
+
         Returns
         -------
         List
@@ -132,7 +134,7 @@ class SimplePlayerImpact(Task):
             The play-by-play data.
         event_type : str
             The event type to get from ``EventTypes``.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -150,11 +152,15 @@ class SimplePlayerImpact(Task):
             & (~pd.isnull(df["VISITORDESCRIPTION"]))
             & (df["TIME"].isin(self._single_event_times(df=df)))
         )
-        df.loc[homefilter, "PLAYER1_IMPACT"] += df.loc[homefilter, "WIN_PROBABILITY_CHANGE"]
-        df.loc[visitorfilter, "PLAYER1_IMPACT"] -= df.loc[visitorfilter, "WIN_PROBABILITY_CHANGE"]
+        df.loc[homefilter, "PLAYER1_IMPACT"] += df.loc[
+            homefilter, "WIN_PROBABILITY_CHANGE"
+        ]
+        df.loc[visitorfilter, "PLAYER1_IMPACT"] -= df.loc[
+            visitorfilter, "WIN_PROBABILITY_CHANGE"
+        ]
 
         return df
-    
+
     def _foul_impact(self, df: pd.DataFrame) -> pd.DataFrame:
         """Impact of fouls.
 
@@ -162,7 +168,7 @@ class SimplePlayerImpact(Task):
         ----------
         df : pd.DataFrame
             The play-by-play dataset.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -181,10 +187,18 @@ class SimplePlayerImpact(Task):
             & (df["TIME"].isin(self._single_event_times(df=df)))
         )
 
-        df.loc[homefilter, "PLAYER1_IMPACT"] += df.loc[homefilter, "WIN_PROBABILITY_CHANGE"]
-        df.loc[homefilter, "PLAYER2_IMPACT"] -= df.loc[homefilter, "WIN_PROBABILITY_CHANGE"]
-        df.loc[visitorfilter, "PLAYER1_IMPACT"] -= df.loc[visitorfilter, "WIN_PROBABILITY_CHANGE"]
-        df.loc[visitorfilter, "PLAYER2_IMPACT"] += df.loc[visitorfilter, "WIN_PROBABILITY_CHANGE"]
+        df.loc[homefilter, "PLAYER1_IMPACT"] += df.loc[
+            homefilter, "WIN_PROBABILITY_CHANGE"
+        ]
+        df.loc[homefilter, "PLAYER2_IMPACT"] -= df.loc[
+            homefilter, "WIN_PROBABILITY_CHANGE"
+        ]
+        df.loc[visitorfilter, "PLAYER1_IMPACT"] -= df.loc[
+            visitorfilter, "WIN_PROBABILITY_CHANGE"
+        ]
+        df.loc[visitorfilter, "PLAYER2_IMPACT"] += df.loc[
+            visitorfilter, "WIN_PROBABILITY_CHANGE"
+        ]
 
         return df
 
@@ -195,7 +209,7 @@ class SimplePlayerImpact(Task):
         ----------
         df : pd.DataFrame
             The play-by-play dataset.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -219,7 +233,7 @@ class SimplePlayerImpact(Task):
         df.loc[visitor, "PLAYER1_IMPACT"] -= df.loc[visitor, "WIN_PROBABILITY_CHANGE"]
 
         return df
-    
+
     def _steal_impact(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add impact of steals.
 
@@ -227,7 +241,7 @@ class SimplePlayerImpact(Task):
         ----------
         df : pd.DataFrame
             The play-by-play data.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -253,7 +267,7 @@ class SimplePlayerImpact(Task):
         df.loc[visitor, "PLAYER1_IMPACT"] += df.loc[visitor, "WIN_PROBABILITY_CHANGE"]
 
         return df
-    
+
     def _block_impact(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add the impact of blocks.
 
@@ -261,7 +275,7 @@ class SimplePlayerImpact(Task):
         ----------
         df : pd.DataFrame
             The play-by-play data.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -283,7 +297,7 @@ class SimplePlayerImpact(Task):
         df.loc[visitor, "PLAYER3_IMPACT"] -= df.loc[visitor, "WIN_PROBABILITY_CHANGE"]
 
         return df
-    
+
     def _uast_impact(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add the impact of unassisted field goal makes.
 
@@ -291,7 +305,7 @@ class SimplePlayerImpact(Task):
         ----------
         df : pd.DataFrame
             The play-by-play data.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -316,7 +330,6 @@ class SimplePlayerImpact(Task):
 
         return df
 
-
     def _ast_impact(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add the impact of assisted field goal makes.
 
@@ -324,7 +337,7 @@ class SimplePlayerImpact(Task):
         ----------
         df : pd.DataFrame
             The play-by-play data.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -348,19 +361,23 @@ class SimplePlayerImpact(Task):
         home_assist_factor = (
             ((df.loc[home, "SHOT_VALUE"] * 100) / df.loc[home, "HOME_OFF_RATING"]) - 1
         ).clip(lower=0)
-        df.loc[home, "PLAYER1_IMPACT"] += (
-            (1 - home_assist_factor) * df.loc[home, "WIN_PROBABILITY_CHANGE"]
-        )
+        df.loc[home, "PLAYER1_IMPACT"] += (1 - home_assist_factor) * df.loc[
+            home, "WIN_PROBABILITY_CHANGE"
+        ]
         df.loc[home, "PLAYER2_IMPACT"] += (
             home_assist_factor * df.loc[home, "WIN_PROBABILITY_CHANGE"]
         )
         # Visitor assist percentage
         visitor_assist_factor = (
-            ((df.loc[visitor, "SHOT_VALUE"] * 100) / df.loc[visitor, "VISITOR_OFF_RATING"]) - 1
+            (
+                (df.loc[visitor, "SHOT_VALUE"] * 100)
+                / df.loc[visitor, "VISITOR_OFF_RATING"]
+            )
+            - 1
         ).clip(lower=0)
-        df.loc[visitor, "PLAYER1_IMPACT"] -= (
-            (1 - visitor_assist_factor) * df.loc[visitor, "WIN_PROBABILITY_CHANGE"]
-        )
+        df.loc[visitor, "PLAYER1_IMPACT"] -= (1 - visitor_assist_factor) * df.loc[
+            visitor, "WIN_PROBABILITY_CHANGE"
+        ]
         df.loc[visitor, "PLAYER2_IMPACT"] -= (
             visitor_assist_factor * df.loc[visitor, "WIN_PROBABILITY_CHANGE"]
         )
@@ -380,7 +397,7 @@ class CompoundPlayerImpact(Task):
         ----------
         pbp : pd.DataFrame
             The output from ``SimplePlayerImpact``.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -395,11 +412,16 @@ class CompoundPlayerImpact(Task):
             # Get the sequence
             sequence = pbp.loc[(pbp["TIME"] == timeperiod) & (rowfilter)]
             try:
-                sequence_type = self.identify_sequence(sequence["EVENTMSGTYPE"].tolist())
-                self.logger.info(f"Found following sequence at {timeperiod}: {sequence_type}")
+                sequence_type = self.identify_sequence(
+                    sequence["EVENTMSGTYPE"].tolist()
+                )
+                self.logger.info(
+                    f"Found following sequence at {timeperiod}: {sequence_type}"
+                )
                 # Assign the impact
                 pbp = self.dispatcher[sequence_type](
-                    df=pbp, event_indices=pbp[pbp["TIME"] == timeperiod].index,
+                    df=pbp,
+                    event_indices=pbp[pbp["TIME"] == timeperiod].index,
                 )
             except ValueError:
                 incomplete_times += 1
@@ -414,16 +436,16 @@ class CompoundPlayerImpact(Task):
                                 "VISITORDESCRIPTION",
                                 "PLAYER1_NAME",
                                 "PLAYER2_NAME",
-                                "PLAYER3_NAME"
+                                "PLAYER3_NAME",
                             ]
-                        ]
+                        ],
                     )
                 )
-        
+
         self.logger.info(f"Unable to calculate impact for {incomplete_times} sequences")
-        
+
         return pbp
-    
+
     def identify_sequence(self, eventlist: List) -> str:
         """Identify the event sequence.
 
@@ -431,7 +453,7 @@ class CompoundPlayerImpact(Task):
         ----------
         eventlist : list
             A list of event types.
-        
+
         Returns
         -------
         str
@@ -445,7 +467,7 @@ class CompoundPlayerImpact(Task):
             raise ValueError("Unknown event type")
 
         return event_type
-    
+
     @property
     def common_sequences(self) -> Dict[str, List[int]]:
         """Common sequences.
@@ -460,33 +482,30 @@ class CompoundPlayerImpact(Task):
                 self.event_types.FIELD_GOAL_MISSED,
                 self.event_types.REBOUND,
             ],
-            "Offensive foul": [
-                self.event_types.FOUL,
-                self.event_types.TURNOVER
-            ],
+            "Offensive foul": [self.event_types.FOUL, self.event_types.TURNOVER],
             "Shooting foul (2PT FGA)": [
                 self.event_types.FOUL,
                 self.event_types.FREE_THROW,
-                self.event_types.FREE_THROW
+                self.event_types.FREE_THROW,
             ],
             "Shooting foul (2PT FGA - Missed FT)": [
                 self.event_types.FOUL,
                 self.event_types.FREE_THROW,
                 self.event_types.FREE_THROW,
-                self.event_types.REBOUND
+                self.event_types.REBOUND,
             ],
             "Shooting foul (3PT FGA)": [
                 self.event_types.FOUL,
                 self.event_types.FREE_THROW,
                 self.event_types.FREE_THROW,
-                self.event_types.FREE_THROW
+                self.event_types.FREE_THROW,
             ],
             "Shooting foul (3PT FGA - Missed FT)": [
                 self.event_types.FOUL,
                 self.event_types.FREE_THROW,
                 self.event_types.FREE_THROW,
                 self.event_types.FREE_THROW,
-                self.event_types.REBOUND                
+                self.event_types.REBOUND,
             ],
             "Shooting foul (FGM)": [
                 self.event_types.FIELD_GOAL_MADE,
@@ -499,13 +518,10 @@ class CompoundPlayerImpact(Task):
                 self.event_types.FREE_THROW,
                 self.event_types.REBOUND,
             ],
-            "Putback FGM": [
-                self.event_types.REBOUND,
-                self.event_types.FIELD_GOAL_MADE
-            ],
+            "Putback FGM": [self.event_types.REBOUND, self.event_types.FIELD_GOAL_MADE],
             "Putback FGA": [
                 self.event_types.REBOUND,
-                self.event_types.FIELD_GOAL_MISSED
+                self.event_types.FIELD_GOAL_MISSED,
             ],
             "Shooting foul (Putback FGM)": [
                 self.event_types.REBOUND,
@@ -517,7 +533,7 @@ class CompoundPlayerImpact(Task):
                 self.event_types.REBOUND,
                 self.event_types.FOUL,
                 self.event_types.FREE_THROW,
-                self.event_types.FREE_THROW
+                self.event_types.FREE_THROW,
             ],
             "Shooting foul (Putback FGM - Missed FT)": [
                 self.event_types.REBOUND,
@@ -531,10 +547,10 @@ class CompoundPlayerImpact(Task):
                 self.event_types.FOUL,
                 self.event_types.FREE_THROW,
                 self.event_types.FREE_THROW,
-                self.event_types.REBOUND
+                self.event_types.REBOUND,
             ],
         }
-    
+
     @property
     def dispatcher(self) -> Dict[str, Callable]:
         """Return the appropriate calculation function.
@@ -560,7 +576,7 @@ class CompoundPlayerImpact(Task):
             "Shooting foul (Putback FGM - Missed FT)": self._putback_impact,
             "Shooting foul (Putback FGA - Missed FT)": self._putback_impact,
         }
-    
+
     def _fga_impact(self, df: pd.DataFrame, event_indices: List[int]) -> pd.DataFrame:
         """Calculate the impact of a missed field goal followed by a rebound.
 
@@ -572,7 +588,7 @@ class CompoundPlayerImpact(Task):
             The complete play-by-play data
         event_indices : list
             The list of indices in the play-by-play data associated with the sequence.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -586,10 +602,12 @@ class CompoundPlayerImpact(Task):
             df.loc[event_indices[0], "PLAYER1_IMPACT"] -= df.loc[
                 event_indices[0], "WIN_PROBABILITY_CHANGE"
             ]
-        
+
         return df
-    
-    def _offensive_foul_impact(self, df: pd.DataFrame, event_indices: List[int]) -> pd.DataFrame:
+
+    def _offensive_foul_impact(
+        self, df: pd.DataFrame, event_indices: List[int]
+    ) -> pd.DataFrame:
         """Calculate the impact of an offensive foul.
 
         We will drop the offensive foul row and give the player committing the foul
@@ -601,7 +619,7 @@ class CompoundPlayerImpact(Task):
             The complete play-by-play data.
         event_indices : list
             The list of indices in the play-by-play data associated with the sequence.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -616,10 +634,12 @@ class CompoundPlayerImpact(Task):
             df.loc[event_indices[1], "PLAYER1_IMPACT"] -= df.loc[
                 event_indices[1], "WIN_PROBABILITY_CHANGE"
             ]
-        
+
         return df
 
-    def _shooting_foul_impact(self, df: pd.DataFrame, event_indices: List[int]) -> pd.DataFrame:
+    def _shooting_foul_impact(
+        self, df: pd.DataFrame, event_indices: List[int]
+    ) -> pd.DataFrame:
         """Calculate the impact of a shooting foul (non-putback).
 
         The player committing the foul is given blame and the player shooting free throws
@@ -631,7 +651,7 @@ class CompoundPlayerImpact(Task):
             The complete play-by-play data.
         event_indices : list
             The list of indices in the play-by-play data associated with the sequence.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -644,14 +664,12 @@ class CompoundPlayerImpact(Task):
         else:
             idx = event_indices[0]
         if not pd.isnull(df.loc[idx, "HOMEDESCRIPTION"]):
-            df.loc[idx, "PLAYER1_IMPACT"] += df.loc[
-                idx, "WIN_PROBABILITY_CHANGE"
-            ]
+            df.loc[idx, "PLAYER1_IMPACT"] += df.loc[idx, "WIN_PROBABILITY_CHANGE"]
         else:
             df.loc[event_indices[0], "PLAYER1_IMPACT"] -= df.loc[
                 event_indices[0], "WIN_PROBABILITY_CHANGE"
             ]
-        
+
         # Give credit for the free throw
         if df.loc[event_indices[-1], "EVENTMSGTYPE"] == self.event_types.REBOUND:
             # Defensive rebound is the final event -- give credit in second last row
@@ -659,17 +677,17 @@ class CompoundPlayerImpact(Task):
         else:
             idx = event_indices[-1]
         if not pd.isnull(df.loc[idx, "HOMEDESCRIPTION"]):
-            df.loc[idx, "PLAYER1_IMPACT"] += df.loc[
-                idx, "WIN_PROBABILITY_CHANGE"
-            ]
+            df.loc[idx, "PLAYER1_IMPACT"] += df.loc[idx, "WIN_PROBABILITY_CHANGE"]
         else:
             df.loc[event_indices[-1], "PLAYER1_IMPACT"] -= df.loc[
                 idx, "WIN_PROBABILITY_CHANGE"
             ]
-        
+
         return df
 
-    def _putback_impact(self, df: pd.DataFrame, event_indices: List[int]) -> pd.DataFrame:
+    def _putback_impact(
+        self, df: pd.DataFrame, event_indices: List[int]
+    ) -> pd.DataFrame:
         """Calculate the impact of a putback.
 
         Player getting the rebound will be given credit proportional to the quality
@@ -682,7 +700,7 @@ class CompoundPlayerImpact(Task):
             The complete play-by-play data.
         event_indices : list
             The list of indices in the play-by-play data associated with the sequence.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -705,39 +723,49 @@ class CompoundPlayerImpact(Task):
                 reb_factor * df.loc[event_indices[0], "WIN_PROBABILITY_CHANGE"]
             )
             # Assign credit for the player who took the shot/free throws
-            df.loc[idx, "PLAYER1_IMPACT"] += (
-                (1 - reb_factor) * df.loc[idx, "WIN_PROBABILITY_CHANGE"]
-            )
+            df.loc[idx, "PLAYER1_IMPACT"] += (1 - reb_factor) * df.loc[
+                idx, "WIN_PROBABILITY_CHANGE"
+            ]
             # Assign blame for the person fouling -- either the second or third event
             if df.loc[event_indices[1], "EVENTMSGTYPE"] == self.event_types.FOUL:
                 # Home team scored -> visiting player is ``PLAYER1_ID`` and they committed the foul
                 df.loc[event_indices[1], "PLAYER1_IMPACT"] -= df.loc[
                     event_indices[1], "WIN_PROBABILITY_CHANGE"
                 ]
-            elif len(event_indices) > 2 and df.loc[event_indices[2], "EVENTMSGTYPE"] == self.event_types.FOUL:
+            elif (
+                len(event_indices) > 2
+                and df.loc[event_indices[2], "EVENTMSGTYPE"] == self.event_types.FOUL
+            ):
                 df.loc[event_indices[2], "PLAYER1_IMPACT"] -= df.loc[
                     event_indices[2], "WIN_PROBABILITY_CHANGE"
                 ]
         else:
             # Get the credit for the rebounder
             reb_factor = np.max(
-                [((shotval * 100) / df.loc[event_indices[0], "VISITOR_OFF_RATING"]) - 1, 0]
+                [
+                    ((shotval * 100) / df.loc[event_indices[0], "VISITOR_OFF_RATING"])
+                    - 1,
+                    0,
+                ]
             )
             # Assign credit for the rebounder
             df.loc[event_indices[0], "PLAYER1_IMPACT"] -= (
                 reb_factor * df.loc[event_indices[0], "WIN_PROBABILITY_CHANGE"]
             )
             # Assign credit for the player who took the shot/free throws
-            df.loc[idx, "PLAYER1_IMPACT"] -= (
-                (1 - reb_factor) * df.loc[idx, "WIN_PROBABILITY_CHANGE"]
-            )
+            df.loc[idx, "PLAYER1_IMPACT"] -= (1 - reb_factor) * df.loc[
+                idx, "WIN_PROBABILITY_CHANGE"
+            ]
             # Assign blame for the person fouling -- either the second or third event
             if df.loc[event_indices[1], "EVENTMSGTYPE"] == self.event_types.FOUL:
                 # Visiting team score -> home player is ``PLAYER1_ID`` and they committed the foul
                 df.loc[event_indices[1], "PLAYER1_IMPACT"] += df.loc[
                     event_indices[1], "WIN_PROBABILITY_CHANGE"
                 ]
-            elif len(event_indices) > 2 and df.loc[event_indices[2], "EVENTMSGTYPE"] == self.event_types.FOUL:
+            elif (
+                len(event_indices) > 2
+                and df.loc[event_indices[2], "EVENTMSGTYPE"] == self.event_types.FOUL
+            ):
                 df.loc[event_indices[2], "PLAYER1_IMPACT"] += df.loc[
                     event_indices[2], "WIN_PROBABILITY_CHANGE"
                 ]
@@ -747,6 +775,7 @@ class CompoundPlayerImpact(Task):
 
 class AggregateImpact(Task):
     """Aggregate player impact for a game."""
+
     def run(self, pbp: pd.DataFrame, boxscore: pd.DataFrame) -> pd.DataFrame:
         """Aggregate player impact for a game.
 
@@ -756,7 +785,7 @@ class AggregateImpact(Task):
             The output of ``PlayerImpact``.
         boxscore : pd.DataFrame
             The output of ``BoxScoreTraditional.get_data("PlayerStats")``.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -770,25 +799,27 @@ class AggregateImpact(Task):
             pbp.groupby("PLAYER1_ID")["PLAYER1_IMPACT"].sum(),
             left_index=True,
             right_index=True,
-            how="left"
+            how="left",
         )
         impact = pd.merge(
             impact,
             pbp.groupby("PLAYER2_ID")["PLAYER2_IMPACT"].sum(),
             left_index=True,
             right_index=True,
-            how="left"
+            how="left",
         )
         impact = pd.merge(
             impact,
             pbp.groupby("PLAYER3_ID")["PLAYER3_IMPACT"].sum(),
             left_index=True,
             right_index=True,
-            how="left"
+            how="left",
         )
         impact.fillna(0, inplace=True)
         impact["IMPACT"] = (
-            impact["PLAYER1_IMPACT"] + impact["PLAYER2_IMPACT"] + impact["PLAYER3_IMPACT"]
+            impact["PLAYER1_IMPACT"]
+            + impact["PLAYER2_IMPACT"]
+            + impact["PLAYER3_IMPACT"]
         )
         # Reset the index
         impact.reset_index(inplace=True)

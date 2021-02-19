@@ -9,8 +9,10 @@ from prefect import Task
 
 from .meta import META
 
+
 class InitializeLifelines(Task):
     """Initialize a new ``lifelines`` model."""
+
     def run(self, params: Optional[Dict] = None) -> CoxTimeVaryingFitter:
         """Initialize a new ``lifelines`` model.
 
@@ -18,7 +20,7 @@ class InitializeLifelines(Task):
         ----------
         params : dict, optional (default None)
             Keyword arguments for ``CoxTimeVaryingFitter``
-        
+
         Returns
         -------
         CoxTimeVaryingFitter
@@ -29,11 +31,9 @@ class InitializeLifelines(Task):
 
 class FitLifelinesModel(Task):
     """Fit the lifelines model."""
+
     def run(
-        self,
-        model: CoxTimeVaryingFitter,
-        data: pd.DataFrame,
-        **kwargs
+        self, model: CoxTimeVaryingFitter, data: pd.DataFrame, **kwargs
     ) -> CoxTimeVaryingFitter:
         """Fit the lifelines model.
 
@@ -45,7 +45,7 @@ class FitLifelinesModel(Task):
             The ``lifelines`` format data.
         **kwargs
             Keyword arguments for the ``fit`` method.
-        
+
         Returns
         -------
         CoxTimeVaryingFitter
@@ -53,7 +53,10 @@ class FitLifelinesModel(Task):
         """
         model = model.fit(
             data[
-                [META["id"], META["event"]] + ["start", "stop"] + META["static"] + META["dynamic"]
+                [META["id"], META["event"]]
+                + ["start", "stop"]
+                + META["static"]
+                + META["dynamic"]
             ],
             id_col=META["id"],
             event_col=META["event"],

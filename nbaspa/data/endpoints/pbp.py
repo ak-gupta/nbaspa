@@ -8,6 +8,7 @@ from typing import Dict, Optional
 from .base import BaseRequest
 from .parameters import DefaultParameters
 
+
 class EventTypes:
     """Play-by-play event types."""
 
@@ -26,18 +27,16 @@ class EventTypes:
     UNKNOWN: int = 13
     REPLAY: int = 18
 
+
 class PlayByPlay(BaseRequest):
     """Get the play by play data for a game.
-    
+
     Parameters
     ----------
     GameID : str
         The game identifier.
     **params
         Parameters for the API call.
-    
-    Attributes
-    ----------
     """
 
     endpoint: str = "playbyplayv2"
@@ -50,6 +49,7 @@ class PlayByPlay(BaseRequest):
         filesystem: Optional[str] = "file",
         **params
     ):
+        """Init method."""
         super().__init__(
             output_dir=output_dir, filesystem=filesystem, GameID=GameID, **params
         )

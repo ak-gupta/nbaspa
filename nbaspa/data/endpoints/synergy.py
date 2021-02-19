@@ -8,9 +8,10 @@ from typing import Dict, Optional
 from .base import BaseRequest
 from .parameters import DefaultParameters
 
+
 class SynergyPlayType(BaseRequest):
     """Get the synergy play types.
-    
+
     Parameters
     ----------
     TypeGrouping : str
@@ -33,6 +34,7 @@ class SynergyPlayType(BaseRequest):
         filesystem: Optional[str] = "file",
         **params
     ):
+        """Init method."""
         super().__init__(
             output_dir=output_dir,
             filesystem=filesystem,

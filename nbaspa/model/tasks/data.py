@@ -9,8 +9,10 @@ from prefect import Task
 
 from .meta import META
 
+
 class SurvivalData(Task):
     """Create time-varying data in the ``lifelines`` format."""
+
     def run(self, data: pd.DataFrame) -> pd.DataFrame:
         """Create time-varying data in the ``lifelines`` format.
 
@@ -18,26 +20,28 @@ class SurvivalData(Task):
         ----------
         data : pd.DataFrame
             The cleaned play-by-play data.
-        
+
         Returns
         -------
         pd.DataFrame
             The lifelines-compliant data.
         """
         # Create the short form data
-        shortform = data.groupby(META["id"]).tail(1)[
-            [META["id"]] + [META["duration"]] + [META["event"]] + META["static"]
-        ].copy()
+        shortform = (
+            data.groupby(META["id"])
+            .tail(1)[
+                [META["id"]] + [META["duration"]] + [META["event"]] + META["static"]
+            ]
+            .copy()
+        )
         base = to_long_format(shortform, duration_col=META["duration"])
         # Create the longform data
         longform = add_covariate_to_timeline(
             base,
-            data[
-                [META["id"]] + [META["duration"]] + META["dynamic"]
-            ],
+            data[[META["id"]] + [META["duration"]] + META["dynamic"]],
             duration_col=META["duration"],
             id_col=META["id"],
-            event_col=META["event"]
+            event_col=META["event"],
         )
         # Drop any rows with the same start and stop time
         longform.drop(
@@ -45,10 +49,7 @@ class SurvivalData(Task):
         )
         # Add the NBA win probability to the dataset
         longform[META["benchmark"]] = longform.merge(
-            data,
-            left_on=("GAME_ID", "stop"),
-            right_on=("GAME_ID", "TIME"),
-            how="left"
+            data, left_on=("GAME_ID", "stop"), right_on=("GAME_ID", "TIME"), how="left"
         )[META["benchmark"]]
 
         return longform
@@ -56,10 +57,13 @@ class SurvivalData(Task):
 
 class SegmentData(Task):
     """Split up the longform data."""
+
     def run(
         self,
         data: pd.DataFrame,
-        splits: Optional[List[float]] = [0.85,],
+        splits: Optional[List[float]] = [
+            0.85,
+        ],
         keys: Optional[List[str]] = ["train", "test"],
         seed: int = 42,
     ) -> Dict[str, pd.DataFrame]:
@@ -93,7 +97,11 @@ class SegmentData(Task):
         np.random.shuffle(games)
         # Split
         splits = np.split(
-            games, [int(len(games) * sum(splits[:(index + 1)])) for index in range(len(splits))]
+            games,
+            [
+                int(len(games) * sum(splits[: (index + 1)]))
+                for index in range(len(splits))
+            ],
         )
         output: Dict = {}
         for index, value in enumerate(keys):
@@ -107,6 +115,7 @@ class SegmentData(Task):
 
 class CollapseData(Task):
     """Collapse data for evaluation."""
+
     def run(
         self,
         data: pd.DataFrame,
@@ -124,7 +133,7 @@ class CollapseData(Task):
         timestep : int, optional (default None)
             The time step to use to create unique rows. If ``None``, the final row
             for each game will be used.
-        
+
         Returns
         -------
         pd.DataFrame

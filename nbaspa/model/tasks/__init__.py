@@ -28,5 +28,5 @@ __all__: List[str] = [
     "LifelinesTuning",
     "XGBoostTuning",
     "PlotTuning",
-    "FitXGBoost"
+    "FitXGBoost",
 ]

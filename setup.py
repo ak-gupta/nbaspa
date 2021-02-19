@@ -40,7 +40,7 @@ setup(
     install_requires=requirements,
     extras_require={
         "docs": ["sphinx", "furo"],
-        "qa": ["pip-tools"],
+        "qa": ["black", "pip-tools"],
     },
     license="MIT license",
     long_description=readme,

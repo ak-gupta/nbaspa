@@ -2,20 +2,12 @@
 
 from typing import List
 
-from .impact import (
-    AggregateImpact,
-    CompoundPlayerImpact,
-    SimplePlayerImpact
-)
-from .io import (
-    LoadRatingData,
-    WinProbabilityLoader,
-    BoxScoreLoader
-)
+from .impact import AggregateImpact, CompoundPlayerImpact, SimplePlayerImpact
+from .io import LoadRatingData, WinProbabilityLoader, BoxScoreLoader
 from .win_prob import (
     AddWinProbability,
     ConvertNBAWinProbability,
-    ConvertSurvivalWinProbability
+    ConvertSurvivalWinProbability,
 )
 
 __all__: List[str] = [
@@ -27,5 +19,5 @@ __all__: List[str] = [
     "BoxScoreLoader",
     "AddWinProbability",
     "ConvertNBAWinProbability",
-    "ConvertSurvivalWinProbability"
+    "ConvertSurvivalWinProbability",
 ]

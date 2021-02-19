@@ -20,6 +20,7 @@ from .tasks import (
     WinProbabilityLoader,
 )
 
+
 def gen_pipeline() -> Flow:
     """Generate the prefect flow.
 
@@ -39,7 +40,9 @@ def gen_pipeline() -> Flow:
     box_loader = BoxScoreLoader(name="Load boxscore data")
     # Calculation tasks
     convertwinprob = ConvertNBAWinProbability(name="Convert NBA win probability")
-    convertsurvprob = ConvertSurvivalWinProbability(name="Convert survival win probability")
+    convertsurvprob = ConvertSurvivalWinProbability(
+        name="Convert survival win probability"
+    )
     addwin = AddWinProbability(name="Add win probability")
     addsimpleimpact = SimplePlayerImpact(name="Calculate simple player impact")
     compoundimpact = CompoundPlayerImpact(name="Calculate sequence player impact")
@@ -52,11 +55,11 @@ def gen_pipeline() -> Flow:
         output_dir = Parameter("output_dir", "nba-data")
         filesystem = Parameter("filesystem", "file")
         # Load data
-        pbp = pbp_loader(
-            GameID=game_id, output_dir=output_dir, filesystem=filesystem
-        )
+        pbp = pbp_loader(GameID=game_id, output_dir=output_dir, filesystem=filesystem)
         box = box_loader(
-            GameID=game_id, output_dir=output_dir, filesystem=filesystem,
+            GameID=game_id,
+            output_dir=output_dir,
+            filesystem=filesystem,
         )
         with case(mode, "nba"):
             win_prob = winprob_loader(
@@ -70,7 +73,7 @@ def gen_pipeline() -> Flow:
         calculatesimple = addsimpleimpact(pbp=win)
         sequence = compoundimpact(pbp=calculatesimple)
         combineimpact(pbp=sequence, boxscore=box)
-    
+
     return flow
 
 
@@ -92,7 +95,7 @@ def run_pipeline(
         The game identifier.
     filesystem : str, optional (default "file")
         The name of the ``fsspec`` filesystem to use.
-    
+
     Returns
     -------
     State

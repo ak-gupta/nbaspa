@@ -20,9 +20,6 @@ class PlayerDashboardBase(BaseRequest):
         The player identifier
     **params
         Parameters for ``BaseRequest``
-    
-    Attributes
-    ----------
     """
 
     endpoint: str = "default"
@@ -33,18 +30,17 @@ class PlayerDashboardBase(BaseRequest):
         PlayerID: int,
         output_dir: Optional[str] = None,
         filesystem: Optional[str] = "file",
-        **params
+        **params,
     ):
+        """Init method."""
         super().__init__(
-            output_dir=output_dir,
-            filesystem=filesystem,
-            PlayerID=PlayerID,
-            **params
+            output_dir=output_dir, filesystem=filesystem, PlayerID=PlayerID, **params
         )
-    
+
     def __str__(self) -> str:
+        """String representation will include the ``PlayerID``."""
         return f"Player Dashboard: {self.params['PlayerID']}"
-    
+
     @property
     def defaults(self) -> Dict:
         """Default parameters for the endpoint.
@@ -76,7 +72,7 @@ class PlayerDashboardBase(BaseRequest):
             "LeagueID": DefaultParameters.LeagueID,
             "GameSegment": DefaultParameters.GameSegment,
             "DateTo": DefaultParameters.DateTo,
-            "DateFrom": DefaultParameters.DateFrom
+            "DateFrom": DefaultParameters.DateFrom,
         }
 
     def get_data(self, dataset_type: Optional[str] = "default") -> pd.DataFrame:
@@ -86,7 +82,7 @@ class PlayerDashboardBase(BaseRequest):
         ----------
         dataset_type : str, optional (default "default")
             The dataset type.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -98,8 +94,10 @@ class PlayerDashboardBase(BaseRequest):
 
         return df
 
+
 class PlayerDashboardGeneral(PlayerDashboardBase):
     """Get the general dashboard."""
+
     endpoint: str = "playerdashboardbygeneralsplits"
 
     @property
@@ -118,11 +116,13 @@ class PlayerDashboardGeneral(PlayerDashboardBase):
             "MonthPlayerDashboard",
             "PrePostAllStarPlayerDashboard",
             "StartingPosition",
-            "DaysRestPlayerDashboard"
+            "DaysRestPlayerDashboard",
         ]
+
 
 class PlayerDashboardShooting(PlayerDashboardBase):
     """Get the shooting dashboard."""
+
     endpoint: str = "playerdashboardbyshootingsplits"
 
     @property
@@ -142,7 +142,7 @@ class PlayerDashboardShooting(PlayerDashboardBase):
             "AssitedShotPlayerDashboard",
             "ShotTypeSummaryPlayerDashboard",
             "ShotTypePlayerDashboard",
-            "AssistedBy"
+            "AssistedBy",
         ]
 
 

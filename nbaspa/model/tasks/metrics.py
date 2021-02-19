@@ -10,8 +10,10 @@ from sklearn.metrics import roc_auc_score
 
 from .meta import META
 
+
 class ConcordanceIndex(Task):
     """Calculate the C-index."""
+
     def run(
         self,
         data: pd.DataFrame,
@@ -25,17 +27,13 @@ class ConcordanceIndex(Task):
             The test data.
         predt : np.ndarray
             The partial hazard prediction.
-        
+
         Returns
         -------
         float
             The Concordance index.
         """
-        cind = concordance_index(
-            data["stop"],
-            -predt,
-            data[META["event"]]
-        )
+        cind = concordance_index(data["stop"], -predt, data[META["event"]])
         self.logger.info(f"Model has a C-index of {np.round(cind, 3)}")
 
         return cind
@@ -43,6 +41,7 @@ class ConcordanceIndex(Task):
 
 class AUROC(Task):
     """Calculate the AUROC score."""
+
     def run(self, data: pd.DataFrame, mode: Optional[str] = "survival") -> float:
         """Calculate the AUROC score.
 
@@ -52,7 +51,7 @@ class AUROC(Task):
             The output of ``WinProbability.run()``.
         mode : str, optional (default "survival")
             The mode, either ``survival`` or ``benchmark``
-        
+
         Returns
         -------
         float

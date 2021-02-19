@@ -14,9 +14,12 @@ from ..pipeline import gen_pipeline, run_pipeline
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
+
 @click.group()
 def clean():
+    """CLI group."""
     pass
+
 
 @clean.command()
 @click.option("--output-dir", help="Path to the output directory.")
@@ -34,10 +37,10 @@ def model(output_dir, season):
                 "save_data": True,
                 "mode": "model",
                 "Season": season,
-                "GameDate": game_date.strftime("%m/%d/%Y")
+                "GameDate": game_date.strftime("%m/%d/%Y"),
             }
         )
-    
+
     report: List = []
     try:
         for call in calls:
@@ -51,7 +54,7 @@ def model(output_dir, season):
                         {
                             "GameDate": call["GameDate"],
                             "mode": call["mode"],
-                            "reason": "No games"
+                            "reason": "No games",
                         }
                     )
                 else:
@@ -59,14 +62,17 @@ def model(output_dir, season):
                         {
                             "GameDate": call["GameDate"],
                             "mode": call["mode"],
-                            "reason": "Unknown"
+                            "reason": "Unknown",
                         }
                     )
     except KeyboardInterrupt:
         pass
     finally:
-        with open(Path(output_dir, season, "model-cleaning-report.json"), "w") as outfile:
+        with open(
+            Path(output_dir, season, "model-cleaning-report.json"), "w"
+        ) as outfile:
             json.dump(report, outfile, indent=4)
+
 
 @clean.command()
 @click.option("--output-dir", help="Path to the output directory.")
@@ -84,7 +90,7 @@ def rating(output_dir, season):
                 "save_data": True,
                 "mode": "rating",
                 "Season": season,
-                "GameDate": game_date.strftime("%m/%d/%Y")
+                "GameDate": game_date.strftime("%m/%d/%Y"),
             }
         )
 
@@ -101,7 +107,7 @@ def rating(output_dir, season):
                         {
                             "GameDate": call["GameDate"],
                             "mode": call["mode"],
-                            "reason": "No games"
+                            "reason": "No games",
                         }
                     )
                 else:
@@ -109,11 +115,13 @@ def rating(output_dir, season):
                         {
                             "GameDate": call["GameDate"],
                             "mode": call["mode"],
-                            "reason": "Unknown"
+                            "reason": "Unknown",
                         }
                     )
     except KeyboardInterrupt:
         pass
     finally:
-        with open(Path(output_dir, season, "rating-cleaning-report.json"), "w") as outfile:
+        with open(
+            Path(output_dir, season, "rating-cleaning-report.json"), "w"
+        ) as outfile:
             json.dump(report, outfile, indent=4)

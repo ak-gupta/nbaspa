@@ -8,6 +8,7 @@ from typing import Dict, List, Optional
 from .base import BaseRequest
 from .parameters import DefaultParameters
 
+
 class GameRotation(BaseRequest):
     """Get rotation data.
 
@@ -17,9 +18,6 @@ class GameRotation(BaseRequest):
         The game identifier.
     **params
         Parameters for ``BaseRequest``.
-    
-    Attributes
-    ----------
     """
 
     endpoint: str = "gamerotation"
@@ -32,10 +30,11 @@ class GameRotation(BaseRequest):
         filesystem: Optional[str] = "file",
         **params
     ):
+        """Init method."""
         super().__init__(
             output_dir=output_dir, filesystem=filesystem, GameID=GameID, **params
         )
-    
+
     @property
     def defaults(self) -> Dict:
         """Default parameters for the endpoint.
@@ -47,9 +46,9 @@ class GameRotation(BaseRequest):
         """
         return {
             "GameID": DefaultParameters.GameID,
-            "LeagueID": DefaultParameters.LeagueID
+            "LeagueID": DefaultParameters.LeagueID,
         }
-    
+
     @property
     def datasets(self) -> List[str]:
         """Datasets returned by the API.

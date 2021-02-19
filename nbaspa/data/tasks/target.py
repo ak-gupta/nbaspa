@@ -6,8 +6,10 @@ Creates the win indicator.
 import pandas as pd
 from prefect import Task
 
+
 class CreateTarget(Task):
     """Create the target boolean."""
+
     def run(self, pbp: pd.DataFrame) -> pd.DataFrame:
         """Create the target boolean.
 
@@ -19,7 +21,7 @@ class CreateTarget(Task):
         ----------
         pbp : pd.DataFrame
             The output from ``FillMargin``.
-        
+
         Returns
         -------
         pd.DataFrame

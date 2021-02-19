@@ -12,6 +12,7 @@ from ...data.endpoints import BoxScoreTraditional, WinProbability
 
 class LoadRatingData(Task):
     """Load the clean NBA play-by-play data."""
+
     def run(
         self, GameID: str, output_dir: str, filesystem: Optional[str] = "file"
     ) -> pd.DataFrame:
@@ -35,7 +36,7 @@ class LoadRatingData(Task):
         fs = fsspec.filesystem(filesystem)
         if fs.exists(fpath):
             with fs.open(fpath, "rb") as infile:
-                data = pd.read_csv(infile, sep="|",  dtype={"GAME_ID": str}, index_col=0)
+                data = pd.read_csv(infile, sep="|", dtype={"GAME_ID": str}, index_col=0)
         else:
             raise ValueError(f"File {str(fpath)} does not exist")
 
@@ -44,6 +45,7 @@ class LoadRatingData(Task):
 
 class WinProbabilityLoader(Task):
     """Load the NBA win probability."""
+
     def run(
         self, GameID: str, output_dir: str, filesystem: Optional[str] = "file"
     ) -> pd.DataFrame:
@@ -57,7 +59,7 @@ class WinProbabilityLoader(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -73,6 +75,7 @@ class WinProbabilityLoader(Task):
 
 class BoxScoreLoader(Task):
     """Load the boxscore data."""
+
     def run(
         self, GameID: str, output_dir: str, filesystem: Optional[str] = "file"
     ) -> pd.DataFrame:
@@ -86,7 +89,7 @@ class BoxScoreLoader(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
-        
+
         Returns
         -------
         pd.DataFrame

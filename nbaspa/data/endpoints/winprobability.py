@@ -8,6 +8,7 @@ from typing import List, Dict, Optional
 from .base import BaseRequest
 from .parameters import DefaultParameters
 
+
 class WinProbability(BaseRequest):
     """Get the NBA win probability metric.
 
@@ -17,7 +18,7 @@ class WinProbability(BaseRequest):
         The game identifier
     **params
         Parameters for ``BaseRequest``
-    
+
     Attributes
     ----------
     None
@@ -33,6 +34,7 @@ class WinProbability(BaseRequest):
         filesystem: Optional[str] = "file",
         **params
     ):
+        """Init method."""
         super().__init__(
             output_dir=output_dir, filesystem=filesystem, GameID=GameID, **params
         )

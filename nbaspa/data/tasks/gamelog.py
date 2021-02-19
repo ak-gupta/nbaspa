@@ -13,6 +13,7 @@ from prefect import Task
 
 class AddWinPercentage(Task):
     """Add team win percentage."""
+
     def run(self, pbp: pd.DataFrame, gamelog: pd.DataFrame) -> pd.DataFrame:
         """Add team win percentage entering the game.
 
@@ -27,7 +28,7 @@ class AddWinPercentage(Task):
             The output from ``AddTeamID``.
         gamelog : pd.DataFrame
             The output from ``TeamGameLog.get_data()``.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -45,14 +46,14 @@ class AddWinPercentage(Task):
             gamelog[["GAME_DATE", "Team_ID", "PREV_W_PCT"]],
             left_on=("GAME_DATE_EST", "HOME_TEAM_ID"),
             right_on=("GAME_DATE", "Team_ID"),
-            how="left"
+            how="left",
         )["PREV_W_PCT"]
         # Add the visitor team win percentage
         pbp["VISITOR_W_PCT"] = pbp.merge(
             gamelog[["GAME_DATE", "Team_ID", "PREV_W_PCT"]],
             left_on=("GAME_DATE_EST", "VISITOR_TEAM_ID"),
             right_on=("GAME_DATE", "Team_ID"),
-            how="left"
+            how="left",
         )["PREV_W_PCT"]
 
         return pbp
@@ -60,23 +61,26 @@ class AddWinPercentage(Task):
 
 class GamesInLastXDays(Task):
     """Add the number of games in the last X days.
-    
+
     Parameters
     ----------
     period : int
         The number of days to consider.
     **kwargs
         Keyword arguments for ``prefect.Task``
-    
+
     Attributes
     ----------
+    period : int
+        The number of days to consider.
     """
+
     def __init__(self, period: int, **kwargs):
         """Init method."""
         self.period = period
 
         super().__init__(**kwargs)
-    
+
     def run(self, pbp: pd.DataFrame, gamelog: pd.DataFrame) -> pd.DataFrame:
         """Add the number of games in the last ``self.period`` days.
 
@@ -91,7 +95,7 @@ class GamesInLastXDays(Task):
             The output of ``AddTeamID``.
         gamelog : pd.DataFrame
             The output of ``TeamGameLog.get_data()``.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -105,20 +109,21 @@ class GamesInLastXDays(Task):
             .assign(count=1)
             .groupby("Team_ID")["count"]
             .rolling(f"{self.period}D")
-            .sum() - 1
+            .sum()
+            - 1
         )
         # Add the rolling sum back to the PBP dataset
         pbp[f"HOME_GAMES_IN_LAST_{self.period}_DAYS"] = pbp.merge(
             rolling,
             left_on=("GAME_DATE_EST", "HOME_TEAM_ID"),
             right_on=("GAME_DATE", "Team_ID"),
-            how="left"
+            how="left",
         )["count"]
         pbp[f"VISITOR_GAMES_IN_LAST_{self.period}_DAYS"] = pbp.merge(
             rolling,
             left_on=("GAME_DATE_EST", "VISITOR_TEAM_ID"),
             right_on=("GAME_DATE", "Team_ID"),
-            how="left"
+            how="left",
         )["count"]
 
         return pbp

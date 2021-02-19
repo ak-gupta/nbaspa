@@ -8,6 +8,7 @@ from typing import Dict, List, Optional
 from .base import BaseRequest
 from .parameters import DefaultParameters
 
+
 class TeamLineups(BaseRequest):
     """Pull lineup data.
 
@@ -17,9 +18,6 @@ class TeamLineups(BaseRequest):
         The team identifier
     **params
         Parameters for ``BaseRequest``
-
-    Attributes
-    ----------
     """
 
     endpoint: str = "teamdashlineups"
@@ -32,11 +30,9 @@ class TeamLineups(BaseRequest):
         filesystem: Optional[str] = "file",
         **params
     ):
+        """Init method."""
         super().__init__(
-            output_dir=output_dir,
-            filesystem=filesystem,
-            TeamID=TeamID,
-            **params
+            output_dir=output_dir, filesystem=filesystem, TeamID=TeamID, **params
         )
 
     @property
@@ -84,5 +80,5 @@ class TeamLineups(BaseRequest):
             "GameSegment": DefaultParameters.GameSegment,
             "GameID": DefaultParameters.GameID,
             "DateTo": DefaultParameters.DateTo,
-            "DateFrom": DefaultParameters.DateFrom
+            "DateFrom": DefaultParameters.DateFrom,
         }

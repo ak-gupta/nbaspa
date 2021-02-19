@@ -17,34 +17,47 @@ LOG = logging.getLogger(__name__)
 
 TEN_MINUTES = 600
 
+
 class NBADataFactory:
     """Make multiple calls to the API.
 
     Parameters
     ----------
+    calls : list
+        A list containing the calls. Each entry in the list should be a tuple,
+        with the first entry being the name of the ``BaseRequest`` subclass
+        you want to call. The second element of the tuple should be a dictionary
+        with the parameters for the API call.
+    output_dir : str, optional (default None)
+        A base output directory to use. If provided, each successful request
+        will stream to a JSON file in the specified directory, within a subfolder
+        for the endpoint.
+    filesystem : str, optional (default "file")
+        The ``fsspec`` filesystem to use if reading/writing files.
 
     Attributes
     ----------
+    calls
+        A list with one object per tuple in the ``calls`` initialization argument.
     """
 
     def __init__(
         self,
         calls: List[Tuple[str, Dict[str, Dict]]],
         output_dir: Optional[str] = None,
-        filesystem: Optional[str] = "file"
+        filesystem: Optional[str] = "file",
     ):
+        """Init method."""
         # Parse the calls
         self.calls = [
-            getattr(endpoints, obj)(output_dir=output_dir, filesystem=filesystem, **params)
+            getattr(endpoints, obj)(
+                output_dir=output_dir, filesystem=filesystem, **params
+            )
             for obj, params in calls
         ]
-    
+
     def get(self) -> List[BaseRequest]:
         """Retrieve the data for each API call.
-
-        Parameters
-        ----------
-        None
 
         Returns
         -------
@@ -61,15 +74,11 @@ class NBADataFactory:
                 self._get(callobj=self.calls[index])
 
                 bar()
-        
+
         return self.calls
-    
+
     def load(self) -> List[BaseRequest]:
         """Load data from a filesystem for each call.
-
-        Parameters
-        ----------
-        None
 
         Returns
         -------
@@ -81,21 +90,21 @@ class NBADataFactory:
                 callobj.load()
 
                 bar()
-        
+
         return self.calls
-    
+
     def get_data(self, dataset_type: Optional[str] = "default") -> pd.DataFrame:
         """Retrieve and concatenate data.
 
         .. important::
 
             This will only work if every call is of the same type.
-        
+
         Parameters
         ----------
         dataset_type : str, optional (default "default")
             The dataset type to retrieve from the call objects.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -108,9 +117,9 @@ class NBADataFactory:
             except KeyError:
                 LOG.error(f"Unable to retrieve data for {str(callobj)}")
                 raise ValueError(f"Unable to retrieve data for {str(callobj)}")
-        
+
         return pd.concat(df_list).reset_index(drop=True)
-    
+
     @sleep_and_retry
     @limits(calls=5, period=TEN_MINUTES)
     def _get(self, callobj: BaseRequest):
@@ -120,9 +129,5 @@ class NBADataFactory:
         ----------
         callobj : BaseRequest
             The endpoint object.
-        
-        Returns
-        -------
-        None
         """
         callobj.get()
