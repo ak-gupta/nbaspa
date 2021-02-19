@@ -6,17 +6,12 @@ NBA survival analysis
         :target: https://nbaspa.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-
-Survival analysis-based win percentage and player impact
-
 * Free software: MIT license
 * Documentation: https://nbaspa.readthedocs.io.
 
--------
-Purpose
--------
-
-Coming soon.
+Survival Probability Added (SPA) is a new player impact metric. It's based on allocating credit
+to players based on how their actions change win probability. Our estimate of win probability
+comes is based on survival analysis, hence the "S" in SPA.
 
 -------
 Credits

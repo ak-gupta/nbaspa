@@ -1,7 +1,4 @@
-"""Plot.
-
-A ``prefect`` serializer for matplotlib plots.
-"""
+"""A ``prefect`` serializer for matplotlib plots."""
 
 import io
 
