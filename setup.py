@@ -7,9 +7,6 @@ from setuptools import setup, find_packages
 with open("README.rst") as readme_file:
     readme = readme_file.read()
 
-with open("HISTORY.rst") as history_file:
-    history = history_file.read()
-
 requirements = [
     "alive-progress>=1.6.2,<=1.6.2",
     "Click>=7.1.2,<=7.1.2",
@@ -39,14 +36,14 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    description="Survival analysis-based win percentage",
+    description="Survival analysis-based win percentage and player impact",
     install_requires=requirements,
     extras_require={
         "docs": ["sphinx", "furo"],
         "qa": ["pip-tools"],
     },
     license="MIT license",
-    long_description=readme + "\n\n" + history,
+    long_description=readme,
     include_package_data=True,
     keywords="nbaspa",
     name="nbaspa",
