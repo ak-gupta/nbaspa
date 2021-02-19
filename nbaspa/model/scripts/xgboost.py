@@ -57,7 +57,7 @@ def build():
     "--seed", default=42, type=int, help="Random seed for segmentation and tuning"
 )
 def train(data_dir, splits, max_evals, seed):
-    r"""Train the survival analysis model.
+    """Train the survival analysis model.
 
     The model training will involve
 

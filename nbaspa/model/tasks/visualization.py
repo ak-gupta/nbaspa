@@ -117,19 +117,32 @@ class PlotTuning(Task):
 
         # Create the plotting object
         fig = plt.figure(figsize=(10, 10))
-        gridsize = int(np.ceil(np.sqrt(len(params))))
-        gs = fig.add_gridspec(gridsize, gridsize)
+        # Create a grid
+        numplots = len(params) + 1
+        if numplots % 2 == 0:
+            gridsize = (numplots // 2, numplots // 2)
+        else:
+            gridsize = ((numplots // 2) + 1, numplots // 2)
+        gs = fig.add_gridspec(*gridsize)
         with sns.axes_style("dark"):
             ax = fig.add_subplot(gs[0, 0])
             sns.scatterplot(
                 x="trial", y="loss", hue="best", legend=False, data=df, ax=ax
             )
+            # Create an index array
+            idxarray = np.arange(numplots)
+            if gridsize[0] * gridsize[1] - numplots > 0:
+                idxarray = np.pad(
+                    idxarray,
+                    (0, gridsize[0] * gridsize[1] - numplots),
+                    mode="constant",
+                    constant_values=-1,
+                )
+            idxarray = idxarray.reshape(*gridsize)
             for idx, param in enumerate(params):
-                if idx < gridsize - 1:
-                    rowidx = 0
-                else:
-                    rowidx = idx % gridsize
-                ax = fig.add_subplot(gs[rowidx, (idx + 1) % gridsize])
+                # Get the matrix location in the index array
+                rowidx, colidx = np.argwhere(idxarray == idx + 1)[0]
+                ax = fig.add_subplot(gs[rowidx, colidx])
                 sns.scatterplot(
                     x="trial", y=param, hue="best", legend=False, data=df, ax=ax
                 )
