@@ -28,7 +28,7 @@ requirements = [
 
 setup(
     author="Akshay Gupta",
-    author_email='akshaykgupta@protonmail.com',
+    author_email='akgcodes@gmail.com',
     python_requires=">=3.7",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
@@ -42,7 +42,8 @@ setup(
     description="Survival analysis-based win percentage",
     install_requires=requirements,
     extras_require={
-        "docs": ["sphinx", "sphinx-material"]
+        "docs": ["sphinx", "sphinx-material"],
+        "qa": ["pip-tools"],
     },
     license="MIT license",
     long_description=readme + "\n\n" + history,
