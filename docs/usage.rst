@@ -1,6 +1,6 @@
-=====
-Usage
-=====
+=============
+Package Usage
+=============
 
 -----------------------------
 Pulling data from the NBA API
@@ -10,9 +10,9 @@ For this model, we are pulling data from the public, undocumented NBA Stats API.
 loader is built on excellent work by `swar <https://github.com/swar/nba_api>`_ and
 `seemethere <https://github.com/seemethere/nba_py/>`_.
 
-Each endpoint has an associated class (see :doc:`the data subpackage API reference <api/modules>`_).
-Let's focus on :py:class:`nbaspa.data.endpoints.boxscore.BoxScoreTraditional`. First,
-we need to initialize the class:
+Each endpoint has an associated class (see :doc:`the API reference <api/nbaspa.data.endpoints>`
+for a complete list). Let's focus on :py:class:`nbaspa.data.endpoints.boxscore.BoxScoreTraditional`.
+First, we need to initialize the class:
 
 .. code-block:: python
 

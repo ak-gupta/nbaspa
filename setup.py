@@ -5,9 +5,9 @@
 from setuptools import setup, find_packages
 
 with open("README.rst") as readme_file:
-    readme = readme_file.read()
+    README = readme_file.read()
 
-requirements = [
+REQUIREMENTS = [
     "alive-progress>=1.6.2,<=1.6.2",
     "Click>=7.1.2,<=7.1.2",
     "fsspec>=0.8.5,<=0.8.5",
@@ -23,6 +23,13 @@ requirements = [
     "xgboost>=1.3.3,<=1.3.3"
 ]
 
+EXTRAS_REQUIRE = {
+    "tests": ["pytest"],
+    "docs": ["sphinx", "furo"],
+    "qa": ["black", "pip-tools"],
+}
+EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["tests"] + EXTRAS_REQUIRE["docs"] + EXTRAS_REQUIRE["qa"]
+
 setup(
     author="Akshay Gupta",
     author_email='akgcodes@gmail.com',
@@ -37,13 +44,10 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     description="Survival analysis-based win percentage and player impact",
-    install_requires=requirements,
-    extras_require={
-        "docs": ["sphinx", "furo"],
-        "qa": ["black", "pip-tools"],
-    },
+    install_requires=REQUIREMENTS,
+    extras_require=EXTRAS_REQUIRE,
     license="MIT license",
-    long_description=readme,
+    long_description=README,
     include_package_data=True,
     keywords="nbaspa",
     name="nbaspa",
