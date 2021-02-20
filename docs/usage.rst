@@ -155,10 +155,10 @@ Both of these calls will save data to ``nba-data/2018-19``.
 Training the models
 -------------------
 
-Coming soon.
+Documentation coming soon.
 
 -----------------------
 Generate player ratings
 -----------------------
 
-Coming soon.
+Documentation coming soon.

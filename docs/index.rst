@@ -15,12 +15,14 @@
 
    _model/modelfit
    _model/features
+   _model/performance
 
 .. toctree::
    :maxdepth: 2
    :caption: Survival probability added (SPA)
 
    _spa/definition
+   _spa/casestudy
 
 .. toctree::
    :maxdepth: 2
