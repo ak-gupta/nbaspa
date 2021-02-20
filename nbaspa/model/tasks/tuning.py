@@ -194,6 +194,4 @@ class XGBoostTuning(Task):
         for param in ["max_depth", "reg_alpha", "min_child_weight"]:
             best[param] = int(best[param])
 
-        best = {**best, **kwargs}
-
         return {"best": best, "trials": trials}
