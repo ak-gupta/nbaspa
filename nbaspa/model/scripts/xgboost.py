@@ -14,6 +14,7 @@ from prefect.engine.serializers import JSONSerializer
 
 from ...serializers import Plot
 from ..tasks import (
+    LoadData,
     SurvivalData,
     SegmentData,
     CollapseData,
@@ -82,15 +83,10 @@ def train(data_dir, splits, max_evals, seed):
     * ``hyperparameter-tuning.png``: A visualization of the hyperparameter tuning output, and
     * ``AUROC over gametime.png``: A visualization of AUROC over gametime.
     """
-    # First, read in the model data
-    LOG.info(f"Reading the model data from {data_dir}")
-    basedata = pd.concat(
-        pd.read_csv(fpath, sep="|", dtype={"GAME_ID": str}, index_col=0)
-        for fpath in Path(data_dir).glob("*/model-data/data_*.csv")
-    ).reset_index(drop=True)
     # Create a time range for AUROC calculation -- start to the end of the fourth quarter
     times = np.linspace(0, 2880, 25)
     # Initialize tasks
+    load = LoadData(name="Load clean model data")
     format_data = SurvivalData(name="Convert input data to ranged form")
     segdata = SegmentData(name="Split data")
     train_data = CollapseData(name="Create training data")
@@ -139,6 +135,8 @@ def train(data_dir, splits, max_evals, seed):
     )
     # Generate the flow
     with Flow(name="Train Cox model") as flow:
+        # Read in the data
+        basedata = load(data_dir=data_dir)
         # Format the data and segment into train, tune, test
         alldata = format_data(basedata)
         data = segdata(
