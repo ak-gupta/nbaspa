@@ -1,6 +1,6 @@
 """Calculate player impact."""
 
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -53,8 +53,9 @@ class SimplePlayerImpact(Task):
     """
 
     event_types = EventTypes()
+    change_column: str = None
 
-    def run(self, pbp: pd.DataFrame) -> pd.DataFrame:
+    def run(self, pbp: pd.DataFrame, mode: Optional[str] = "nba") -> pd.DataFrame:
         """Add player impact to the data.
 
         This class will only calculate player impact for time periods in the game
@@ -68,12 +69,18 @@ class SimplePlayerImpact(Task):
         ----------
         pbp : pd.DataFrame
             The output from ``AddWinProbability``.
+        mode : str, optional (default "nba")
+            Whether to use NBA win probability or the survival probability.
 
         Returns
         -------
         pd.DataFrame
             The updated dataset.
         """
+        if mode == "nba":
+            self.change_column = "NBA_WIN_PROB_CHANGE"
+        else:
+            raise NotImplementedError
         types = EventTypes()
         # Initialize the column
         pbp["PLAYER1_IMPACT"] = 0
@@ -153,10 +160,10 @@ class SimplePlayerImpact(Task):
             & (df["TIME"].isin(self._single_event_times(df=df)))
         )
         df.loc[homefilter, "PLAYER1_IMPACT"] += df.loc[
-            homefilter, "WIN_PROBABILITY_CHANGE"
+            homefilter, self.change_column
         ]
         df.loc[visitorfilter, "PLAYER1_IMPACT"] -= df.loc[
-            visitorfilter, "WIN_PROBABILITY_CHANGE"
+            visitorfilter, self.change_column
         ]
 
         return df
@@ -188,16 +195,16 @@ class SimplePlayerImpact(Task):
         )
 
         df.loc[homefilter, "PLAYER1_IMPACT"] += df.loc[
-            homefilter, "WIN_PROBABILITY_CHANGE"
+            homefilter, self.change_column
         ]
         df.loc[homefilter, "PLAYER2_IMPACT"] -= df.loc[
-            homefilter, "WIN_PROBABILITY_CHANGE"
+            homefilter, self.change_column
         ]
         df.loc[visitorfilter, "PLAYER1_IMPACT"] -= df.loc[
-            visitorfilter, "WIN_PROBABILITY_CHANGE"
+            visitorfilter, self.change_column
         ]
         df.loc[visitorfilter, "PLAYER2_IMPACT"] += df.loc[
-            visitorfilter, "WIN_PROBABILITY_CHANGE"
+            visitorfilter, self.change_column
         ]
 
         return df
@@ -229,8 +236,8 @@ class SimplePlayerImpact(Task):
             & (df["TIME"].isin(self._single_event_times(df=df)))
         )
 
-        df.loc[home, "PLAYER1_IMPACT"] += df.loc[home, "WIN_PROBABILITY_CHANGE"]
-        df.loc[visitor, "PLAYER1_IMPACT"] -= df.loc[visitor, "WIN_PROBABILITY_CHANGE"]
+        df.loc[home, "PLAYER1_IMPACT"] += df.loc[home, self.change_column]
+        df.loc[visitor, "PLAYER1_IMPACT"] -= df.loc[visitor, self.change_column]
 
         return df
 
@@ -261,10 +268,10 @@ class SimplePlayerImpact(Task):
             & (df["TIME"].isin(self._single_event_times(df=df)))
         )
 
-        df.loc[home, "PLAYER2_IMPACT"] += df.loc[home, "WIN_PROBABILITY_CHANGE"]
-        df.loc[home, "PLAYER1_IMPACT"] -= df.loc[home, "WIN_PROBABILITY_CHANGE"]
-        df.loc[visitor, "PLAYER2_IMPACT"] -= df.loc[visitor, "WIN_PROBABILITY_CHANGE"]
-        df.loc[visitor, "PLAYER1_IMPACT"] += df.loc[visitor, "WIN_PROBABILITY_CHANGE"]
+        df.loc[home, "PLAYER2_IMPACT"] += df.loc[home, self.change_column]
+        df.loc[home, "PLAYER1_IMPACT"] -= df.loc[home, self.change_column]
+        df.loc[visitor, "PLAYER2_IMPACT"] -= df.loc[visitor, self.change_column]
+        df.loc[visitor, "PLAYER1_IMPACT"] += df.loc[visitor, self.change_column]
 
         return df
 
@@ -293,8 +300,8 @@ class SimplePlayerImpact(Task):
             & (df["TIME"].isin(self._single_event_times(df=df)))
         )
 
-        df.loc[home, "PLAYER3_IMPACT"] += df.loc[home, "WIN_PROBABILITY_CHANGE"]
-        df.loc[visitor, "PLAYER3_IMPACT"] -= df.loc[visitor, "WIN_PROBABILITY_CHANGE"]
+        df.loc[home, "PLAYER3_IMPACT"] += df.loc[home, self.change_column]
+        df.loc[visitor, "PLAYER3_IMPACT"] -= df.loc[visitor, self.change_column]
 
         return df
 
@@ -325,8 +332,8 @@ class SimplePlayerImpact(Task):
             & (df["TIME"].isin(self._single_event_times(df=df)))
         )
 
-        df.loc[home, "PLAYER1_IMPACT"] += df.loc[home, "WIN_PROBABILITY_CHANGE"]
-        df.loc[visitor, "PLAYER2_IMPACT"] -= df.loc[visitor, "WIN_PROBABILITY_CHANGE"]
+        df.loc[home, "PLAYER1_IMPACT"] += df.loc[home, self.change_column]
+        df.loc[visitor, "PLAYER2_IMPACT"] -= df.loc[visitor, self.change_column]
 
         return df
 
@@ -362,10 +369,10 @@ class SimplePlayerImpact(Task):
             ((df.loc[home, "SHOT_VALUE"] * 100) / df.loc[home, "HOME_OFF_RATING"]) - 1
         ).clip(lower=0)
         df.loc[home, "PLAYER1_IMPACT"] += (1 - home_assist_factor) * df.loc[
-            home, "WIN_PROBABILITY_CHANGE"
+            home, self.change_column
         ]
         df.loc[home, "PLAYER2_IMPACT"] += (
-            home_assist_factor * df.loc[home, "WIN_PROBABILITY_CHANGE"]
+            home_assist_factor * df.loc[home, self.change_column]
         )
         # Visitor assist percentage
         visitor_assist_factor = (
@@ -376,10 +383,10 @@ class SimplePlayerImpact(Task):
             - 1
         ).clip(lower=0)
         df.loc[visitor, "PLAYER1_IMPACT"] -= (1 - visitor_assist_factor) * df.loc[
-            visitor, "WIN_PROBABILITY_CHANGE"
+            visitor, self.change_column
         ]
         df.loc[visitor, "PLAYER2_IMPACT"] -= (
-            visitor_assist_factor * df.loc[visitor, "WIN_PROBABILITY_CHANGE"]
+            visitor_assist_factor * df.loc[visitor, self.change_column]
         )
 
         return df
@@ -389,20 +396,27 @@ class CompoundPlayerImpact(Task):
     """Define player impact for time periods with multiple events."""
 
     event_types = EventTypes()
+    change_column: str = None
 
-    def run(self, pbp: pd.DataFrame) -> pd.DataFrame:
+    def run(self, pbp: pd.DataFrame, mode: Optional[str] = "nba") -> pd.DataFrame:
         """Define player impact for time periods with multiple events.
 
         Parameters
         ----------
         pbp : pd.DataFrame
             The output from ``SimplePlayerImpact``.
+        mode : str, optional (default "nba")
+            Whether to use NBA win probability or the survival probability.
 
         Returns
         -------
         pd.DataFrame
             The updated dataset.
         """
+        if mode == "nba":
+            self.change_column = "NBA_WIN_PROB_CHANGE"
+        else:
+            raise NotImplementedError
         sizes, rowfilter = _num_events_at_time(pbp)
         # Get compound events
         compound = sizes[sizes > 1].index.tolist()
@@ -596,11 +610,11 @@ class CompoundPlayerImpact(Task):
         """
         if not pd.isnull(df.loc[event_indices[0], "HOMEDESCRIPTION"]):
             df.loc[event_indices[0], "PLAYER1_IMPACT"] += df.loc[
-                event_indices[0], "WIN_PROBABILITY_CHANGE"
+                event_indices[0], self.change_column
             ]
         else:
             df.loc[event_indices[0], "PLAYER1_IMPACT"] -= df.loc[
-                event_indices[0], "WIN_PROBABILITY_CHANGE"
+                event_indices[0], self.change_column
             ]
 
         return df
@@ -628,11 +642,11 @@ class CompoundPlayerImpact(Task):
         # Attribute blame for the second row (the turnover)
         if not pd.isnull(df.loc[event_indices[1], "HOMEDESCRIPTION"]):
             df.loc[event_indices[1], "PLAYER1_IMPACT"] += df.loc[
-                event_indices[1], "WIN_PROBABILITY_CHANGE"
+                event_indices[1], self.change_column
             ]
         else:
             df.loc[event_indices[1], "PLAYER1_IMPACT"] -= df.loc[
-                event_indices[1], "WIN_PROBABILITY_CHANGE"
+                event_indices[1], self.change_column
             ]
 
         return df
@@ -664,10 +678,10 @@ class CompoundPlayerImpact(Task):
         else:
             idx = event_indices[0]
         if not pd.isnull(df.loc[idx, "HOMEDESCRIPTION"]):
-            df.loc[idx, "PLAYER1_IMPACT"] += df.loc[idx, "WIN_PROBABILITY_CHANGE"]
+            df.loc[idx, "PLAYER1_IMPACT"] += df.loc[idx, self.change_column]
         else:
             df.loc[event_indices[0], "PLAYER1_IMPACT"] -= df.loc[
-                event_indices[0], "WIN_PROBABILITY_CHANGE"
+                event_indices[0], self.change_column
             ]
 
         # Give credit for the free throw
@@ -677,10 +691,10 @@ class CompoundPlayerImpact(Task):
         else:
             idx = event_indices[-1]
         if not pd.isnull(df.loc[idx, "HOMEDESCRIPTION"]):
-            df.loc[idx, "PLAYER1_IMPACT"] += df.loc[idx, "WIN_PROBABILITY_CHANGE"]
+            df.loc[idx, "PLAYER1_IMPACT"] += df.loc[idx, self.change_column]
         else:
             df.loc[event_indices[-1], "PLAYER1_IMPACT"] -= df.loc[
-                idx, "WIN_PROBABILITY_CHANGE"
+                idx, self.change_column
             ]
 
         return df
@@ -720,24 +734,24 @@ class CompoundPlayerImpact(Task):
             )
             # Assign credit for the rebounder
             df.loc[event_indices[0], "PLAYER1_IMPACT"] += (
-                reb_factor * df.loc[event_indices[0], "WIN_PROBABILITY_CHANGE"]
+                reb_factor * df.loc[event_indices[0], self.change_column]
             )
             # Assign credit for the player who took the shot/free throws
             df.loc[idx, "PLAYER1_IMPACT"] += (1 - reb_factor) * df.loc[
-                idx, "WIN_PROBABILITY_CHANGE"
+                idx, self.change_column
             ]
             # Assign blame for the person fouling -- either the second or third event
             if df.loc[event_indices[1], "EVENTMSGTYPE"] == self.event_types.FOUL:
                 # Home team scored -> visiting player is ``PLAYER1_ID`` and they committed the foul
                 df.loc[event_indices[1], "PLAYER1_IMPACT"] -= df.loc[
-                    event_indices[1], "WIN_PROBABILITY_CHANGE"
+                    event_indices[1], self.change_column
                 ]
             elif (
                 len(event_indices) > 2
                 and df.loc[event_indices[2], "EVENTMSGTYPE"] == self.event_types.FOUL
             ):
                 df.loc[event_indices[2], "PLAYER1_IMPACT"] -= df.loc[
-                    event_indices[2], "WIN_PROBABILITY_CHANGE"
+                    event_indices[2], self.change_column
                 ]
         else:
             # Get the credit for the rebounder
@@ -750,24 +764,24 @@ class CompoundPlayerImpact(Task):
             )
             # Assign credit for the rebounder
             df.loc[event_indices[0], "PLAYER1_IMPACT"] -= (
-                reb_factor * df.loc[event_indices[0], "WIN_PROBABILITY_CHANGE"]
+                reb_factor * df.loc[event_indices[0], self.change_column]
             )
             # Assign credit for the player who took the shot/free throws
             df.loc[idx, "PLAYER1_IMPACT"] -= (1 - reb_factor) * df.loc[
-                idx, "WIN_PROBABILITY_CHANGE"
+                idx, self.change_column
             ]
             # Assign blame for the person fouling -- either the second or third event
             if df.loc[event_indices[1], "EVENTMSGTYPE"] == self.event_types.FOUL:
                 # Visiting team score -> home player is ``PLAYER1_ID`` and they committed the foul
                 df.loc[event_indices[1], "PLAYER1_IMPACT"] += df.loc[
-                    event_indices[1], "WIN_PROBABILITY_CHANGE"
+                    event_indices[1], self.change_column
                 ]
             elif (
                 len(event_indices) > 2
                 and df.loc[event_indices[2], "EVENTMSGTYPE"] == self.event_types.FOUL
             ):
                 df.loc[event_indices[2], "PLAYER1_IMPACT"] += df.loc[
-                    event_indices[2], "WIN_PROBABILITY_CHANGE"
+                    event_indices[2], self.change_column
                 ]
 
         return df

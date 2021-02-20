@@ -9,15 +9,11 @@ from prefect.tasks.control_flow import merge
 import pandas as pd
 
 from .tasks import (
-    AddWinProbability,
     AggregateImpact,
     BoxScoreLoader,
     CompoundPlayerImpact,
-    ConvertNBAWinProbability,
-    ConvertSurvivalWinProbability,
     LoadRatingData,
     SimplePlayerImpact,
-    WinProbabilityLoader,
 )
 
 
@@ -36,21 +32,14 @@ def gen_pipeline() -> Flow:
     # Initialize the tasks
     # Loader tasks
     pbp_loader = LoadRatingData(name="Load clean data")
-    winprob_loader = WinProbabilityLoader(name="Load NBA win probability loader")
     box_loader = BoxScoreLoader(name="Load boxscore data")
     # Calculation tasks
-    convertwinprob = ConvertNBAWinProbability(name="Convert NBA win probability")
-    convertsurvprob = ConvertSurvivalWinProbability(
-        name="Convert survival win probability"
-    )
-    addwin = AddWinProbability(name="Add win probability")
     addsimpleimpact = SimplePlayerImpact(name="Calculate simple player impact")
     compoundimpact = CompoundPlayerImpact(name="Calculate sequence player impact")
     combineimpact = AggregateImpact(name="Aggregate player impact")
 
     with Flow(name="Calculate player impact") as flow:
         # Parameter
-        mode = Parameter("Win Probability Mode", "nba")
         game_id = Parameter("GameID", "default")
         output_dir = Parameter("output_dir", "nba-data")
         filesystem = Parameter("filesystem", "file")
@@ -61,16 +50,7 @@ def gen_pipeline() -> Flow:
             output_dir=output_dir,
             filesystem=filesystem,
         )
-        with case(mode, "nba"):
-            win_prob = winprob_loader(
-                GameID=game_id, output_dir=output_dir, filesystem=filesystem
-            )
-            nbawinprob = convertwinprob(win_prob=win_prob)
-        with case(mode, "survival"):
-            survivalprob = convertsurvprob(win_prob=win_prob)
-        winprob = merge(nbawinprob, survivalprob)
-        win = addwin(pbp=pbp, win_prob=winprob)
-        calculatesimple = addsimpleimpact(pbp=win)
+        calculatesimple = addsimpleimpact(pbp=pbp)
         sequence = compoundimpact(pbp=calculatesimple)
         combineimpact(pbp=sequence, boxscore=box)
 

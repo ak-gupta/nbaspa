@@ -7,7 +7,7 @@ import fsspec
 import pandas as pd
 from prefect import Task
 
-from ...data.endpoints import BoxScoreTraditional, WinProbability
+from ...data.endpoints import BoxScoreTraditional
 
 
 class LoadRatingData(Task):
@@ -41,36 +41,6 @@ class LoadRatingData(Task):
             raise ValueError(f"File {str(fpath)} does not exist")
 
         return data
-
-
-class WinProbabilityLoader(Task):
-    """Load the NBA win probability."""
-
-    def run(
-        self, GameID: str, output_dir: str, filesystem: Optional[str] = "file"
-    ) -> pd.DataFrame:
-        """Load the NBA win probability.
-
-        Parameters
-        ----------
-        GameID : str
-            The game identifier.
-        output_dir : str
-            The directory containing the data.
-        filesystem : str, optional (default "file")
-            The name of the ``fsspec`` filesystem to use.
-
-        Returns
-        -------
-        pd.DataFrame
-            The NBA win probability dataset.
-        """
-        win = WinProbability(
-            GameID=GameID, output_dir=output_dir, filesystem=filesystem
-        )
-        win.load()
-
-        return win.get_data("WinProbPBP")
 
 
 class BoxScoreLoader(Task):
