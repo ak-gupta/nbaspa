@@ -59,8 +59,7 @@ setup(
         "console_scripts": [
             "nbaspa-download=nbaspa.data.scripts.download:download",
             "nbaspa-clean=nbaspa.data.scripts.clean:clean",
-            "nbaspa-lifelines=nbaspa.model.scripts.lifelines:build",
-            "nbaspa-xgboost=nbaspa.model.scripts.xgboost:build"
+            "nbaspa-model=nbaspa.model.scripts.model:model",
         ],
     },
 )

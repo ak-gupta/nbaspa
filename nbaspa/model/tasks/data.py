@@ -6,10 +6,32 @@ from typing import Dict, List, Optional
 from lifelines.utils import add_covariate_to_timeline, to_long_format
 import numpy as np
 import pandas as pd
-from prefect import Task
+from prefect import Task, task
 
 from .meta import META
 
+@task
+def load_df(data_dir: str, dataset: Optional[str] = "build.csv") -> pd.DataFrame:
+    """Load the pandas dataframe.
+
+    Parameters
+    ----------
+    data_dir : str
+        The data directory
+    dataset : str, optional (default "build.csv")
+        The filename in the directory
+    
+    Returns
+    -------
+    pd.DataFrame
+        The dataframe.
+    """
+    return pd.read_csv(
+        Path(data_dir, "models", dataset),
+        sep="|",
+        index_col=0,
+        dtype={"GAME_ID": str}
+    )
 
 class LoadData(Task):
     """Load clean data to a DataFrame."""
