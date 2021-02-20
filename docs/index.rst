@@ -11,16 +11,16 @@
 
 .. toctree::
    :maxdepth: 2
-   :caption: Model methodology
+   :caption: Model
 
-   _methodology/model/modelfit
-   _methodology/model/features
+   _model/modelfit
+   _model/features
 
 .. toctree::
    :maxdepth: 2
    :caption: Survival probability added (SPA)
 
-   _methodology/impact/metric
+   _spa/definition
 
 .. toctree::
    :maxdepth: 2

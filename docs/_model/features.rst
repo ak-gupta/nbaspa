@@ -1,6 +1,6 @@
-==============
-Model Features
-==============
+========
+Features
+========
 
 The survival analysis model will use a dataset with the following variables:
 
