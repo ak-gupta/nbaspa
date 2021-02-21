@@ -18,7 +18,6 @@ def model():
 @click.option("--data-dir", help="Path to the data directory.")
 @click.option(
     "--splits",
-    nargs=2,
     type=click.Tuple([float, float]),
     default=(0.85, 0.15),
     help="Percentage splits for build and holdout data",
@@ -85,6 +84,11 @@ def train(data_dir, splits, max_evals, seed, model):
     if model == "lifelines":
         flow = gen_lifelines_pipeline()
     else:
+        if len(splits) < 3:
+            click.secho(
+                "Please provide 3 values for split (one for train, stop, and tune)", fg="red"
+            )
+            raise ValueError
         flow = gen_xgboost_pipeline()
     
     run_pipeline(

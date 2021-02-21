@@ -1,9 +1,10 @@
 """Generate model build/evaluation framework."""
 
-from pathlib import Path
+from typing import Dict, List
 
+import numpy as np
 import prefect
-from prefect import Flow, Parameter
+from prefect import Flow, Parameter, unmapped
 from prefect.engine.results import LocalResult
 from prefect.engine.serializers import PandasSerializer
 from prefect.engine.state import State
@@ -22,6 +23,10 @@ from .tasks import (
     SurvivalData,
     SegmentData,
     XGBoostTuning,
+    LoadModel,
+    WinProbability,
+    AUROC,
+    PlotMetric
 )
 
 def gen_data_pipeline() -> Flow:
@@ -103,7 +108,7 @@ def gen_lifelines_pipeline() -> Flow:
         checkpoint=True,
         result=LocalResult(
             dir=".",
-            location="{data_dir}/models/lifelines/{today}/tuning.pkl"
+            location="{data_dir}/models/{today}/lifelines/tuning.pkl"
         )
     )
     tuneplots = PlotTuning(
@@ -112,7 +117,7 @@ def gen_lifelines_pipeline() -> Flow:
         result=LocalResult(
             serializer=Plot(),
             dir=".",
-            location="{data_dir}/models/lifelines/{today}/hyperparameter-tuning.png",
+            location="{data_dir}/models/{today}/lifelines/hyperparameter-tuning.png",
         )
     )
     model = InitializeLifelines(name="Initialize lifelines model")
@@ -120,7 +125,7 @@ def gen_lifelines_pipeline() -> Flow:
         name="Train lifelines model",
         checkpoint=True,
         result=LocalResult(
-            dir=".", location="{data_dir}/models/lifelines/{today}/model.pkl"
+            dir=".", location="{data_dir}/models/{today}/lifelines/model.pkl"
         ),
     )
 
@@ -169,7 +174,7 @@ def gen_xgboost_pipeline() -> Flow:
         checkpoint=True,
         result=LocalResult(
             dir=".",
-            location="{data_dir}/models/xgboost/{today}/tuning.pkl",
+            location="{data_dir}/models/{today}/xgboost/tuning.pkl",
         ),
     )
     tuneplots = PlotTuning(
@@ -178,14 +183,14 @@ def gen_xgboost_pipeline() -> Flow:
         result=LocalResult(
             serializer=Plot(),
             dir=".",
-            location="{data_dir}/models/xgboost/{today}/hyperparameter-tuning.png",
+            location="{data_dir}/models/{today}/xgboost/hyperparameter-tuning.png",
         ),
     )
     trained = FitXGBoost(
         name="Train XGBoost model",
         checkpoint=True,
         result=LocalResult(
-            dir=".", location="{data_dir}/models/xgboost/{today}/model.pkl"
+            dir=".", location="{data_dir}/models/{today}/xgboost/model.pkl"
         ),
     )
 
@@ -226,6 +231,76 @@ def gen_xgboost_pipeline() -> Flow:
             num_boost_round=1000,
         )
     
+    return flow
+
+def gen_evaluate_pipeline(**kwargs) -> Flow:
+    """Generate pipeline for evaluating models.
+
+    Parameters
+    ----------
+    **kwargs
+        Each key will be the name of a model. The value is the location
+        of the model pickle.
+
+    Returns
+    -------
+    Flow
+        The generated pipeline.
+    """
+    # Create a time range for AUROC calculation -- start to the end of the fourth quarter
+    times = np.linspace(0, 2880, 25)
+    # Initialize the tasks
+    modelobjs: Dict = {}
+    calc_sprob: Dict = {}
+    sprob_auc: Dict = {}
+    for key in kwargs:
+        modelobjs[key] = LoadModel(name=f"Load model {key}")
+        calc_sprob[key] = WinProbability(name=f"Calculate survival probability for model {key}")
+        sprob_auc[key] = AUROC(name=f"Calculate Cox PH AUROC for model {key}")
+
+    auc_data = CollapseData(name="Create AUROC input data")
+    nba_wprob = WinProbability(name="Retrieve NBA win probability")
+    wprob_auc = AUROC(name="Calculate NBA AUROC")
+    metricplot = PlotMetric(
+        name="AUROC over gametime",
+        checkpoint=True,
+        result=LocalResult(
+            dir=".",
+            serializer=Plot(),
+            location="{data_dir}/models/{today}/auroc.png"
+        )
+    )
+
+    # Generate the pipeline
+    with Flow(name="Evaluate models") as flow:
+        # Define some parameters
+        data_dir = Parameter("data_dir", "nba-data")
+        # Load the models
+        models = {
+            key: modelobjs[key](filepath=value) for key, value in kwargs.items()
+        }
+        # Load the holdout data
+        holdout = load_df(data_dir=data_dir, dataset="holdout.csv")
+        # Collapse the data to each timestamp
+        test = auc_data.map(data=unmapped(holdout), timestep=times)
+        # Get the predicted probabilities at each time step
+        wprob = nba_wprob.map(model=unmapped("nba"), data=test)
+        sprob = {
+            key: calc_sprob[key].map(model=unmapped(models[key]), data=test) for key in kwargs
+        }
+        # Get the AUROC based on the model outputs
+        metric_benchmark = wprob_auc.map(data=wprob, mode=unmapped("benchmark"))
+        metric = {
+            key: sprob_auc[key].map(data=sprob[key]) for key in kwargs
+        }
+        # Plot the AUROC over game-time
+        metricplot(
+            times=times,
+            metric="AUROC",
+            nba=metric_benchmark,
+            **metric
+        )
+
     return flow
 
 def run_pipeline(flow: Flow, data_dir: str, **kwargs) -> State:

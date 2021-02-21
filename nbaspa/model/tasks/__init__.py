@@ -2,7 +2,8 @@
 
 from typing import List
 
-from .data import LoadData, load_df, SurvivalData, SegmentData, CollapseData
+from .data import SurvivalData, SegmentData, CollapseData
+from .io import load_df, LoadData, LoadModel
 from .lifelines import (
     InitializeLifelines,
     FitLifelinesModel,
@@ -14,11 +15,12 @@ from .visualization import PlotMetric, PlotProbability, PlotTuning
 from .xgboost import FitXGBoost
 
 __all__: List[str] = [
-    "LoadData",
-    "load_df",
     "SurvivalData",
     "SegmentData",
     "CollapseData",
+    "LoadData",
+    "load_df",
+    "LoadModel",
     "InitializeLifelines",
     "FitLifelinesModel",
     "Predict",
