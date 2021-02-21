@@ -7,6 +7,7 @@ import cloudpickle
 import pandas as pd
 from prefect import Task, task
 
+
 @task
 def load_df(data_dir: str, dataset: Optional[str] = "build.csv") -> pd.DataFrame:
     """Load the pandas dataframe.
@@ -17,21 +18,20 @@ def load_df(data_dir: str, dataset: Optional[str] = "build.csv") -> pd.DataFrame
         The data directory
     dataset : str, optional (default "build.csv")
         The filename in the directory
-    
+
     Returns
     -------
     pd.DataFrame
         The dataframe.
     """
     return pd.read_csv(
-        Path(data_dir, "models", dataset),
-        sep="|",
-        index_col=0,
-        dtype={"GAME_ID": str}
+        Path(data_dir, "models", dataset), sep="|", index_col=0, dtype={"GAME_ID": str}
     )
+
 
 class LoadData(Task):
     """Load clean data to a DataFrame."""
+
     def run(self, data_dir: str) -> pd.DataFrame:
         """Load clean data to a DataFrame.
 
@@ -39,7 +39,7 @@ class LoadData(Task):
         ----------
         data_dir : str
             The directory containing multiple seasons of data.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -56,6 +56,7 @@ class LoadData(Task):
 
 class LoadModel(Task):
     """Load model object using ``cloudpickle``."""
+
     def run(self, filepath: str) -> Tuple:
         """Load model object using ``cloudpickle``.
 
@@ -63,7 +64,7 @@ class LoadModel(Task):
         ----------
         filepath : str
             The path to the ``.pkl`` object.
-        
+
         Returns
         -------
         Dict
@@ -73,5 +74,5 @@ class LoadModel(Task):
         self.logger.info(f"Reading model object from {filepath}")
         with open(Path(filepath), "rb") as infile:
             model = cloudpickle.load(infile)
-        
+
         return model

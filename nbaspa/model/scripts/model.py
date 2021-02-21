@@ -7,13 +7,15 @@ from ..pipeline import (
     gen_lifelines_pipeline,
     gen_xgboost_pipeline,
     gen_evaluate_pipeline,
-    run_pipeline
+    run_pipeline,
 )
+
 
 @click.group()
 def model():
     """CLI group."""
     pass
+
 
 @model.command()
 @click.option("--data-dir", help="Path to the data directory.")
@@ -23,9 +25,7 @@ def model():
     default=(0.85, 0.15),
     help="Percentage splits for build and holdout data",
 )
-@click.option(
-    "--seed", default=42, type=int, help="Random seed for segmentation"
-)
+@click.option("--seed", default=42, type=int, help="Random seed for segmentation")
 def build(data_dir, splits, seed):
     """Split the entire dataset into build and holdout sets.
 
@@ -33,12 +33,8 @@ def build(data_dir, splits, seed):
     subfolder in ``data_dir``.
     """
     flow = gen_data_pipeline()
-    run_pipeline(
-        flow=flow,
-        data_dir=data_dir,
-        splits=splits,
-        seed=seed
-    )
+    run_pipeline(flow=flow, data_dir=data_dir, splits=splits, seed=seed)
+
 
 @model.command()
 @click.option("--data-dir", help="Path to the data directory.")
@@ -55,14 +51,12 @@ def build(data_dir, splits, seed):
     type=int,
     help="Number of hyperparameter tuning iterations",
 )
-@click.option(
-    "--seed", default=42, type=int, help="Random seed for segmentation"
-)
+@click.option("--seed", default=42, type=int, help="Random seed for segmentation")
 @click.option(
     "--model",
     type=click.Choice(["xgboost", "lifelines"], case_sensitive=True),
     default="lifelines",
-    help="Whether to fit an XGBoost or lifelines model"
+    help="Whether to fit an XGBoost or lifelines model",
 )
 def train(data_dir, splits, max_evals, seed, model):
     """Train the survival analysis model.
@@ -87,11 +81,12 @@ def train(data_dir, splits, max_evals, seed, model):
     else:
         if len(splits) < 3:
             click.secho(
-                "Please provide 3 values for split (one for train, stop, and tune)", fg="red"
+                "Please provide 3 values for split (one for train, stop, and tune)",
+                fg="red",
             )
             raise ValueError
         flow = gen_xgboost_pipeline()
-    
+
     run_pipeline(
         flow=flow,
         data_dir=data_dir,
@@ -99,6 +94,7 @@ def train(data_dir, splits, max_evals, seed, model):
         max_evals=max_evals,
         seed=seed,
     )
+
 
 @model.command()
 @click.option("--data-dir", help="Path to the data directory.")
@@ -110,7 +106,5 @@ def train(data_dir, splits, max_evals, seed, model):
 )
 def evaluate(data_dir, model):
     """Evaluate the models using AUROC over time."""
-    flow = gen_evaluate_pipeline(
-        **{name: location for name, location in model}
-    )
+    flow = gen_evaluate_pipeline(**{name: location for name, location in model})
     run_pipeline(flow, data_dir=data_dir)

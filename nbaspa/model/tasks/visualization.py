@@ -119,9 +119,7 @@ class PlotTuning(Task):
         fig = plt.figure(figsize=(10, 10))
         # Create a grid
         numplots = len(params) + 1
-        gridsize = (
-            int(np.ceil(np.sqrt(numplots))), int(np.ceil(np.sqrt(numplots)))
-        )
+        gridsize = (int(np.ceil(np.sqrt(numplots))), int(np.ceil(np.sqrt(numplots))))
         gs = fig.add_gridspec(*gridsize)
         with sns.axes_style("darkgrid"):
             ax = fig.add_subplot(gs[0, 0])

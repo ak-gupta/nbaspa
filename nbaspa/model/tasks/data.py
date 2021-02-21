@@ -9,6 +9,7 @@ from prefect import Task
 
 from .meta import META
 
+
 class SurvivalData(Task):
     """Create time-varying data in the ``lifelines`` format."""
 

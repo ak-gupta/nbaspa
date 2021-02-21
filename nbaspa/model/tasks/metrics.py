@@ -65,10 +65,11 @@ class AUROC(Task):
 
 class AUROCLift(Task):
     """Calculate the lift in AUROC between two sequences."""
+
     def run(
         self,
         benchmark: Union[List[float], np.ndarray],
-        test: Union[List[float], np.ndarray]
+        test: Union[List[float], np.ndarray],
     ) -> np.ndarray:
         """Calculate the lift in AUROC between two sequences.
 
@@ -82,7 +83,7 @@ class AUROCLift(Task):
             The benchmark series.
         test : np.ndarray
             The test series.
-        
+
         Returns
         -------
         np.ndarray

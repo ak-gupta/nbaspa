@@ -27,8 +27,9 @@ from .tasks import (
     WinProbability,
     AUROC,
     AUROCLift,
-    PlotMetric
+    PlotMetric,
 )
+
 
 def gen_data_pipeline() -> Flow:
     """Split the enire input set into build and holdout.
@@ -55,10 +56,8 @@ def gen_data_pipeline() -> Flow:
         result=LocalResult(
             dir=".",
             location="{data_dir}/models/build.csv",
-            serializer=PandasSerializer(
-                file_type="csv", serialize_kwargs={"sep": "|"}
-            )
-        )
+            serializer=PandasSerializer(file_type="csv", serialize_kwargs={"sep": "|"}),
+        ),
     )
     retrieve_hold = GetItem(
         name="Get holdout data",
@@ -66,10 +65,8 @@ def gen_data_pipeline() -> Flow:
         result=LocalResult(
             dir=".",
             location="{data_dir}/models/holdout.csv",
-            serializer=PandasSerializer(
-                file_type="csv", serialize_kwargs={"sep": "|"}
-            )
-        )
+            serializer=PandasSerializer(file_type="csv", serialize_kwargs={"sep": "|"}),
+        ),
     )
     # Generate the flow
     with Flow(name="Split data into build and holdout") as flow:
@@ -81,13 +78,12 @@ def gen_data_pipeline() -> Flow:
         basedata = load(data_dir=data_dir)
         # Format the data
         alldata = format_data(basedata)
-        data = segdata(
-            alldata, splits=splits, keys=["build", "holdout"], seed=seed
-        )
+        data = segdata(alldata, splits=splits, keys=["build", "holdout"], seed=seed)
         _ = retrieve_build(task_result=data, key="build")
         _ = retrieve_hold(task_result=data, key="holdout")
-    
+
     return flow
+
 
 def gen_lifelines_pipeline() -> Flow:
     """Generate a ``lifelines`` model fit pipeline.
@@ -108,9 +104,8 @@ def gen_lifelines_pipeline() -> Flow:
         name="Run lifelines hyperparameter tuning",
         checkpoint=True,
         result=LocalResult(
-            dir=".",
-            location="{data_dir}/models/{today}/lifelines/tuning.pkl"
-        )
+            dir=".", location="{data_dir}/models/{today}/lifelines/tuning.pkl"
+        ),
     )
     tuneplots = PlotTuning(
         name="Plot lifelines hyperparameter tuning",
@@ -119,7 +114,7 @@ def gen_lifelines_pipeline() -> Flow:
             serializer=Plot(),
             dir=".",
             location="{data_dir}/models/{today}/lifelines/hyperparameter-tuning.png",
-        )
+        ),
     )
     model = InitializeLifelines(name="Initialize lifelines model")
     trained = FitLifelinesModel(
@@ -150,8 +145,9 @@ def gen_lifelines_pipeline() -> Flow:
         tuneplots(params["trials"])
         model_obj = model(params["best"])
         _ = trained(model=model_obj, data=data["train"])
-    
+
     return flow
+
 
 def gen_xgboost_pipeline() -> Flow:
     """Generate a ``xgboost`` fit pipeline.
@@ -205,9 +201,7 @@ def gen_xgboost_pipeline() -> Flow:
         # Load the data
         build = load_df(data_dir=data_dir, dataset="build.csv")
         # Segment data into train, stop, tune
-        data = segdata(
-            build, splits=splits, keys=["train", "stop", "tune"], seed=seed
-        )
+        data = segdata(build, splits=splits, keys=["train", "stop", "tune"], seed=seed)
         # Collapse data to the final row
         train = train_data(data["train"])
         tune = tune_data(data["tune"])
@@ -231,8 +225,9 @@ def gen_xgboost_pipeline() -> Flow:
             early_stopping_rounds=10,
             num_boost_round=1000,
         )
-    
+
     return flow
+
 
 def gen_evaluate_pipeline(**kwargs) -> Flow:
     """Generate pipeline for evaluating models.
@@ -257,7 +252,9 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
     calc_lift: Dict = {}
     for key in kwargs:
         modelobjs[key] = LoadModel(name=f"Load model {key}")
-        calc_sprob[key] = WinProbability(name=f"Calculate survival probability for model {key}")
+        calc_sprob[key] = WinProbability(
+            name=f"Calculate survival probability for model {key}"
+        )
         sprob_auc[key] = AUROC(name=f"Calculate Cox PH AUROC for model {key}")
         calc_lift[key] = AUROCLift(name=f"Calculate AUROC life for model {key}")
 
@@ -268,10 +265,8 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
         name="AUROC over gametime",
         checkpoint=True,
         result=LocalResult(
-            dir=".",
-            serializer=Plot(),
-            location="{data_dir}/models/{today}/auroc.png"
-        )
+            dir=".", serializer=Plot(), location="{data_dir}/models/{today}/auroc.png"
+        ),
     )
     liftplot = PlotMetric(
         name="AUROC lift over gametime",
@@ -279,8 +274,8 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
         result=LocalResult(
             dir=".",
             serializer=Plot(),
-            location="{data_dir}/models/{today}/auroc_lift.png"
-        )
+            location="{data_dir}/models/{today}/auroc_lift.png",
+        ),
     )
 
     # Generate the pipeline
@@ -288,9 +283,7 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
         # Define some parameters
         data_dir = Parameter("data_dir", "nba-data")
         # Load the models
-        models = {
-            key: modelobjs[key](filepath=value) for key, value in kwargs.items()
-        }
+        models = {key: modelobjs[key](filepath=value) for key, value in kwargs.items()}
         # Load the holdout data
         holdout = load_df(data_dir=data_dir, dataset="holdout.csv")
         # Collapse the data to each timestamp
@@ -298,31 +291,23 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
         # Get the predicted probabilities at each time step
         wprob = nba_wprob.map(model=unmapped("nba"), data=test)
         sprob = {
-            key: calc_sprob[key].map(model=unmapped(models[key]), data=test) for key in kwargs
+            key: calc_sprob[key].map(model=unmapped(models[key]), data=test)
+            for key in kwargs
         }
         # Get the AUROC based on the model outputs
         metric_benchmark = wprob_auc.map(data=wprob, mode=unmapped("benchmark"))
-        metric = {
-            key: sprob_auc[key].map(data=sprob[key]) for key in kwargs
-        }
+        metric = {key: sprob_auc[key].map(data=sprob[key]) for key in kwargs}
         # Get the AUROC lift
         lift = {
-            key: calc_lift[key](benchmark=metric_benchmark, test=metric[key]) for key in kwargs
+            key: calc_lift[key](benchmark=metric_benchmark, test=metric[key])
+            for key in kwargs
         }
         # Plot the AUROC over game-time
-        aucplot(
-            times=times,
-            metric="AUROC",
-            nba=metric_benchmark,
-            **metric
-        )
-        liftplot(
-            times=times,
-            metric="AUROC Lift",
-            **lift
-        )
+        aucplot(times=times, metric="AUROC", nba=metric_benchmark, **metric)
+        liftplot(times=times, metric="AUROC Lift", **lift)
 
     return flow
+
 
 def run_pipeline(flow: Flow, data_dir: str, **kwargs) -> State:
     """Run a pipeline.
@@ -335,7 +320,7 @@ def run_pipeline(flow: Flow, data_dir: str, **kwargs) -> State:
         The directory containing the data.
     **kwargs
         Parameter values.
-    
+
     Returns
     -------
     State
