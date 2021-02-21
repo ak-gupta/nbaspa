@@ -126,9 +126,10 @@ class WinProbability(Task):
             model.baseline_cumulative_hazard_, data["stop"].values
         )
         # Survival is the negative exponent of the cumulative hazard
-        data[META["survival"]] = 1 - np.exp(-(c0 * vals.values))
+        new = data.copy()
+        new[META["survival"]] = 1 - np.exp(-(c0 * vals.values))
 
-        return data
+        return new
 
     @staticmethod
     def _run_xgboost(model: xgb.Booster, data: pd.DataFrame) -> pd.DataFrame:
@@ -175,6 +176,7 @@ class WinProbability(Task):
 
         # Get the cumulative probability
         c0 = interpolate_at_times(cumulative_hazard_, data["stop"].values)
-        data[META["survival"]] = 1 - np.exp(-(c0 * hazard))
+        new = data.copy()
+        new[META["survival"]] = 1 - np.exp(-(c0 * hazard))
 
-        return data
+        return new

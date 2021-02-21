@@ -10,6 +10,10 @@ For this model, we are pulling data from the public, undocumented NBA Stats API.
 loader is built on excellent work by `swar <https://github.com/swar/nba_api>`_ and
 `seemethere <https://github.com/seemethere/nba_py/>`_.
 
+~~~~~~
+Python
+~~~~~~
+
 Each endpoint has an associated class (see :doc:`the API reference <api/nbaspa.data.endpoints>`
 for a complete list). Let's focus on :py:class:`nbaspa.data.endpoints.boxscore.BoxScoreTraditional`.
 First, we need to initialize the class:
@@ -37,9 +41,9 @@ dataset type:
 
 and that's it!
 
-~~~~~~~~~~~~~~
+++++++++++++++
 Multiple calls
-~~~~~~~~~~~~~~
+++++++++++++++
 
 Calling an individual endpoint for every game in a season is... tiring. So, we made a factory
 class that will loop through multiple calls. First, define your list of calls.
@@ -103,7 +107,13 @@ Cleaning data
 Our `prefect <https://docs.prefect.io/core/>`_ data cleaning pipeline iterates through all
 games on a given day. The pipeline produces two types of data: ``model`` and ``rating``. The
 ``model`` dataset will be an input for the survival analysis model while the ``rating`` dataset
-will be used for generating SPA ratings. To clean a given day in python,
+will be used for generating SPA ratings.
+
+~~~~~~
+Python
+~~~~~~
+
+To clean a given day in python,
 
 .. code-block:: python
 
@@ -151,11 +161,152 @@ and for ratings data:
 
 Both of these calls will save data to ``nba-data/2018-19``.
 
--------------------
-Training the models
--------------------
+----------------------------------
+Training and evaluating the models
+----------------------------------
 
-Documentation coming soon.
+.. important::
+
+    The outputs for the following pipelines will be saved using Prefect
+    `checkpointing <https://docs.prefect.io/core/concepts/persistence.html#persisting-output>`_.
+    For this to work you must set the following environment variable:
+
+    .. code-block:: console
+
+        $ export PREFECT__FLOWS__CHECKPOINTING=true
+
+~~~~~~
+Python
+~~~~~~
+
++++++++++++++++++++++
+Building the datasets
++++++++++++++++++++++
+
+To create the **build** and **holdout** CSV files,
+
+.. code-block:: python
+
+    from nbaspa.model.pipeline import gen_data_pipeline, run_pipeline
+
+    flow = gen_data_pipeline()
+    output = run_pipeline(
+        flow=flow, data_dir="nba-data", splits=(0.85, 0.15), seed=42
+    )
+
+This flow will save ``build.csv`` and ``holdout.csv`` to ``nba-data/models``.
+
++++++++++++++++++++
+Training the models
++++++++++++++++++++
+
+To train a ``lifelines`` model,
+
+.. code-block:: python
+
+    from nbaspa.model.pipeline import gen_lifelines_pipeline, run_pipeline
+
+    flow = gen_lifelines_pipeline()
+    output = run_pipeline(
+        flow=flow, data_dir="nba-data", splits=(0.7, 0.3), max_evals=100, seed=42
+    )
+
+If you ran the flow on 2021-02-21, the ``lifelines`` model artifacts will be saved to the
+``nba-data/models/2021-02-21/lifelines`` folder. To train a ``xgboost`` model,
+
+.. code-block:: python
+
+    from nbaspa.model.pipeline import gen_xgboost_pipeline, run_pipeline
+
+    flow = gen_xgboost_pipeline()
+    output = run_pipeline(
+        flow=flow, data_dir="nba-data", splits=(0.7, 0.15, 0.15), max_evals==100, seed=42
+    )
+
+If you ran the flow on 2021-02-21, the ``xgboost`` model artifacts will be saved to the
+``nba-data/models/2021-02-21/xgboost`` folder.
+
++++++++++++++++++
+Evaluating models
++++++++++++++++++
+
+To evaluate a set of models,
+
+.. code-block:: python
+
+    from nbaspa.model.pipeline import gen_evaluate_pipeline, run_pipeline
+
+    flow = gen_evaluate_pipeline(
+        lifelines="nba-data/models/2021-02-21/lifelines/model.pkl",
+        xgboost="nba-data/models/2021-02-21/xgboost/model.pkl"
+    )
+    output = run_pipeline(flow=flow, data_dir="nba-data")
+
+This flow will read in the ``model.pkl`` files, create the AUROC visualizations, and
+save the visualizations to ``nba-data/models/2021-02-21``.
+
+~~~~~~~~~~~~~~~~~~~~~~
+Command-line interface
+~~~~~~~~~~~~~~~~~~~~~~
+
++++++++++++++++++++++
+Building the datasets
++++++++++++++++++++++
+
+First, we need to split the initial dataset into **build** and **holdout**:
+
+.. code-block:: console
+
+    $ nbaspa-model build --data-dir nba-data
+
+This CLI call will save two CSV files to ``nba-data/models``: ``build.csv`` and ``holdout.csv``.
+
++++++++++++++++++++
+Training the models
++++++++++++++++++++
+
+Next, we can fit a model
+
+.. code-block:: console
+
+    $ nbaspa-model train --data-dir nba-data --model lifelines
+
+This CLI call will train a ``lifelines`` model with
+
+* a 70-30 train-tune split within the build dataset, and
+* a maximum of 100 ``hyperopt`` evaluations.
+
+You can modify these parameters with ``--splits`` and ``--max-evals``, respectively.
+To train an ``xgboost`` model, you have to supply ``--splits``:
+
+.. code-block:: console
+
+    $ nbaspa-model train \
+        --data-dir nba-data \
+        --model xgboost \
+        --splits 0.7 \
+        --splits 0.15 \
+        --splits 0.15
+
+After you call the ``train`` endpoint you will see a new subfolder within ``nba-data/models``
+corresponding to the system date. The ``lifelines`` artifacts will be saved to a ``lifelines``
+subfolder; the ``xgboost`` artifacts will be saved to a ``xgboost`` subfolder.
+
++++++++++++++++++
+Evaluating models
++++++++++++++++++
+
+To evaluate your models, use the ``evaluate`` endpoint. Suppose you trained your model on 2021-02-21:
+
+.. code-block:: console
+
+    $ nbaspa-model evaluate \
+        --data-dir nba-data \
+        --model lifelines nba-data/models/2021-02-21/lifelines/model.pkl \
+        --model xgboost nba-data/models/2021-02-21/xgboost/model.pkl
+
+This endpoint will read in the model ``.pkl`` files, create the AUROC visualizations, and
+save them to the ``nba-data/models/2021-02-21`` folder.
 
 -----------------------
 Generate player ratings

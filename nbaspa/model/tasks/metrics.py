@@ -1,6 +1,6 @@
 """Define some metrics for evaluating the model."""
 
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from lifelines.utils import concordance_index
 import numpy as np
@@ -61,3 +61,37 @@ class AUROC(Task):
         self.logger.info(f"Model has a AUROC value of {np.round(output, 3)}")
 
         return output
+
+
+class AUROCLift(Task):
+    """Calculate the lift in AUROC between two sequences."""
+
+    def run(
+        self,
+        benchmark: Union[List[float], np.ndarray],
+        test: Union[List[float], np.ndarray],
+    ) -> np.ndarray:
+        """Calculate the lift in AUROC between two sequences.
+
+        For our purposes, we will be calculating the AUROC across the entire game. This
+        task will help produce a series comparing the survival model to the benchmark NBA
+        win probability model.
+
+        Parameters
+        ----------
+        benchmark : np.ndarray
+            The benchmark series.
+        test : np.ndarray
+            The test series.
+
+        Returns
+        -------
+        np.ndarray
+            The output lift series.
+        """
+        if isinstance(test, list):
+            test = np.array(test)
+        if isinstance(benchmark, list):
+            benchmark = np.array(benchmark)
+
+        return test - benchmark
