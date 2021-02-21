@@ -10,6 +10,10 @@ For this model, we are pulling data from the public, undocumented NBA Stats API.
 loader is built on excellent work by `swar <https://github.com/swar/nba_api>`_ and
 `seemethere <https://github.com/seemethere/nba_py/>`_.
 
+~~~~~~
+Python
+~~~~~~
+
 Each endpoint has an associated class (see :doc:`the API reference <api/nbaspa.data.endpoints>`
 for a complete list). Let's focus on :py:class:`nbaspa.data.endpoints.boxscore.BoxScoreTraditional`.
 First, we need to initialize the class:
@@ -37,9 +41,9 @@ dataset type:
 
 and that's it!
 
-~~~~~~~~~~~~~~
+++++++++++++++
 Multiple calls
-~~~~~~~~~~~~~~
+++++++++++++++
 
 Calling an individual endpoint for every game in a season is... tiring. So, we made a factory
 class that will loop through multiple calls. First, define your list of calls.
@@ -103,7 +107,13 @@ Cleaning data
 Our `prefect <https://docs.prefect.io/core/>`_ data cleaning pipeline iterates through all
 games on a given day. The pipeline produces two types of data: ``model`` and ``rating``. The
 ``model`` dataset will be an input for the survival analysis model while the ``rating`` dataset
-will be used for generating SPA ratings. To clean a given day in python,
+will be used for generating SPA ratings.
+
+~~~~~~
+Python
+~~~~~~
+
+To clean a given day in python,
 
 .. code-block:: python
 
@@ -164,6 +174,10 @@ Training and evaluating the models
     .. code-block:: console
 
         $ export PREFECT__FLOWS__CHECKPOINTING=true
+
+~~~~~~
+Python
+~~~~~~
 
 +++++++++++++++++++++
 Building the datasets
