@@ -6,6 +6,7 @@ from ..pipeline import (
     gen_data_pipeline,
     gen_lifelines_pipeline,
     gen_xgboost_pipeline,
+    gen_evaluate_pipeline,
     run_pipeline
 )
 
@@ -98,3 +99,18 @@ def train(data_dir, splits, max_evals, seed, model):
         max_evals=max_evals,
         seed=seed,
     )
+
+@model.command()
+@click.option("--data-dir", help="Path to the data directory.")
+@click.option(
+    "--models",
+    multiple=True,
+    type=click.Tuple([str, str]),
+    help="Alias and location for model pickle files",
+)
+def evaluate(data_dir, models):
+    """Evaluate the models using AUROC over time."""
+    flow = gen_evaluate_pipeline(
+        **{name: location for name, location in models}
+    )
+    run_pipeline(flow, data_dir=data_dir)

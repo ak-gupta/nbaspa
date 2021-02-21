@@ -279,7 +279,6 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
         models = {
             key: modelobjs[key](filepath=value) for key, value in kwargs.items()
         }
-        print(models)
         # Load the holdout data
         holdout = load_df(data_dir=data_dir, dataset="holdout.csv")
         # Collapse the data to each timestamp
@@ -289,13 +288,11 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
         sprob = {
             key: calc_sprob[key].map(model=unmapped(models[key]), data=test) for key in kwargs
         }
-        print(sprob)
         # Get the AUROC based on the model outputs
         metric_benchmark = wprob_auc.map(data=wprob, mode=unmapped("benchmark"))
         metric = {
             key: sprob_auc[key].map(data=sprob[key]) for key in kwargs
         }
-        print(metric)
         # Plot the AUROC over game-time
         metricplot(
             times=times,
