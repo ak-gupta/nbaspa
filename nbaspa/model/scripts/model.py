@@ -103,14 +103,14 @@ def train(data_dir, splits, max_evals, seed, model):
 @model.command()
 @click.option("--data-dir", help="Path to the data directory.")
 @click.option(
-    "--models",
+    "--model",
     multiple=True,
     type=click.Tuple([str, str]),
     help="Alias and location for model pickle files",
 )
-def evaluate(data_dir, models):
+def evaluate(data_dir, model):
     """Evaluate the models using AUROC over time."""
     flow = gen_evaluate_pipeline(
-        **{name: location for name, location in models}
+        **{name: location for name, location in model}
     )
     run_pipeline(flow, data_dir=data_dir)
