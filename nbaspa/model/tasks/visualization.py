@@ -77,7 +77,7 @@ class PlotMetric(Task):
         ).reset_index(drop=True)
         # Plot the line
         with sns.axes_style("darkgrid"):
-            fig, ax = plt.subplots(figsize=(10, 10))
+            fig, ax = plt.subplots(figsize=(12, 8))
             sns.lineplot(x="time", y="value", hue="model", data=data, ax=ax).set(
                 title=f"{metric} value over game-time", xlabel="Time", ylabel=metric
             )

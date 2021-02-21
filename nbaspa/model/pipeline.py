@@ -249,7 +249,7 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
         The generated pipeline.
     """
     # Create a time range for AUROC calculation -- start to the end of the fourth quarter
-    times = np.linspace(0, 2880, 25)
+    times = np.arange(2880, step=10)
     # Initialize the tasks
     modelobjs: Dict = {}
     calc_sprob: Dict = {}
