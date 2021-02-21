@@ -30,7 +30,7 @@ class PlotProbability(Task):
         Figure
             The matplotlib figure object.
         """
-        with sns.axes_style("dark"):
+        with sns.axes_style("darkgrid"):
             fig, ax = plt.subplots(figsize=(10, 10))
             probplot = sns.scatterplot(
                 x="SCOREMARGIN",
@@ -76,7 +76,7 @@ class PlotMetric(Task):
             for key, value in kwargs.items()
         ).reset_index(drop=True)
         # Plot the line
-        with sns.axes_style("dark"):
+        with sns.axes_style("darkgrid"):
             fig, ax = plt.subplots(figsize=(10, 10))
             sns.lineplot(x="time", y="value", hue="model", data=data, ax=ax).set(
                 title=f"{metric} value over game-time", xlabel="Time", ylabel=metric
@@ -123,7 +123,7 @@ class PlotTuning(Task):
             int(np.ceil(np.sqrt(numplots))), int(np.ceil(np.sqrt(numplots)))
         )
         gs = fig.add_gridspec(*gridsize)
-        with sns.axes_style("dark"):
+        with sns.axes_style("darkgrid"):
             ax = fig.add_subplot(gs[0, 0])
             sns.scatterplot(
                 x="trial", y="loss", hue="best", legend=False, data=df, ax=ax

@@ -26,6 +26,7 @@ from .tasks import (
     LoadModel,
     WinProbability,
     AUROC,
+    AUROCLift,
     PlotMetric
 )
 
@@ -253,21 +254,32 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
     modelobjs: Dict = {}
     calc_sprob: Dict = {}
     sprob_auc: Dict = {}
+    calc_lift: Dict = {}
     for key in kwargs:
         modelobjs[key] = LoadModel(name=f"Load model {key}")
         calc_sprob[key] = WinProbability(name=f"Calculate survival probability for model {key}")
         sprob_auc[key] = AUROC(name=f"Calculate Cox PH AUROC for model {key}")
+        calc_lift[key] = AUROCLift(name=f"Calculate AUROC life for model {key}")
 
     auc_data = CollapseData(name="Create AUROC input data")
     nba_wprob = WinProbability(name="Retrieve NBA win probability")
     wprob_auc = AUROC(name="Calculate NBA AUROC")
-    metricplot = PlotMetric(
+    aucplot = PlotMetric(
         name="AUROC over gametime",
         checkpoint=True,
         result=LocalResult(
             dir=".",
             serializer=Plot(),
             location="{data_dir}/models/{today}/auroc.png"
+        )
+    )
+    liftplot = PlotMetric(
+        name="AUROC lift over gametime",
+        checkpoint=True,
+        result=LocalResult(
+            dir=".",
+            serializer=Plot(),
+            location="{data_dir}/models/{today}/auroc_lift.png"
         )
     )
 
@@ -293,12 +305,21 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
         metric = {
             key: sprob_auc[key].map(data=sprob[key]) for key in kwargs
         }
+        # Get the AUROC lift
+        lift = {
+            key: calc_lift[key](benchmark=metric_benchmark, test=metric[key]) for key in kwargs
+        }
         # Plot the AUROC over game-time
-        metricplot(
+        aucplot(
             times=times,
             metric="AUROC",
             nba=metric_benchmark,
             **metric
+        )
+        liftplot(
+            times=times,
+            metric="AUROC Lift",
+            **lift
         )
 
     return flow
