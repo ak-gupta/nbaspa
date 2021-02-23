@@ -67,7 +67,12 @@ class LifelinesTuning(Task):
         def func(params):
             model = CoxTimeVaryingFitter(**params, **kwargs)
             model.fit(
-                train_data,
+                train_data[
+                    [META["id"], META["event"]]
+                    + ["start", "stop"]
+                    + META["static"]
+                    + META["dynamic"]
+                ],
                 id_col=META["id"],
                 event_col=META["event"],
                 start_col="start",
