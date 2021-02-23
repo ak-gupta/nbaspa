@@ -67,7 +67,7 @@ Next, initialize :py:class:`nbaspa.data.factory.NBADataFactory` and download the
 .. important::
 
     We use `ratelimit <https://github.com/tomasbasham/ratelimit>`_ to prevent overloading the
-    NBA API. The ratelimiting is **very** conservative and limits to 5 calls every 10 minutes.
+    NBA API. The ratelimiting is **very** conservative and limits to 5 calls every 5 minutes.
 
 ~~~~~~~~~~~~~~~~~~~~~~
 Command-line interface
