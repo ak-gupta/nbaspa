@@ -18,7 +18,7 @@ DEFAULT_LIFELINES_SPACE: Dict = {
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
-    "learning_rate": hp.uniform("learning_rate", 0.05, 0.2),
+    "learning_rate": hp.uniform("learning_rate", 0.05, 0.5),
     "subsample": hp.uniform("subsample", 0.8, 1),
     "max_delta_step": hp.quniform("max_delta_step", 0, 10, 1),
     "max_depth": hp.quniform("max_depth", 2, 20, 1),
