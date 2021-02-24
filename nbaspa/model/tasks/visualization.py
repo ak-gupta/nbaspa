@@ -116,7 +116,7 @@ class PlotTuning(Task):
         df.loc[df["loss"] == df["loss"].min(), "best"] = True
 
         # Create the plotting object
-        fig = plt.figure(figsize=(10, 10))
+        fig = plt.figure(figsize=(18, 12))
         # Create a grid
         numplots = len(params) + 1
         gridsize = (int(np.ceil(np.sqrt(numplots))), int(np.ceil(np.sqrt(numplots))))
@@ -134,7 +134,7 @@ class PlotTuning(Task):
                 rowidx, colidx = np.argwhere(idxarray == idx + 1)[0]
                 ax = fig.add_subplot(gs[rowidx, colidx])
                 sns.scatterplot(
-                    x="trial", y=param, hue="best", legend=False, data=df, ax=ax
+                    x=param, y="loss", hue="best", legend=False, data=df, ax=ax
                 )
         fig.tight_layout()
 
