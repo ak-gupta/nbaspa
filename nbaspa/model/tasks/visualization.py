@@ -30,7 +30,7 @@ class PlotProbability(Task):
         Figure
             The matplotlib figure object.
         """
-        with sns.axes_style("dark"):
+        with sns.axes_style("darkgrid"):
             fig, ax = plt.subplots(figsize=(10, 10))
             probplot = sns.scatterplot(
                 x="SCOREMARGIN",
@@ -76,8 +76,8 @@ class PlotMetric(Task):
             for key, value in kwargs.items()
         ).reset_index(drop=True)
         # Plot the line
-        with sns.axes_style("dark"):
-            fig, ax = plt.subplots(figsize=(10, 10))
+        with sns.axes_style("darkgrid"):
+            fig, ax = plt.subplots(figsize=(12, 8))
             sns.lineplot(x="time", y="value", hue="model", data=data, ax=ax).set(
                 title=f"{metric} value over game-time", xlabel="Time", ylabel=metric
             )
@@ -116,35 +116,25 @@ class PlotTuning(Task):
         df.loc[df["loss"] == df["loss"].min(), "best"] = True
 
         # Create the plotting object
-        fig = plt.figure(figsize=(10, 10))
+        fig = plt.figure(figsize=(18, 12))
         # Create a grid
         numplots = len(params) + 1
-        if numplots % 2 == 0:
-            gridsize = (numplots // 2, numplots // 2)
-        else:
-            gridsize = ((numplots // 2) + 1, numplots // 2)
+        gridsize = (int(np.ceil(np.sqrt(numplots))), int(np.ceil(np.sqrt(numplots))))
         gs = fig.add_gridspec(*gridsize)
-        with sns.axes_style("dark"):
+        with sns.axes_style("darkgrid"):
             ax = fig.add_subplot(gs[0, 0])
             sns.scatterplot(
                 x="trial", y="loss", hue="best", legend=False, data=df, ax=ax
             )
             # Create an index array
-            idxarray = np.arange(numplots)
-            if gridsize[0] * gridsize[1] - numplots > 0:
-                idxarray = np.pad(
-                    idxarray,
-                    (0, gridsize[0] * gridsize[1] - numplots),
-                    mode="constant",
-                    constant_values=-1,
-                )
+            idxarray = np.arange(gridsize[0] * gridsize[1])
             idxarray = idxarray.reshape(*gridsize)
             for idx, param in enumerate(params):
                 # Get the matrix location in the index array
                 rowidx, colidx = np.argwhere(idxarray == idx + 1)[0]
                 ax = fig.add_subplot(gs[rowidx, colidx])
                 sns.scatterplot(
-                    x="trial", y=param, hue="best", legend=False, data=df, ax=ax
+                    x=param, y="loss", hue="best", legend=False, data=df, ax=ax
                 )
         fig.tight_layout()
 

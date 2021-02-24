@@ -64,6 +64,5 @@ class FitLifelinesModel(Task):
             stop_col="stop",
             **kwargs
         )
-        model.print_summary()
 
         return model

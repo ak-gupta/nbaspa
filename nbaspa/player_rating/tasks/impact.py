@@ -159,9 +159,7 @@ class SimplePlayerImpact(Task):
             & (~pd.isnull(df["VISITORDESCRIPTION"]))
             & (df["TIME"].isin(self._single_event_times(df=df)))
         )
-        df.loc[homefilter, "PLAYER1_IMPACT"] += df.loc[
-            homefilter, self.change_column
-        ]
+        df.loc[homefilter, "PLAYER1_IMPACT"] += df.loc[homefilter, self.change_column]
         df.loc[visitorfilter, "PLAYER1_IMPACT"] -= df.loc[
             visitorfilter, self.change_column
         ]
@@ -194,12 +192,8 @@ class SimplePlayerImpact(Task):
             & (df["TIME"].isin(self._single_event_times(df=df)))
         )
 
-        df.loc[homefilter, "PLAYER1_IMPACT"] += df.loc[
-            homefilter, self.change_column
-        ]
-        df.loc[homefilter, "PLAYER2_IMPACT"] -= df.loc[
-            homefilter, self.change_column
-        ]
+        df.loc[homefilter, "PLAYER1_IMPACT"] += df.loc[homefilter, self.change_column]
+        df.loc[homefilter, "PLAYER2_IMPACT"] -= df.loc[homefilter, self.change_column]
         df.loc[visitorfilter, "PLAYER1_IMPACT"] -= df.loc[
             visitorfilter, self.change_column
         ]
