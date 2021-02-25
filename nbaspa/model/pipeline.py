@@ -72,7 +72,7 @@ def gen_data_pipeline() -> Flow:
     with Flow(name="Split data into build and holdout") as flow:
         # Set up parameters
         data_dir = Parameter("data_dir", "nba-data")
-        splits = Parameter("splits", [0.85, 0.15])
+        splits = Parameter("splits", [0.8, 0.2])
         seed = Parameter("seed", 42)
         # Load the data
         basedata = load(data_dir=data_dir)
@@ -129,7 +129,7 @@ def gen_lifelines_pipeline() -> Flow:
     with Flow(name="Train Cox model") as flow:
         # Define some parameters
         data_dir = Parameter("data_dir", "nba-data")
-        splits = Parameter("splits", [0.7, 0.3])
+        splits = Parameter("splits", [0.75, 0.25])
         max_evals = Parameter("max_evals", 100)
         seed = Parameter("seed", 42)
         # Load the data
@@ -195,7 +195,7 @@ def gen_xgboost_pipeline() -> Flow:
     with Flow(name="Train Cox model") as flow:
         # Define some parameters
         data_dir = Parameter("data_dir", "nba-data")
-        splits = Parameter("splits", [0.7, 0.15, 0.15])
+        splits = Parameter("splits", [0.5, 0.25, 0.25])
         max_evals = Parameter("max_evals", 100)
         seed = Parameter("seed", 42)
         # Load the data
