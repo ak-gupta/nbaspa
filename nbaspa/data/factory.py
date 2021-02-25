@@ -119,7 +119,7 @@ class NBADataFactory:
         return pd.concat(df_list).reset_index(drop=True)
 
     @sleep_and_retry
-    @limits(calls=1, period=60)
+    @limits(calls=1, period=30)
     def _get(self, callobj: BaseRequest):
         """Run the ``get()`` method to retrieve data.
 
