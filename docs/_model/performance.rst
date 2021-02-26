@@ -17,7 +17,7 @@ Performance
 
 .. important::
 
-    At this time the models have been trained on the 2016-17 and 2017-18 seasons.
+    At this time the models have been trained on the 2017-18 and 2018-19 seasons.
 
 Figure 1 shows the AUROC over game-time for each model.
 
