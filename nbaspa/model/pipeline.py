@@ -27,6 +27,7 @@ from .tasks import (
     WinProbability,
     AUROC,
     AUROCLift,
+    MeanAUROCLift,
     PlotMetric,
 )
 
@@ -250,6 +251,7 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
     calc_sprob: Dict = {}
     sprob_auc: Dict = {}
     calc_lift: Dict = {}
+    average_lift: Dict = {}
     for key in kwargs:
         modelobjs[key] = LoadModel(name=f"Load model {key}")
         calc_sprob[key] = WinProbability(
@@ -257,6 +259,7 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
         )
         sprob_auc[key] = AUROC(name=f"Calculate Cox PH AUROC for model {key}")
         calc_lift[key] = AUROCLift(name=f"Calculate AUROC life for model {key}")
+        average_lift[key] = MeanAUROCLift(name=f"Calculate average AUROC lift for model {key}")
 
     auc_data = CollapseData(name="Create AUROC input data")
     nba_wprob = WinProbability(name="Retrieve NBA win probability")
@@ -305,6 +308,10 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
         # Plot the AUROC over game-time
         aucplot(times=times, metric="AUROC", nba=metric_benchmark, **metric)
         liftplot(times=times, metric="AUROC Lift", **lift)
+        _ = {
+            key: average_lift[key](lift=lift[key], timestep=times)
+            for key in kwargs
+        }
 
     return flow
 

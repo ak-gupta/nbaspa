@@ -1,6 +1,6 @@
 """Define some metrics for evaluating the model."""
 
-from typing import List, Optional, Union
+from typing import Callable, List, Optional, Union
 
 from lifelines.utils import concordance_index
 import numpy as np
@@ -95,3 +95,50 @@ class AUROCLift(Task):
             benchmark = np.array(benchmark)
 
         return test - benchmark
+
+
+class MeanAUROCLift(Task):
+    """Calculate the weighted average AUROC lift over gametime."""
+
+    def run(
+        self, lift: np.ndarray, timestep: List[int], weight_func: Optional[Callable] = None,
+    ) -> float:
+        """Calculate the weighted average AUROC lift over gametime.
+
+        Parameters
+        ----------
+        lift : np.ndarray
+            An array of the AUROC lift from ``AUROCLift.run()`` at each time step.
+        timestep : list
+            The list of time periods for each AUROC calculation. Used to calculate
+            weighting.
+        weight_func : Callable, optional (default None)
+            The function to apply to the ``timestep`` list before multiplying by
+            the lift value.
+
+        Returns
+        -------
+        float
+            The weighted average AUROC lift.
+        
+        Examples
+        --------
+        >>> auroc = np.array([0.5, 0.6, 0.7])
+        >>> times = [10, 20, 30]
+        >>> MeanAUROCLift().run(auroc, times, np.log1p)
+        0.61167242753803508
+
+        If you don't provide a weight function,
+
+        >>> MeanAUROCLift().run(auroc, times)
+        0.59999999999999998
+        """
+        if weight_func is not None:
+            weights = weight_func(timestep)
+        else:
+            weights = None
+        
+        result = np.average(lift, weights=weights)
+        self.logger.info(f"Found a weighted average AUROC lift of {result}")
+        
+        return result
