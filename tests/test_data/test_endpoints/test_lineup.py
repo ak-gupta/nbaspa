@@ -1,5 +1,7 @@
 """Test loading lineup data."""
 
+from pathlib import Path
+
 from nbaspa.data.endpoints import TeamLineups
 
 def test_lineup(output_dir):
@@ -9,6 +11,10 @@ def test_lineup(output_dir):
         Season="2018-19",
         output_dir=output_dir
     )
+
+    assert lineup.fpath == output_dir / Path("teamdashlineups", "data_1610612761.json")
+    assert lineup.exists()
+
     lineup.get()
 
     for dataset in lineup.datasets:
