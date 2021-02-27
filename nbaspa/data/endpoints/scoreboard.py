@@ -62,5 +62,4 @@ class Scoreboard(BaseRequest):
             "Available",
             "TeamLeaders",
             "TicketLinks",
-            "WinProbability",
         ]

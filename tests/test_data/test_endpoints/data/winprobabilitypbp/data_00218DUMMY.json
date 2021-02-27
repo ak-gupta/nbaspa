@@ -1,0 +1,44 @@
+{
+    "resource": "winprobabilitypbp",
+    "parameters": {
+        "GameID": "00218DUMMY",
+        "RunType": "each second"
+    },
+    "resultSets": [
+        {
+            "name": "WinProbPBP",
+            "headers": [
+                "GAME_ID",
+                "EVENT_NUM",
+                "HOME_PCT",
+                "VISITOR_PCT",
+                "HOME_PTS",
+                "VISITOR_PTS",
+                "HOME_SCORE_MARGIN",
+                "PERIOD",
+                "SECONDS_REMAINING",
+                "HOME_POSS_IND",
+                "HOME_G",
+                "DESCRIPTION",
+                "LOCATION",
+                "PCTIMESTRING",
+                "ISVISIBLE"
+            ],
+            "rowSet": []
+        },
+        {
+            "name": "GameInfo",
+            "headers": [
+                "GAME_ID",
+                "GAME_DATE",
+                "HOME_TEAM_ID",
+                "HOME_TEAM_ABR",
+                "HOME_TEAM_PTS",
+                "VISITOR_TEAM_ID",
+                "VISITOR_TEAM_ABR",
+                "VISITOR_TEAM_PTS"
+            ],
+            "rowSet": []
+        }
+    ]
+}

@@ -1,0 +1,46 @@
+{
+    "resource": "teamgamelog",
+    "parameters": {
+        "TeamID": 1610612761,
+        "LeagueID": "00",
+        "Season": "2018-19",
+        "SeasonType": "Regular Season",
+        "DateFrom": null,
+        "DateTo": null
+    },
+    "resultSets": [
+        {
+            "name": "TeamGameLog",
+            "headers": [
+                "Team_ID",
+                "Game_ID",
+                "GAME_DATE",
+                "MATCHUP",
+                "WL",
+                "W",
+                "L",
+                "W_PCT",
+                "MIN",
+                "FGM",
+                "FGA",
+                "FG_PCT",
+                "FG3M",
+                "FG3A",
+                "FG3_PCT",
+                "FTM",
+                "FTA",
+                "FT_PCT",
+                "OREB",
+                "DREB",
+                "REB",
+                "AST",
+                "STL",
+                "BLK",
+                "TOV",
+                "PF",
+                "PTS"
+            ],
+            "rowSet": []
+        }
+    ]
+}

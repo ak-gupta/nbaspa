@@ -1,1 +1,1 @@
-"""Unit test package for nba_survival."""
+"""Unit test package for nbaspa."""
