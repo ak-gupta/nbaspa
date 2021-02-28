@@ -20,6 +20,8 @@ def pbp():
             "PCTIMESTRING": ["12:00", "12:00", "11:50", "12:00", "11:55", "11:50"],
             "PERIOD": [1, 1, 1, 1, 1, 1],
             "EVENTNUM": [2, 3, 4, 2, 3, 4],
+            "EVENTMSGTYPE": [12, 9, 3, 12, 2, 1],
+            "PLAYER1_ID": [np.nan, np.nan, 2, np.nan, np.nan, 1],
             "SCOREMARGIN": ["TIE", None, "-2", "TIE", "2", None]
         }
     )
@@ -121,5 +123,40 @@ def stats():
             "TEAM_ID": [1610612761, 1610612760],
             "E_OFF_RATING": [110.5, 120.5],
             "E_NET_RATING": [-3.5, 6.5],
+        }
+    )
+
+@pytest.fixture
+def shotchart():
+    """Create a dummy shotchart."""
+    return pd.DataFrame(
+        {
+            "GAME_ID": ["00218DUMMY2"],
+            "TEAM_ID": [1610612761],
+            "GAME_EVENT_ID": [4],
+            "PLAYER_ID": [1],
+            "SHOT_TYPE": ["2PT Field Goal"],
+            "SHOT_ZONE_BASIC": ["Restricted Area"],
+        }
+    )
+
+@pytest.fixture
+def shotzonedashboard():
+    """Dummy shooting dashboard."""
+    return pd.DataFrame(
+        {
+            "PLAYER_ID": [1],
+            "GROUP_VALUE": ["Restricted Area"],
+            "FG_PCT": [0.65]
+        }
+    )
+
+@pytest.fixture
+def overallshooting():
+    """Dummy general dashboard."""
+    return pd.DataFrame(
+        {
+            "PLAYER_ID": [2],
+            "FT_PCT": [0.85],
         }
     )
