@@ -32,13 +32,12 @@ class SurvivalTime(Task):
         # Create the new column
         # First add time for regulation
         pbp.loc[pbp["PERIOD"] <= 4, "TIME"] = (
-            ((pbp["PERIOD"] - 1) * 720) + 720 - (pbp_time[0] * 60) - pbp_time[1]
+            (pbp["PERIOD"] * 720) - (pbp_time[0] * 60) - pbp_time[1]
         )
         # Then add for overtime
         pbp.loc[pbp["PERIOD"] > 4, "TIME"] = (
             (4 * 720)
-            + ((pbp["PERIOD"] - 5) * 300)
-            + 720
+            + ((pbp["PERIOD"] - 4) * 300)
             - (pbp_time[0] * 60)
             - pbp_time[1]
         )
