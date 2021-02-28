@@ -56,7 +56,7 @@ def gen_data_pipeline() -> Flow:
         checkpoint=True,
         result=LocalResult(
             dir=".",
-            location="{data_dir}/models/build.csv",
+            location="{output_dir}/models/build.csv",
             serializer=PandasSerializer(file_type="csv", serialize_kwargs={"sep": "|"}),
         ),
     )
@@ -65,7 +65,7 @@ def gen_data_pipeline() -> Flow:
         checkpoint=True,
         result=LocalResult(
             dir=".",
-            location="{data_dir}/models/holdout.csv",
+            location="{output_dir}/models/holdout.csv",
             serializer=PandasSerializer(file_type="csv", serialize_kwargs={"sep": "|"}),
         ),
     )
@@ -105,7 +105,7 @@ def gen_lifelines_pipeline() -> Flow:
         name="Run lifelines hyperparameter tuning",
         checkpoint=True,
         result=LocalResult(
-            dir=".", location="{data_dir}/models/{today}/lifelines/tuning.pkl"
+            dir=".", location="{output_dir}/models/{today}/lifelines/tuning.pkl"
         ),
     )
     tuneplots = PlotTuning(
@@ -114,7 +114,7 @@ def gen_lifelines_pipeline() -> Flow:
         result=LocalResult(
             serializer=Plot(),
             dir=".",
-            location="{data_dir}/models/{today}/lifelines/hyperparameter-tuning.png",
+            location="{output_dir}/models/{today}/lifelines/hyperparameter-tuning.png",
         ),
     )
     model = InitializeLifelines(name="Initialize lifelines model")
@@ -122,7 +122,7 @@ def gen_lifelines_pipeline() -> Flow:
         name="Train lifelines model",
         checkpoint=True,
         result=LocalResult(
-            dir=".", location="{data_dir}/models/{today}/lifelines/model.pkl"
+            dir=".", location="{output_dir}/models/{today}/lifelines/model.pkl"
         ),
     )
 
@@ -172,7 +172,7 @@ def gen_xgboost_pipeline() -> Flow:
         checkpoint=True,
         result=LocalResult(
             dir=".",
-            location="{data_dir}/models/{today}/xgboost/tuning.pkl",
+            location="{output_dir}/models/{today}/xgboost/tuning.pkl",
         ),
     )
     tuneplots = PlotTuning(
@@ -181,14 +181,14 @@ def gen_xgboost_pipeline() -> Flow:
         result=LocalResult(
             serializer=Plot(),
             dir=".",
-            location="{data_dir}/models/{today}/xgboost/hyperparameter-tuning.png",
+            location="{output_dir}/models/{today}/xgboost/hyperparameter-tuning.png",
         ),
     )
     trained = FitXGBoost(
         name="Train XGBoost model",
         checkpoint=True,
         result=LocalResult(
-            dir=".", location="{data_dir}/models/{today}/xgboost/model.pkl"
+            dir=".", location="{output_dir}/models/{today}/xgboost/model.pkl"
         ),
     )
 
@@ -268,7 +268,7 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
         name="AUROC over gametime",
         checkpoint=True,
         result=LocalResult(
-            dir=".", serializer=Plot(), location="{data_dir}/models/{today}/auroc.png"
+            dir=".", serializer=Plot(), location="{output_dir}/models/{today}/auroc.png"
         ),
     )
     liftplot = PlotMetric(
@@ -277,7 +277,7 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
         result=LocalResult(
             dir=".",
             serializer=Plot(),
-            location="{data_dir}/models/{today}/auroc_lift.png",
+            location="{output_dir}/models/{today}/auroc_lift.png",
         ),
     )
 
@@ -316,7 +316,7 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
     return flow
 
 
-def run_pipeline(flow: Flow, data_dir: str, **kwargs) -> State:
+def run_pipeline(flow: Flow, data_dir: str, output_dir: str, **kwargs) -> State:
     """Run a pipeline.
 
     Parameters
@@ -325,6 +325,8 @@ def run_pipeline(flow: Flow, data_dir: str, **kwargs) -> State:
         The generated flow.
     data_dir : str
         The directory containing the data.
+    output_dir : str
+        The output location for the data.
     **kwargs
         Parameter values.
 
@@ -333,7 +335,7 @@ def run_pipeline(flow: Flow, data_dir: str, **kwargs) -> State:
     State
         The output of ``flow.run``.
     """
-    with prefect.context(data_dir=data_dir):
+    with prefect.context(data_dir=data_dir, output_dir=output_dir):
         output = flow.run(parameters={"data_dir": data_dir, **kwargs})
 
     return output
