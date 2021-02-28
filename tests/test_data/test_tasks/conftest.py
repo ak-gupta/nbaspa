@@ -112,3 +112,14 @@ def gamelog():
             ]
         }
     )
+
+@pytest.fixture
+def stats():
+    """Dummy team stats data."""
+    return pd.DataFrame(
+        {
+            "TEAM_ID": [1610612761, 1610612760],
+            "E_OFF_RATING": [110.5, 120.5],
+            "E_NET_RATING": [-3.5, 6.5],
+        }
+    )
