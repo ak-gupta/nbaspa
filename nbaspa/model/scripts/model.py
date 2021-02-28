@@ -22,7 +22,7 @@ def model():
 @click.option(
     "--splits",
     type=click.Tuple([float, float]),
-    default=(0.85, 0.15),
+    default=(0.8, 0.2),
     help="Percentage splits for build and holdout data",
 )
 @click.option("--seed", default=42, type=int, help="Random seed for segmentation")

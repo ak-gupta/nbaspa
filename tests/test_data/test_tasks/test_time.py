@@ -51,32 +51,11 @@ def test_survival_time():
         )
     )
 
-def test_dedupe():
+def test_dedupe(pbp):
     """Test de-duping time."""
-    df = pd.DataFrame(
-        {
-            "GAME_ID": [
-                "00218DUMMY1",
-                "00218DUMMY1",
-                "00218DUMMY1",
-                "00218DUMMY2",
-                "00218DUMMY2",
-                "00218DUMMY2"
-            ],
-            "TIME": [0, 0, 10, 0, 0, 10],
-            "EVENTNUM": [2, 3, 4, 2, 3, 4],
-        }
-    )
+    pre = SurvivalTime()
+    new = pre.run(pbp)
     tsk = DeDupeTime()
-    output = tsk.run(df)
+    output = tsk.run(new)
 
-    assert output.equals(
-        pd.DataFrame(
-            {
-                "GAME_ID": ["00218DUMMY1", "00218DUMMY1", "00218DUMMY2", "00218DUMMY2"],
-                "TIME": [0, 10, 0, 10],
-                "EVENTNUM": [3, 4, 3, 4]
-            },
-            index=[1, 2, 4, 5]
-        )
-    )
+    assert output.index.tolist() == [1, 2, 3, 4, 5]
