@@ -42,7 +42,7 @@ def build(data_dir, splits, seed):
     "--splits",
     type=float,
     multiple=True,
-    default=(0.7, 0.3),
+    default=(0.75, 0.25),
     help="Percentage splits for train, stopping, and tune data",
 )
 @click.option(
