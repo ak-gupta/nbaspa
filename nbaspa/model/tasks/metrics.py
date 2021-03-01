@@ -101,7 +101,10 @@ class MeanAUROCLift(Task):
     """Calculate the weighted average AUROC lift over gametime."""
 
     def run(
-        self, lift: np.ndarray, timestep: List[int], weight_func: Optional[Callable] = None,
+        self,
+        lift: np.ndarray,
+        timestep: List[int],
+        weight_func: Optional[Callable] = None,
     ) -> float:
         """Calculate the weighted average AUROC lift over gametime.
 
@@ -120,7 +123,7 @@ class MeanAUROCLift(Task):
         -------
         float
             The weighted average AUROC lift.
-        
+
         Examples
         --------
         >>> auroc = np.array([0.5, 0.6, 0.7])
@@ -137,8 +140,8 @@ class MeanAUROCLift(Task):
             weights = weight_func(timestep)
         else:
             weights = None
-        
+
         result = np.average(lift, weights=weights)
         self.logger.info(f"Found a weighted average AUROC lift of {result}")
-        
+
         return result

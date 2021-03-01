@@ -44,11 +44,15 @@ class AddNBAWinProbability(Task):
             how="left",
         )["HOME_PCT"]
         # Create a variable representing the change in win probability
-        pbp.loc[~pd.isnull(pbp["NBA_WIN_PROB"]), "NBA_WIN_PROB_CHANGE"] = pbp.loc[
-            ~pd.isnull(pbp["NBA_WIN_PROB"])
-        ].groupby("GAME_ID")["NBA_WIN_PROB"].diff()
+        pbp.loc[~pd.isnull(pbp["NBA_WIN_PROB"]), "NBA_WIN_PROB_CHANGE"] = (
+            pbp.loc[~pd.isnull(pbp["NBA_WIN_PROB"])]
+            .groupby("GAME_ID")["NBA_WIN_PROB"]
+            .diff()
+        )
         pbp.loc[pbp["TIME"] == 0, "NBA_WIN_PROB_CHANGE"] = 0.0
         pbp["NBA_WIN_PROB"] = pbp.groupby("GAME_ID")["NBA_WIN_PROB"].bfill()
-        pbp["NBA_WIN_PROB_CHANGE"] = pbp.groupby("GAME_ID")["NBA_WIN_PROB_CHANGE"].bfill()
+        pbp["NBA_WIN_PROB_CHANGE"] = pbp.groupby("GAME_ID")[
+            "NBA_WIN_PROB_CHANGE"
+        ].bfill()
 
         return pbp

@@ -36,10 +36,7 @@ class SurvivalTime(Task):
         )
         # Then add for overtime
         pbp.loc[pbp["PERIOD"] > 4, "TIME"] = (
-            (4 * 720)
-            + ((pbp["PERIOD"] - 4) * 300)
-            - (pbp_time[0] * 60)
-            - pbp_time[1]
+            (4 * 720) + ((pbp["PERIOD"] - 4) * 300) - (pbp_time[0] * 60) - pbp_time[1]
         )
 
         return pbp

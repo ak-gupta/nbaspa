@@ -34,7 +34,9 @@ def build(data_dir, output_dir, splits, seed):
     subfolder in ``data_dir``.
     """
     flow = gen_data_pipeline()
-    run_pipeline(flow=flow, data_dir=data_dir, output_dir=output_dir, splits=splits, seed=seed)
+    run_pipeline(
+        flow=flow, data_dir=data_dir, output_dir=output_dir, splits=splits, seed=seed
+    )
 
 
 @model.command()
