@@ -9,6 +9,11 @@ import pytest
 CURR_DIR = Path(__file__).resolve().parent
 
 @pytest.fixture
+def data_dir():
+    """Data directory."""
+    return CURR_DIR / Path("data")
+
+@pytest.fixture
 def pbp():
     """Dummy play-by-play data."""
     dfs = []
@@ -21,6 +26,8 @@ def pbp():
                 columns=rawdata["resultSets"][0]["headers"]
             )
         )
+        dfs[-1]["PLAYER1_ID"] = dfs[-1]["PLAYER1_ID"].astype(float)
+        dfs[-1]["PLAYER2_ID"] = dfs[-1]["PLAYER2_ID"].astype(float)
     
     return pd.concat(dfs).reset_index(drop=True)
 
