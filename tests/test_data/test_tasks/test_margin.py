@@ -13,5 +13,5 @@ def test_margin(pbp):
     output.sort_values("GAME_ID", ascending=True, inplace=True)
 
     assert output["SCOREMARGIN"].equals(
-        pd.Series([0, 0, -1, -1, -1, 0, 2, 2], name="SCOREMARGIN")
+        pd.Series([0, 0, -1, -1, -1, 0, 0, 2], name="SCOREMARGIN")
     )
