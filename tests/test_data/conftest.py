@@ -98,3 +98,37 @@ def stats():
         rawdata["resultSet"]["rowSet"],
         columns=rawdata["resultSet"]["headers"]
     )
+
+@pytest.fixture
+def shotchart():
+    """Dummy shotchart."""
+    dfs = []
+    for fpath in Path(CURR_DIR, "data", "2018-19", "shotchartdetail").glob("data_*.json"):
+        with open(fpath) as infile:
+            rawdata = json.load(infile)
+        dfs.append(
+            pd.DataFrame(
+                rawdata["resultSets"][0]["rowSet"],
+                columns=rawdata["resultSets"][0]["headers"]
+            )
+        )
+    
+    return pd.concat(dfs).reset_index(drop=True)
+
+@pytest.fixture
+def shotzonedashboard():
+    """Dummy shooting dashboard."""
+    dfs = []
+    for fpath in Path(CURR_DIR, "data", "2018-19", "playerdashboardbyshootingsplits").glob("data_*.json"):
+        with open(fpath) as infile:
+            rawdata = json.load(infile)
+        dfs.append(
+            pd.DataFrame(
+                rawdata["resultSets"][3]["rowSet"],
+                columns=rawdata["resultSets"][3]["headers"]
+            )
+        )
+        pid = str(fpath).split("data_")[-1].split(".json")[0]
+        dfs[-1]["PLAYER_ID"] = int(pid)
+    
+    return pd.concat(dfs).reset_index(drop=True)

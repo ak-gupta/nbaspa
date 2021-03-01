@@ -5,31 +5,6 @@ import pandas as pd
 import pytest
 
 @pytest.fixture
-def shotchart():
-    """Create a dummy shotchart."""
-    return pd.DataFrame(
-        {
-            "GAME_ID": ["00218DUMMY2"],
-            "TEAM_ID": [1610612761],
-            "GAME_EVENT_ID": [4],
-            "PLAYER_ID": [1],
-            "SHOT_TYPE": ["2PT Field Goal"],
-            "SHOT_ZONE_BASIC": ["Restricted Area"],
-        }
-    )
-
-@pytest.fixture
-def shotzonedashboard():
-    """Dummy shooting dashboard."""
-    return pd.DataFrame(
-        {
-            "PLAYER_ID": [1],
-            "GROUP_VALUE": ["Restricted Area"],
-            "FG_PCT": [0.65]
-        }
-    )
-
-@pytest.fixture
 def overallshooting():
     """Dummy general dashboard."""
     return pd.DataFrame(
