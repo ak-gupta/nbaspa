@@ -17,6 +17,8 @@ def test_add_team_id(pbp, header):
                     "2018-12-25T00:00:00",
                     "2018-12-25T00:00:00",
                     "2018-12-25T00:00:00",
+                    "2018-12-25T00:00:00",
+                    "2018-12-25T00:00:00",
                     "2018-12-26T00:00:00",
                     "2018-12-26T00:00:00",
                     "2018-12-26T00:00:00",
@@ -31,6 +33,8 @@ def test_add_team_id(pbp, header):
                 1610612761,
                 1610612761,
                 1610612761,
+                1610612761,
+                1610612761,
                 1610612760,
                 1610612760,
                 1610612760,
@@ -41,6 +45,8 @@ def test_add_team_id(pbp, header):
     assert output["VISITOR_TEAM_ID"].equals(
         pd.Series(
             [
+                1610612760,
+                1610612760,
                 1610612760,
                 1610612760,
                 1610612760,
@@ -61,5 +67,5 @@ def test_last_meeting_result(pbp, header, last_meeting):
     output = tsk.run(pbp=precursor, last_meeting=last_meeting)
 
     assert output["LAST_GAME_WIN"].equals(
-        pd.Series([0, 0, 0, 1, 1, 1], name="LAST_GAME_WIN")
+        pd.Series([0, 0, 0, 0, 0, 1, 1, 1], name="LAST_GAME_WIN")
     )

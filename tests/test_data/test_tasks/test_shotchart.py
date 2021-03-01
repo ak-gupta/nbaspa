@@ -10,16 +10,14 @@ def test_add_shot_detail(pbp, shotchart):
     tsk = AddShotDetail()
     output = tsk.run(pbp=pbp, shotchart=shotchart)
 
-    print(output)
-
     assert output["SHOT_VALUE"].equals(
         pd.Series(
-            [np.nan, np.nan, 1, np.nan, np.nan, 2], name="SHOT_VALUE"
+            [np.nan, np.nan, 1, np.nan, np.nan, np.nan, np.nan, 2], name="SHOT_VALUE"
         )
     )
     assert output["SHOT_ZONE_BASIC"].equals(
         pd.Series(
-            [np.nan, np.nan, np.nan, np.nan, np.nan, "Restricted Area"], name="SHOT_ZONE_BASIC"
+            [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, "Restricted Area"], name="SHOT_ZONE_BASIC"
         )
     )
 
@@ -32,11 +30,11 @@ def test_add_expected_value(pbp, shotzonedashboard, overallshooting, shotchart):
 
     assert output["SHOT_VALUE"].equals(
         pd.Series(
-            [np.nan, np.nan, 0.85, np.nan, np.nan, 1.30], name="SHOT_VALUE"
+            [np.nan, np.nan, 0.85, np.nan, np.nan, np.nan, np.nan, 1.30], name="SHOT_VALUE"
         )
     )
     assert output["FG_PCT"].equals(
         pd.Series(
-            [np.nan, np.nan, 0.85, np.nan, np.nan, 0.65], name="FG_PCT"
+            [np.nan, np.nan, 0.85, np.nan, np.nan, np.nan, np.nan, 0.65], name="FG_PCT"
         )
     )

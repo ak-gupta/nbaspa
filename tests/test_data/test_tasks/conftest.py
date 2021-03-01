@@ -13,16 +13,48 @@ def pbp():
                 "00218DUMMY1",
                 "00218DUMMY1",
                 "00218DUMMY1",
+                "00218DUMMY1",
+                "00218DUMMY1",
                 "00218DUMMY2",
                 "00218DUMMY2",
                 "00218DUMMY2",
             ],
-            "PCTIMESTRING": ["12:00", "12:00", "11:50", "12:00", "11:55", "11:50"],
-            "PERIOD": [1, 1, 1, 1, 1, 1],
-            "EVENTNUM": [2, 3, 4, 2, 3, 4],
-            "EVENTMSGTYPE": [12, 9, 3, 12, 2, 1],
-            "PLAYER1_ID": [np.nan, np.nan, 2, np.nan, np.nan, 1],
-            "SCOREMARGIN": ["TIE", None, "-2", "TIE", "2", None]
+            "PCTIMESTRING": [
+                "12:00",
+                "12:00",
+                "11:50",
+                "11:40",
+                "11:40",
+                "12:00",
+                "11:55",
+                "11:50"
+            ],
+            "PERIOD": 1,
+            "EVENTNUM": [2, 3, 4, 5, 6, 2, 3, 4],
+            "EVENTMSGTYPE": [12, 9, 3, 8, 8, 12, 2, 1],
+            "HOMEDESCRIPTION": [
+                None,
+                None,
+                None,
+                "HOME SUBSTITUTION",
+                None,
+                None,
+                None,
+                None,
+            ],
+            "VISITORDESCRIPTION": [
+                None,
+                None,
+                "FREE THROW MADE",
+                None,
+                "VISITOR SUBSTITUTION",
+                None,
+                None,
+                None,
+            ],
+            "PLAYER1_ID": [np.nan, np.nan, 7, 5, 9, np.nan, np.nan, 1],
+            "PLAYER2_ID": [np.nan, np.nan, np.nan, 6, 12, np.nan, np.nan, np.nan],
+            "SCOREMARGIN": ["TIE", None, "-1", None, None, "TIE", "2", None]
         }
     )
 
@@ -61,16 +93,18 @@ def win_prob():
                 "00218DUMMY1",
                 "00218DUMMY1",
                 "00218DUMMY1",
+                "00218DUMMY1",
+                "00218DUMMY1",
                 "00218DUMMY2",
                 "00218DUMMY2",
                 "00218DUMMY2",
                 "00218DUMMY2"
             ],
             "EVENT_NUM": [
-                2, 3, np.nan, 4, 2, np.nan, 3, 4
+                2, 3, np.nan, 4, np.nan, 6, 2, np.nan, 3, 4
             ],
             "HOME_PCT": [
-                0.5, 0.51, 0.52, 0.48, 0.6, 0.61, 0.65, 0.65
+                0.5, 0.51, 0.52, 0.48, 0.49, 0.49, 0.6, 0.61, 0.65, 0.65
             ]
         }
     )
@@ -156,7 +190,127 @@ def overallshooting():
     """Dummy general dashboard."""
     return pd.DataFrame(
         {
-            "PLAYER_ID": [2],
+            "PLAYER_ID": [7],
             "FT_PCT": [0.85],
+        }
+    )
+
+@pytest.fixture
+def homerotation():
+    """Dummy home rotation data."""
+    return pd.DataFrame(
+        {
+            "GAME_ID": [
+                "00218DUMMY1",
+                "00218DUMMY1",
+                "00218DUMMY1",
+                "00218DUMMY1",
+                "00218DUMMY1",
+                "00218DUMMY1",
+                "00218DUMMY2",
+                "00218DUMMY2",
+                "00218DUMMY2",
+                "00218DUMMY2",
+                "00218DUMMY2",
+            ],
+            "TEAM_ID": [
+                1610612761,
+                1610612761,
+                1610612761,
+                1610612761,
+                1610612761,
+                1610612761,
+                1610612760,
+                1610612760,
+                1610612760,
+                1610612760,
+                1610612760,
+            ],
+            "PERSON_ID": [
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+            ],
+            "IN_TIME_REAL": [
+                0.0, 0.0, 0.0, 0.0, 0.0, 200.0, 0.0, 0.0, 0.0, 0.0, 0.0
+            ],
+            "OUT_TIME_REAL": [
+                28800.0,
+                28800.0,
+                28800.0,
+                28800.0,
+                200.0,
+                28800.0,
+                28800.0,
+                28800.0,
+                28800.0,
+                28800.0,
+                28800.0,
+            ],
+        }
+    )
+
+@pytest.fixture
+def awayrotation():
+    """Dummy away rotation data."""
+    return pd.DataFrame(
+        {
+            "GAME_ID": [
+                "00218DUMMY1",
+                "00218DUMMY1",
+                "00218DUMMY1",
+                "00218DUMMY1",
+                "00218DUMMY1",
+                "00218DUMMY1",
+                "00218DUMMY2",
+                "00218DUMMY2",
+                "00218DUMMY2",
+                "00218DUMMY2",
+                "00218DUMMY2",
+            ],
+            "TEAM_ID": [
+                1610612760,
+                1610612760,
+                1610612760,
+                1610612760,
+                1610612760,
+                1610612760,
+                1610612761,
+                1610612761,
+                1610612761,
+                1610612761,
+                1610612761,
+            ],
+            "PERSON_ID": [
+                7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5
+            ],
+            "IN_TIME_REAL": [
+                0.0, 0.0, 0.0, 0.0, 0.0, 200.0, 0.0, 0.0, 0.0, 0.0, 0.0
+            ],
+            "OUT_TIME_REAL": [
+                28800.0,
+                28800.0,
+                28800.0,
+                28800.0,
+                200.0,
+                28800.0,
+                28800.0,
+                28800.0,
+                28800.0,
+                28800.0,
+                28800.0,
+            ],
+        }
+    )
+
+@pytest.fixture
+def lineup_stats():
+    """Dummy lineup stats."""
+    return pd.DataFrame(
+        {
+            "GROUP_ID": [
+                "-2-1-3-5-4-",
+                "-2-4-3-1-6-",
+                "-7-9-8-10-11"
+            ],
+            "E_NET_RATING": [4.5, 6.0, 1.5]
         }
     )

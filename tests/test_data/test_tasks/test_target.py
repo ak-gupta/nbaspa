@@ -15,5 +15,5 @@ def test_target_creation(pbp):
     output.sort_values(by="GAME_ID", ascending=True, inplace=True)
 
     assert output["WIN"].equals(
-        pd.Series([0, 0, 0, 0, 0, 1], name="WIN")
+        pd.Series([0, 0, 0, 0, 0, 0, 0, 1], name="WIN")
     )

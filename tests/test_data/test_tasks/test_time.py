@@ -58,4 +58,4 @@ def test_dedupe(pbp):
     tsk = DeDupeTime()
     output = tsk.run(new)
 
-    assert output.index.tolist() == [1, 2, 3, 4, 5]
+    assert output.index.tolist() == [1, 2, 4, 5, 6, 7]
