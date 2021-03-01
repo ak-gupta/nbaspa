@@ -7,7 +7,13 @@ from nbaspa.data.tasks import (
     GenericLoader,
     PlayByPlayLoader,
     WinProbabilityLoader,
-    GameLogLoader
+    GameLogLoader,
+    LineupLoader,
+    RotationLoader,
+    ShotChartLoader,
+    BoxScoreLoader,
+    ShotZoneLoader,
+    GeneralShootingLoader,
 )
 
 def test_load_scoreboard(data_dir, header, last_meeting):
@@ -58,3 +64,27 @@ def test_gamelog_loader(data_dir, gamelog):
         output_dir=data_dir / Path("2018-19")
     )
     assert output.equals(gamelog)
+
+def test_lineup_loader(data_dir, lineup_stats):
+    """Test loading lineup stats."""
+    pass
+
+def test_rotation_loader(data_dir, header, homerotation, awayrotation):
+    """Test loading the rotation data."""
+    loader = RotationLoader()
+    output = loader.run(
+        header=header,
+        output_dir=data_dir / Path("2018-19"),
+    )
+    assert output["AwayTeam"].equals(awayrotation)
+    assert output["HomeTeam"].equals(homerotation)
+
+def test_shotchart_loader(data_dir, header, shotchart):
+    """Test loading the shotchart data."""
+    loader = ShotChartLoader()
+    output = loader.run(
+        header=header,
+        season="2018-19",
+        output_dir=data_dir / Path("2018-19")
+    )
+    assert output.equals(shotchart)
