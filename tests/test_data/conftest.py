@@ -132,3 +132,69 @@ def shotzonedashboard():
         dfs[-1]["PLAYER_ID"] = int(pid)
     
     return pd.concat(dfs).reset_index(drop=True)
+
+@pytest.fixture
+def overallshooting():
+    """Dummy general shooting dashboard."""
+    dfs = []
+    for fpath in Path(CURR_DIR, "data", "2018-19", "playerdashboardbygeneralsplits").glob("data_*.json"):
+        with open(fpath) as infile:
+            rawdata = json.load(infile)
+        dfs.append(
+            pd.DataFrame(
+                rawdata["resultSets"][0]["rowSet"],
+                columns=rawdata["resultSets"][0]["headers"]
+            )
+        )
+        pid = str(fpath).split("data_")[-1].split(".json")[0]
+        dfs[-1]["PLAYER_ID"] = int(pid)
+    
+    return pd.concat(dfs).reset_index(drop=True)
+
+@pytest.fixture
+def homerotation():
+    """Dummy home team rotation data."""
+    dfs = []
+    for fpath in Path(CURR_DIR, "data", "2018-19", "gamerotation").glob("data_*.json"):
+        with open(fpath) as infile:
+            rawdata = json.load(infile)
+        dfs.append(
+            pd.DataFrame(
+                rawdata["resultSets"][1]["rowSet"],
+                columns=rawdata["resultSets"][1]["headers"]
+            )
+        )
+    
+    return pd.concat(dfs).reset_index(drop=True)
+
+@pytest.fixture
+def awayrotation():
+    """Dummy away rotation data."""
+    dfs = []
+    for fpath in Path(CURR_DIR, "data", "2018-19", "gamerotation").glob("data_*.json"):
+        with open(fpath) as infile:
+            rawdata = json.load(infile)
+        dfs.append(
+            pd.DataFrame(
+                rawdata["resultSets"][0]["rowSet"],
+                columns=rawdata["resultSets"][0]["headers"]
+            )
+        )
+    
+    return pd.concat(dfs).reset_index(drop=True)
+
+@pytest.fixture
+def lineup_stats():
+    """Dummy lineup stats."""
+    dfs = []
+    for fpath in Path(CURR_DIR, "data", "2018-19", "teamdashlineups").glob("data_*.json"):
+        with open(fpath) as infile:
+            rawdata = json.load(infile)
+        dfs.append(
+            pd.DataFrame(
+                rawdata["resultSets"][1]["rowSet"],
+                columns=rawdata["resultSets"][1]["headers"]
+            )
+        )
+    
+    return pd.concat(dfs).reset_index(drop=True)
