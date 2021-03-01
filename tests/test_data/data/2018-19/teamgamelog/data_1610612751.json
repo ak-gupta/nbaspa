@@ -1,0 +1,14 @@
+{
+    "resultSets": [
+        {
+            "name": "TeamGameLog",
+            "headers": [
+                "Team_ID",
+                "Game_ID",
+                "GAME_DATE",
+                "W_PCT"
+            ],
+            "rowSet": []
+        }
+    ]
+}
