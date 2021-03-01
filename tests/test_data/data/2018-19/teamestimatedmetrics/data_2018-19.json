@@ -1,0 +1,22 @@
+{
+    "resultSet": {
+        "name": "TeamEstimatedMetrics",
+        "headers": [
+            "TEAM_ID",
+            "E_OFF_RATING",
+            "E_NET_RATING"
+        ],
+        "rowSet": [
+            [
+                1610612761,
+                110.5,
+                -3.5
+            ],
+            [
+                1610612760,
+                120.5,
+                6.5
+            ]
+        ]
+    }
+}

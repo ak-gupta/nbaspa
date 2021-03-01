@@ -5,57 +5,6 @@ import pandas as pd
 import pytest
 
 @pytest.fixture
-def gamelog():
-    """Dummy gamelog data."""
-    return pd.DataFrame(
-        {
-            "Team_ID": [
-                1610612761,
-                1610612761,
-                1610612761,
-                1610612760,
-                1610612760,
-                1610612760
-            ],
-            "Game_ID": [
-                "00218DUMMY0",
-                "00218DUMMY1",
-                "00218DUMMY2",
-                "00218DUMMY0",
-                "00218DUMMY1",
-                "00218DUMMY2"
-            ],
-            "GAME_DATE": [
-                "2018-12-23T00:00:00",
-                "2018-12-25T00:00:00",
-                "2018-12-26T00:00:00",
-                "2018-12-20T00:00:00",
-                "2018-12-25T00:00:00",
-                "2018-12-26T00:00:00"
-            ],
-            "W_PCT": [
-                1.0,
-                0.5,
-                0.33,
-                0.0,
-                0.5,
-                0.66
-            ]
-        }
-    )
-
-@pytest.fixture
-def stats():
-    """Dummy team stats data."""
-    return pd.DataFrame(
-        {
-            "TEAM_ID": [1610612761, 1610612760],
-            "E_OFF_RATING": [110.5, 120.5],
-            "E_NET_RATING": [-3.5, 6.5],
-        }
-    )
-
-@pytest.fixture
 def shotchart():
     """Create a dummy shotchart."""
     return pd.DataFrame(

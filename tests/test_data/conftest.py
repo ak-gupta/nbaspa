@@ -71,3 +71,30 @@ def win_prob():
         )
     
     return pd.concat(dfs).reset_index(drop=True)
+
+@pytest.fixture
+def gamelog():
+    """Dummy gamelog data."""
+    dfs = []
+    for fpath in Path(CURR_DIR, "data", "2018-19", "teamgamelog").glob("data_*.json"):
+        with open(fpath) as infile:
+            rawdata = json.load(infile)
+        dfs.append(
+            pd.DataFrame(
+                rawdata["resultSets"][0]["rowSet"],
+                columns=rawdata["resultSets"][0]["headers"]
+            )
+        )
+    
+    return pd.concat(dfs).reset_index(drop=True)
+
+@pytest.fixture
+def stats():
+    """Dummy team stats."""
+    with open(Path(CURR_DIR, "data", "2018-19", "teamestimatedmetrics", "data_2018-19.json")) as infile:
+        rawdata = json.load(infile)
+    
+    return pd.DataFrame(
+        rawdata["resultSet"]["rowSet"],
+        columns=rawdata["resultSet"]["headers"]
+    )
