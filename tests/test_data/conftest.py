@@ -29,7 +29,11 @@ def pbp():
         dfs[-1]["PLAYER1_ID"] = dfs[-1]["PLAYER1_ID"].astype(float)
         dfs[-1]["PLAYER2_ID"] = dfs[-1]["PLAYER2_ID"].astype(float)
     
-    return pd.concat(dfs).reset_index(drop=True)
+    out = pd.concat(dfs)
+    out.sort_values(by=["GAME_ID", "EVENTNUM"], ascending=True, inplace=True)
+    out.reset_index(drop=True, inplace=True)
+    
+    return out
 
 @pytest.fixture
 def header():
@@ -77,7 +81,11 @@ def win_prob():
             )
         )
     
-    return pd.concat(dfs).reset_index(drop=True)
+    out = pd.concat(dfs)
+    out.sort_values(by=["GAME_ID", "EVENT_NUM"], ascending=True, inplace=True)
+    out.reset_index(drop=True, inplace=True)
+    
+    return out
 
 @pytest.fixture
 def gamelog():
@@ -93,7 +101,11 @@ def gamelog():
             )
         )
     
-    return pd.concat(dfs).reset_index(drop=True)
+    out = pd.concat(dfs)
+    out.sort_values(by=["Team_ID", "GAME_DATE"], ascending=True, inplace=True)
+    out.reset_index(drop=True, inplace=True)
+    
+    return out
 
 @pytest.fixture
 def stats():
@@ -136,7 +148,11 @@ def boxscore():
             )
         )
     
-    return pd.concat(dfs).reset_index(drop=True)
+    out = pd.concat(dfs)
+    out.sort_values(by=["GAME_ID", "PLAYER_ID"], ascending=True, inplace=True)
+    out.reset_index(drop=True, inplace=True)
+    
+    return out
 
 @pytest.fixture
 def shotzonedashboard():
@@ -188,7 +204,11 @@ def homerotation():
             )
         )
     
-    return pd.concat(dfs).reset_index(drop=True)
+    out = pd.concat(dfs)
+    out.sort_values(by=["GAME_ID", "PERSON_ID"], ascending=True, inplace=True)
+    out.reset_index(drop=True, inplace=True)
+    
+    return out
 
 @pytest.fixture
 def awayrotation():
@@ -204,7 +224,11 @@ def awayrotation():
             )
         )
     
-    return pd.concat(dfs).reset_index(drop=True)
+    out = pd.concat(dfs)
+    out.sort_values(by=["GAME_ID", "PERSON_ID"], ascending=True, inplace=True)
+    out.reset_index(drop=True, inplace=True)
+    
+    return out
 
 @pytest.fixture
 def lineup_stats():
@@ -220,4 +244,8 @@ def lineup_stats():
             )
         )
     
-    return pd.concat(dfs).reset_index(drop=True)
+    out = pd.concat(dfs)
+    out.sort_values(by=["GROUP_ID"], ascending=True, inplace=True)
+    out.reset_index(drop=True, inplace=True)
+    
+    return out

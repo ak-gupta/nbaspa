@@ -1,13 +1,18 @@
 # Config file for automatic testing at travis-ci.com
 
 language: python
+dist: bionic
 python:
-  - 3.8
+    - 3.8
 
 # Install dependencies
+before_install:
+    - python -m pip install codecov
 install:
-    - pip install -r requirements.txt
-    - pip install .[tests]
+    - python -m pip install -r requirements.txt
+    - python -m pip install .[tests]
 
 # Run tests
-script: pytest tests
+script: pytest
+after_success:
+    - codecov
