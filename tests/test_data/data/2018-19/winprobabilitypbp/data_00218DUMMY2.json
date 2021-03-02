@@ -1,0 +1,39 @@
+{
+    "resultSets": [
+        {
+            "name": "WinProbPBP",
+            "headers": [
+                "GAME_ID",
+                "EVENT_NUM",
+                "HOME_PCT"
+            ],
+            "rowSet": [
+                [
+                    "00218DUMMY2",
+                    2,
+                    0.6
+                ],
+                [
+                    "00218DUMMY2",
+                    null,
+                    0.61
+                ],
+                [
+                    "00218DUMMY2",
+                    3,
+                    0.65
+                ],
+                [
+                    "00218DUMMY2",
+                    4,
+                    0.65
+                ]
+            ]
+        },
+        {
+            "name": "GameInfo",
+            "headers": [],
+            "rowSet": []
+        }
+    ]
+}

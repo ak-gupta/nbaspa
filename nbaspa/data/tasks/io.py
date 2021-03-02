@@ -100,8 +100,11 @@ class PlayByPlayLoader(Task):
             calls=calls, output_dir=output_dir, filesystem=filesystem
         )
         factory.load()
+        data = factory.get_data()
+        data["PLAYER1_ID"] = data["PLAYER1_ID"].astype(float)
+        data["PLAYER2_ID"] = data["PLAYER2_ID"].astype(float)
 
-        return factory.get_data()
+        return data
 
 
 class WinProbabilityLoader(Task):

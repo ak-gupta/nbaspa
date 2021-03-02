@@ -24,7 +24,7 @@ REQUIREMENTS = [
 ]
 
 EXTRAS_REQUIRE = {
-    "tests": ["pytest"],
+    "tests": ["pytest", "pytest-cov"],
     "docs": ["sphinx", "furo"],
     "qa": ["black", "pip-tools"],
 }

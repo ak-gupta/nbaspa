@@ -1,0 +1,44 @@
+{
+    "resource": "teamestimatedmetrics",
+    "parameters": {
+        "Season": "2018-19",
+        "SeasonType": "Regular Season",
+        "LeagueID": "00"
+    },
+    "resultSet": {
+        "name": "TeamEstimatedMetrics",
+        "headers": [
+            "TEAM_NAME",
+            "TEAM_ID",
+            "GP",
+            "W",
+            "L",
+            "W_PCT",
+            "MIN",
+            "E_OFF_RATING",
+            "E_DEF_RATING",
+            "E_NET_RATING",
+            "E_PACE",
+            "E_AST_RATIO",
+            "E_OREB_PCT",
+            "E_DREB_PCT",
+            "E_REB_PCT",
+            "E_TM_TOV_PCT",
+            "GP_RANK",
+            "W_RANK",
+            "L_RANK",
+            "W_PCT_RANK",
+            "MIN_RANK",
+            "E_OFF_RATING_RANK",
+            "E_DEF_RATING_RANK",
+            "E_NET_RATING_RANK",
+            "E_AST_RATIO_RANK",
+            "E_OREB_PCT_RANK",
+            "E_DREB_PCT_RANK",
+            "E_REB_PCT_RANK",
+            "E_TM_TOV_PCT_RANK",
+            "E_PACE_RANK"
+        ],
+        "rowSet": []
+    }
+}

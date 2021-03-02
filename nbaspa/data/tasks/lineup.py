@@ -81,7 +81,6 @@ class AddLineupPlusMinus(Task):
                             home_lineup, plusminus = self._substitution_event(
                                 lineup=home_lineup,
                                 lineup_stats=lineup_stats,
-                                rotation=home_rotation,
                                 row=row,
                             )
                             pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = plusminus
@@ -118,7 +117,6 @@ class AddLineupPlusMinus(Task):
                             away_lineup, plusminus = self._substitution_event(
                                 lineup=away_lineup,
                                 lineup_stats=lineup_stats,
-                                rotation=away_rotation,
                                 row=row,
                             )
                             pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = plusminus
@@ -280,7 +278,6 @@ class AddLineupPlusMinus(Task):
         self,
         lineup: Set,
         lineup_stats: pd.DataFrame,
-        rotation: pd.DataFrame,
         row: pd.Series,
     ) -> Tuple[Set, float]:
         """Adjust the lineup and get the plus minus.
@@ -291,9 +288,6 @@ class AddLineupPlusMinus(Task):
             The current set of players on the floor.
         lineup_stats: pd.DataFrame
             The 5-man lineup stats.
-        rotation : pd.DataFrame
-            The output from ``GameRotation.get_data("AwayTeam")`` or
-            ``GameRotation.get_data("HomeTeam")``.
         row : pd.Series
             Current substitution event in the play by play data.
 
@@ -310,7 +304,7 @@ class AddLineupPlusMinus(Task):
 
         # Add PLAYER2_ID
         self.logger.debug(f"Adding {row['PLAYER2_ID']}")
-        lineup.add(row["PLAYER2_ID"])
+        lineup.add(int(row["PLAYER2_ID"]))
 
         # Look for the lineup group in the lineup stats
         linestr = "-".join(sorted(str(item) for item in lineup))
@@ -366,7 +360,7 @@ class AddLineupPlusMinus(Task):
             self.logger.debug(f"New players at time {gametime}")
             self.logger.debug(
                 "Substituting the following players in: "
-                f"{', '.join(str(itm) for itm in new_players['PERSON_ID'].values)}"
+                f"{', '.join(str(int(itm)) for itm in new_players['PERSON_ID'].values)}"
             )
             # Add new players
             lineup.update(new_players["PERSON_ID"].values.tolist())
@@ -379,12 +373,12 @@ class AddLineupPlusMinus(Task):
             if subout:
                 self.logger.debug(
                     "Substituting the following players out: "
-                    f"{', '.join(str(itm) for itm in subout)}"
+                    f"{', '.join(str(int(itm)) for itm in subout)}"
                 )
-                lineup = lineup.difference(set(subout))
+                lineup = lineup.difference(set([int(itm) for itm in subout]))
 
         # Look for the lineup group in the lineup stats
-        linestr = "-".join(sorted(str(item) for item in lineup))
+        linestr = "-".join(sorted(str(int(item)) for item in lineup))
         self.logger.debug(f"Looking for the following lineup group: {linestr}")
         if len(lineup) != 5:
             self.logger.error(f"Lineup has {len(lineup)} players instead of 5.")

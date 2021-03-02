@@ -26,6 +26,11 @@ class SurvivalData(Task):
         pd.DataFrame
             The lifelines-compliant data.
         """
+        self.logger.info(
+            f"Dropping {sum(pd.isnull(data[META['benchmark']]))} rows with null "
+            "benchmark probabilities"
+        )
+        data = data[~pd.isnull(data[META["benchmark"]])].copy()
         # Create the short form data
         shortform = (
             data.groupby(META["id"])
@@ -49,7 +54,10 @@ class SurvivalData(Task):
         )
         # Add the NBA win probability to the dataset
         longform[META["benchmark"]] = longform.merge(
-            data, left_on=("GAME_ID", "stop"), right_on=("GAME_ID", "TIME"), how="left"
+            data,
+            left_on=("GAME_ID", "stop"),
+            right_on=("GAME_ID", "TIME"),
+            how="left"
         )[META["benchmark"]]
 
         return longform

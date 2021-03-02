@@ -15,8 +15,6 @@ from .endpoints.base import BaseRequest
 
 LOG = logging.getLogger(__name__)
 
-FIVE_MINUTES = 300
-
 
 class NBADataFactory:
     """Make multiple calls to the API.
@@ -121,7 +119,7 @@ class NBADataFactory:
         return pd.concat(df_list).reset_index(drop=True)
 
     @sleep_and_retry
-    @limits(calls=5, period=FIVE_MINUTES)
+    @limits(calls=1, period=60)
     def _get(self, callobj: BaseRequest):
         """Run the ``get()`` method to retrieve data.
 

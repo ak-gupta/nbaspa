@@ -1,0 +1,22 @@
+{
+    "resultSets": [
+        {
+            "name": "Overall",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "Lineups",
+            "headers": [
+                "GROUP_ID",
+                "E_NET_RATING"
+            ],
+            "rowSet": [
+                [
+                    "-7-9-8-10-11-",
+                    1.5
+                ]
+            ]
+        }
+    ]
+}

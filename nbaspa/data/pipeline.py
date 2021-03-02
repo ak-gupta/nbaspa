@@ -2,7 +2,6 @@
 
 from typing import Optional
 
-import pandas as pd
 from prefect import case, Flow, Parameter
 from prefect.engine.state import State
 from prefect.tasks.control_flow import merge
@@ -83,6 +82,7 @@ def gen_pipeline() -> Flow:
 
     with Flow(name="Transform raw NBA data") as flow:
         # Set some parameters
+        data_dir = Parameter("data_dir", "nba-data")
         output_dir = Parameter("output_dir", "nba-data")
         filesystem = Parameter("filesystem", "file")
         season = Parameter("Season", DefaultParameters.Season)
@@ -91,29 +91,29 @@ def gen_pipeline() -> Flow:
         mode = Parameter("mode", "model")
         # Load data
         scoreboard = scoreboard_loader(
-            output_dir=output_dir,
+            output_dir=data_dir,
             filesystem=filesystem,
             dataset_type=None,
             GameDate=gamedate,
         )
         pbp = pbp_loader(
             header=scoreboard["GameHeader"],
-            output_dir=output_dir,
+            output_dir=data_dir,
             filesystem=filesystem,
         )
         wprob = wprob_loader(
             header=scoreboard["GameHeader"],
-            output_dir=output_dir,
+            output_dir=data_dir,
             filesystem=filesystem,
         )
         stats = teamstats_loader(
-            output_dir=output_dir,
+            output_dir=data_dir,
             filesystem=filesystem,
             Season=season,
         )
         boxscore = box_loader(
             header=scoreboard["GameHeader"],
-            output_dir=output_dir,
+            output_dir=data_dir,
             filesystem=filesystem,
         )
         # Base transformations
@@ -128,15 +128,15 @@ def gen_pipeline() -> Flow:
             shotchart = shotchart_loader(
                 header=scoreboard["GameHeader"],
                 season=season,
-                output_dir=output_dir,
+                output_dir=data_dir,
                 filesystem=filesystem,
             )
             shotzonedashboard = shotzone_loader(
-                boxscore=boxscore, output_dir=output_dir, filesystem=filesystem
+                boxscore=boxscore, output_dir=data_dir, filesystem=filesystem
             )
             shooting = gshooting_loader(
                 boxscore=boxscore,
-                output_dir=output_dir,
+                output_dir=data_dir,
                 filesystem=filesystem,
             )
             # Add variables for the player rating
@@ -150,17 +150,17 @@ def gen_pipeline() -> Flow:
             # Load data
             gamelog = log_loader(
                 season=season,
-                output_dir=output_dir,
+                output_dir=data_dir,
                 filesystem=filesystem,
             )
             lineup_stats = lineup_loader(
                 season=season,
-                output_dir=output_dir,
+                output_dir=data_dir,
                 filesystem=filesystem,
             )
             rotation = rota_loader(
                 header=scoreboard["GameHeader"],
-                output_dir=output_dir,
+                output_dir=data_dir,
                 filesystem=filesystem,
             )
             # Transform data for the survival model
@@ -186,6 +186,7 @@ def gen_pipeline() -> Flow:
 
 def run_pipeline(
     flow: Flow,
+    data_dir: str,
     output_dir: str,
     save_data: bool = True,
     filesystem: Optional[str] = "file",
@@ -197,8 +198,10 @@ def run_pipeline(
 
     Parameters
     ----------
-    output_dir : str
+    data_dir : str
         The directory containing the data.
+    output_dir : str
+        The output location for the clean data.
     filesystem : str, optional (default "file")
         The name of the ``fsspec`` filesystem to use.
     mode : str, optional (default "model")
@@ -218,6 +221,7 @@ def run_pipeline(
         The output of ``flow.run``.
     """
     params = {
+        "data_dir": data_dir,
         "output_dir": output_dir,
         "filesystem": filesystem,
         "save_data": save_data,

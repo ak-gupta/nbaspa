@@ -22,9 +22,10 @@ def clean():
 
 
 @clean.command()
+@click.option("--data-dir", help="Path to the directory containing the raw data.")
 @click.option("--output-dir", help="Path to the output directory.")
 @click.option("--season", type=str, help="The season to download")
-def model(output_dir, season):
+def model(data_dir, output_dir, season):
     """Clean model data."""
     calls: List[Dict] = []
     flow = gen_pipeline()
@@ -33,6 +34,7 @@ def model(output_dir, season):
         calls.append(
             {
                 "flow": flow,
+                "data_dir": Path(data_dir, season),
                 "output_dir": Path(output_dir, season),
                 "save_data": True,
                 "mode": "model",
@@ -75,9 +77,10 @@ def model(output_dir, season):
 
 
 @clean.command()
+@click.option("--data-dir", help="Path to the directory containing the raw data.")
 @click.option("--output-dir", help="Path to the output directory.")
 @click.option("--season", type=str, help="The season to download")
-def rating(output_dir, season):
+def rating(data_dir, output_dir, season):
     """Clean the rating input data."""
     calls: List[Dict] = []
     flow = gen_pipeline()
@@ -86,6 +89,7 @@ def rating(output_dir, season):
         calls.append(
             {
                 "flow": flow,
+                "data_dir": Path(data_dir, season),
                 "output_dir": Path(output_dir, season),
                 "save_data": True,
                 "mode": "rating",
