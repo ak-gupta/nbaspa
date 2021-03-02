@@ -160,7 +160,7 @@ def gen_pipeline() -> Flow:
             )
             rotation = rota_loader(
                 header=scoreboard["GameHeader"],
-                output_dir=output_dir,
+                output_dir=data_dir,
                 filesystem=filesystem,
             )
             # Transform data for the survival model
