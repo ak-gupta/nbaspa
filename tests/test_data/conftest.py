@@ -123,6 +123,22 @@ def shotchart():
     return pd.concat(dfs).reset_index(drop=True)
 
 @pytest.fixture
+def boxscore():
+    """Dummy boxscore."""
+    dfs = []
+    for fpath in Path(CURR_DIR, "data", "2018-19", "boxscoretraditionalv2").glob("data_*.json"):
+        with open(fpath) as infile:
+            rawdata = json.load(infile)
+        dfs.append(
+            pd.DataFrame(
+                rawdata["resultSets"][0]["rowSet"],
+                columns=rawdata["resultSets"][0]["headers"]
+            )
+        )
+    
+    return pd.concat(dfs).reset_index(drop=True)
+
+@pytest.fixture
 def shotzonedashboard():
     """Dummy shooting dashboard."""
     dfs = []

@@ -67,7 +67,12 @@ def test_gamelog_loader(data_dir, gamelog):
 
 def test_lineup_loader(data_dir, lineup_stats):
     """Test loading lineup stats."""
-    pass
+    loader = LineupLoader()
+    output = loader.run(
+        season="2018-19",
+        output_dir=data_dir / Path("2018-19")
+    )
+    assert output.equals(lineup_stats)
 
 def test_rotation_loader(data_dir, header, homerotation, awayrotation):
     """Test loading the rotation data."""
@@ -88,3 +93,31 @@ def test_shotchart_loader(data_dir, header, shotchart):
         output_dir=data_dir / Path("2018-19")
     )
     assert output.equals(shotchart)
+
+def test_boxscore_loader(data_dir, header, boxscore):
+    """Test loading boxscore data."""
+    loader = BoxScoreLoader()
+    output = loader.run(
+        header=header,
+        output_dir=data_dir / Path("2018-19")
+    )
+    assert output.equals(boxscore)
+
+def test_shotzone_loader(data_dir, boxscore, shotzonedashboard):
+    """Test loading shotzone data."""
+    # Only test one game of data since we have repeated games
+    loader = ShotZoneLoader()
+    output = loader.run(
+        boxscore=boxscore[boxscore["GAME_ID"] == "00218DUMMY1"],
+        output_dir=data_dir / Path("2018-19")
+    )
+    assert output.equals(shotzonedashboard)
+
+def test_overall_shooting_loader(data_dir, boxscore, overallshooting):
+    """Test loading overall shooting data."""
+    loader = GeneralShootingLoader()
+    output = loader.run(
+        boxscore=boxscore[boxscore["GAME_ID"] == "00218DUMMY1"],
+        output_dir=data_dir / Path("2018-19")
+    )
+    assert output.equals(overallshooting)
