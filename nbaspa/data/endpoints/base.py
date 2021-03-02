@@ -183,6 +183,7 @@ class BaseRequest:
         Dict
             Default values for each request parameter.
         """
+        return {}
 
     @property
     def datasets(self) -> List[str]:

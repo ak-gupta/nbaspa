@@ -1,0 +1,75 @@
+{
+    "resultSets": [
+        {
+            "name": "GameHeader",
+            "headers": [
+                "GAME_ID",
+                "GAME_DATE_EST",
+                "HOME_TEAM_ID",
+                "VISITOR_TEAM_ID"
+            ],
+            "rowSet": [
+                [
+                    "00218DUMMY2",
+                    "2018-12-26T00:00:00",
+                    1610612760,
+                    1610612761
+                ]
+            ]
+        },
+        {
+            "name": "LineScore",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "SeriesStandings",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "LastMeeting",
+            "headers": [
+                "GAME_ID",
+                "LAST_GAME_HOME_TEAM_POINTS",
+                "LAST_GAME_VISITOR_TEAM_POINTS",
+                "LAST_GAME_HOME_TEAM_ID",
+                "LAST_GAME_VISITOR_TEAM_ID"
+            ],
+            "rowSet": [
+                [
+                    "00218DUMMY2",
+                    100,
+                    120,
+                    1610612761,
+                    1610612760
+                ]
+            ]
+        },
+        {
+            "name": "EastConfStandingsByDay",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "WestConfStandingsByDay",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "Available",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "TeamLeaders",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "TicketLinks",
+            "headers": [],
+            "rowSet": []
+        }
+    ]
+}

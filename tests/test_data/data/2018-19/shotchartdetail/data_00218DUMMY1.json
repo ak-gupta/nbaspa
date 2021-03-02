@@ -1,0 +1,21 @@
+{
+    "resultSets": [
+        {
+            "name": "Shot_Chart_Detail",
+            "headers": [
+                "GAME_ID",
+                "TEAM_ID",
+                "GAME_EVENT_ID",
+                "PLAYER_ID",
+                "SHOT_TYPE",
+                "SHOT_ZONE_BASIC"
+            ],
+            "rowSet": []
+        },
+        {
+            "name": "LeagueAverages",
+            "headers": [],
+            "rowSet": []
+        }
+    ]
+}

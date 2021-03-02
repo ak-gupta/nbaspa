@@ -67,7 +67,7 @@ Next, initialize :py:class:`nbaspa.data.factory.NBADataFactory` and download the
 .. important::
 
     We use `ratelimit <https://github.com/tomasbasham/ratelimit>`_ to prevent overloading the
-    NBA API. The ratelimiting is **very** conservative and limits to 5 calls every 5 minutes.
+    NBA API. The ratelimiting is **very** conservative and limits to 1 call every minute.
 
 ~~~~~~~~~~~~~~~~~~~~~~
 Command-line interface
@@ -122,6 +122,7 @@ To clean a given day in python,
     flow = gen_pipeline()
     output = run_pipeline(
         flow=flow,
+        data_dir="nba-data/2018-19",
         output_dir="nba-data/2018-19",
         save_data=True,
         mode="model",
@@ -151,13 +152,13 @@ As with downloading data, the CLI is the best way to clean data. For model data:
 
 .. code-block:: console
 
-    $ nbaspa-clean model --output-dir nba-data --season 2018-19
+    $ nbaspa-clean model --data-dir nba-data --output-dir nba-data --season 2018-19
 
 and for ratings data:
 
 .. code-block:: console
 
-    $ nbaspa-clean rating --output-dir nba-data --season 2018-19
+    $ nbaspa-clean rating --data-dir nba-data --output-dir nba-data --season 2018-19
 
 Both of these calls will save data to ``nba-data/2018-19``.
 
@@ -191,7 +192,7 @@ To create the **build** and **holdout** CSV files,
 
     flow = gen_data_pipeline()
     output = run_pipeline(
-        flow=flow, data_dir="nba-data", splits=(0.85, 0.15), seed=42
+        flow=flow, data_dir="nba-data", output_dir="nba-data", splits=(0.8, 0.2), seed=42
     )
 
 This flow will save ``build.csv`` and ``holdout.csv`` to ``nba-data/models``.
@@ -208,7 +209,7 @@ To train a ``lifelines`` model,
 
     flow = gen_lifelines_pipeline()
     output = run_pipeline(
-        flow=flow, data_dir="nba-data", splits=(0.7, 0.3), max_evals=100, seed=42
+        flow=flow, data_dir="nba-data", output_dir="nba-data", splits=(0.75, 0.25), max_evals=100, seed=42
     )
 
 If you ran the flow on 2021-02-21, the ``lifelines`` model artifacts will be saved to the
@@ -220,7 +221,7 @@ If you ran the flow on 2021-02-21, the ``lifelines`` model artifacts will be sav
 
     flow = gen_xgboost_pipeline()
     output = run_pipeline(
-        flow=flow, data_dir="nba-data", splits=(0.7, 0.15, 0.15), max_evals==100, seed=42
+        flow=flow, data_dir="nba-data", output_dir="nba-data", splits=(0.5, 0.25, 0.25), max_evals==100, seed=42
     )
 
 If you ran the flow on 2021-02-21, the ``xgboost`` model artifacts will be saved to the
@@ -240,7 +241,7 @@ To evaluate a set of models,
         lifelines="nba-data/models/2021-02-21/lifelines/model.pkl",
         xgboost="nba-data/models/2021-02-21/xgboost/model.pkl"
     )
-    output = run_pipeline(flow=flow, data_dir="nba-data")
+    output = run_pipeline(flow=flow, data_dir="nba-data", output_dir="nba-data")
 
 This flow will read in the ``model.pkl`` files, create the AUROC visualizations, and
 save the visualizations to ``nba-data/models/2021-02-21``.
@@ -257,7 +258,7 @@ First, we need to split the initial dataset into **build** and **holdout**:
 
 .. code-block:: console
 
-    $ nbaspa-model build --data-dir nba-data
+    $ nbaspa-model build --data-dir nba-data --output-dir nba-data
 
 This CLI call will save two CSV files to ``nba-data/models``: ``build.csv`` and ``holdout.csv``.
 
@@ -269,11 +270,11 @@ Next, we can fit a model
 
 .. code-block:: console
 
-    $ nbaspa-model train --data-dir nba-data --model lifelines
+    $ nbaspa-model train --data-dir nba-data --output-dir nba-data --model lifelines
 
 This CLI call will train a ``lifelines`` model with
 
-* a 70-30 train-tune split within the build dataset, and
+* a 75-25 train-tune split within the build dataset, and
 * a maximum of 100 ``hyperopt`` evaluations.
 
 You can modify these parameters with ``--splits`` and ``--max-evals``, respectively.
@@ -283,10 +284,11 @@ To train an ``xgboost`` model, you have to supply ``--splits``:
 
     $ nbaspa-model train \
         --data-dir nba-data \
+        --output-dir nba-data \
         --model xgboost \
-        --splits 0.7 \
-        --splits 0.15 \
-        --splits 0.15
+        --splits 0.5 \
+        --splits 0.25 \
+        --splits 0.25
 
 After you call the ``train`` endpoint you will see a new subfolder within ``nba-data/models``
 corresponding to the system date. The ``lifelines`` artifacts will be saved to a ``lifelines``
@@ -302,6 +304,7 @@ To evaluate your models, use the ``evaluate`` endpoint. Suppose you trained your
 
     $ nbaspa-model evaluate \
         --data-dir nba-data \
+        --output-dir nba-data \
         --model lifelines nba-data/models/2021-02-21/lifelines/model.pkl \
         --model xgboost nba-data/models/2021-02-21/xgboost/model.pkl
 

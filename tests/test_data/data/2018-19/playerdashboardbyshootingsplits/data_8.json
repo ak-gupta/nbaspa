@@ -1,0 +1,47 @@
+{
+    "resultSets": [
+        {
+            "name": "OverallPlayerDashboard",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "Shot5FTPlayerDashboard",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "Shot8FTPlayerDashboard",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "ShotAreaPlayerDashboard",
+            "headers": [
+                "GROUP_VALUE",
+                "FG_PCT"
+            ],
+            "rowSet": []
+        },
+        {
+            "name": "AssitedShotPlayerDashboard",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "ShotTypeSummaryPlayerDashboard",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "ShotTypePlayerDashboard",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "AssitedBy",
+            "headers": [],
+            "rowSet": []
+        }
+    ]
+}

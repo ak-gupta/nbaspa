@@ -1,0 +1,30 @@
+{
+    "resultSets": [
+        {
+            "name": "Shot_Chart_Detail",
+            "headers": [
+                "GAME_ID",
+                "TEAM_ID",
+                "GAME_EVENT_ID",
+                "PLAYER_ID",
+                "SHOT_TYPE",
+                "SHOT_ZONE_BASIC"
+            ],
+            "rowSet": [
+                [
+                    "00218DUMMY2",
+                    1610612761,
+                    4,
+                    1,
+                    "2PT Field Goal",
+                    "Restricted Area"
+                ]
+            ]
+        },
+        {
+            "name": "LeagueAverages",
+            "headers": [],
+            "rowSet": []
+        }
+    ]
+}

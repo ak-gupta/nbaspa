@@ -1,0 +1,41 @@
+{
+    "resultSets": [
+        {
+            "name": "OverallPlayerDashboard",
+            "headers": [
+                "FT_PCT"
+            ],
+            "rowSet": []
+        },
+        {
+            "name": "LocationPlayerDashboard",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "WinsLossesPlayerDashboard",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "MonthPlayerDashboard",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "PrePostAllStarPlayerDashboard",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "StartingPosition",
+            "headers": [],
+            "rowSet": []
+        },
+        {
+            "name": "DaysRestPlayerDashboard",
+            "headers": [],
+            "rowSet": []
+        }
+    ]
+}

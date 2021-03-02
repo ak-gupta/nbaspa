@@ -1,0 +1,80 @@
+{
+    "resource": "shotchartdetail",
+    "parameters": {
+        "LeagueID": "00",
+        "Season": "2018-19",
+        "SeasonType": "Regular Season",
+        "TeamID": 0,
+        "PlayerID": 0,
+        "GameID": "00218DUMMY",
+        "Outcome": null,
+        "Location": null,
+        "Month": 0,
+        "SeasonSegment": null,
+        "DateFrom": null,
+        "DateTo": null,
+        "OpponentTeamID": 0,
+        "VsConference": null,
+        "VsDivision": null,
+        "Position": null,
+        "RookieYear": null,
+        "GameSegment": null,
+        "Period": 0,
+        "LastNGames": 0,
+        "ClutchTime": null,
+        "AheadBehind": null,
+        "PointDiff": null,
+        "RangeType": 0,
+        "StartPeriod": 0,
+        "EndPeriod": 0,
+        "StartRange": 0,
+        "EndRange": 0,
+        "ContextFilter": "",
+        "ContextMeasure": "FG_PCT"
+    },
+    "resultSets": [
+        {
+            "name": "Shot_Chart_Detail",
+            "headers": [
+                "GRID_TYPE",
+                "GAME_ID",
+                "GAME_EVENT_ID",
+                "PLAYER_ID",
+                "PLAYER_NAME",
+                "TEAM_ID",
+                "TEAM_NAME",
+                "PERIOD",
+                "MINUTES_REMAINING",
+                "SECONDS_REMAINING",
+                "EVENT_TYPE",
+                "ACTION_TYPE",
+                "SHOT_TYPE",
+                "SHOT_ZONE_BASIC",
+                "SHOT_ZONE_AREA",
+                "SHOT_ZONE_RANGE",
+                "SHOT_DISTANCE",
+                "LOC_X",
+                "LOC_Y",
+                "SHOT_ATTEMPTED_FLAG",
+                "SHOT_MADE_FLAG",
+                "GAME_DATE",
+                "HTM",
+                "VTM"
+            ],
+            "rowSet": []
+        },
+        {
+            "name": "LeagueAverages",
+            "headers": [
+                "GRID_TYPE",
+                "SHOT_ZONE_BASIC",
+                "SHOT_ZONE_AREA",
+                "SHOT_ZONE_RANGE",
+                "FGA",
+                "FGM",
+                "FG_PCT"
+            ],
+            "rowSet": []
+        }
+    ]
+}
