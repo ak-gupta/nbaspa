@@ -6,8 +6,11 @@ Survival analysis-powered player impact
         :target: https://nbaspa.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-.. image:: https://img.shields.io/travis/ak-gupta/nbaspa.svg
+.. image:: https://img.shields.io/travis/ak-gupta/nbaspa.svg?branch=master
         :target: https://travis-ci.com/ak-gupta/nbaspa
+
+.. image:: https://codecov.io/github/ak-gupta/nbaspa/coverage.svg?branch=master
+        :target: https://codecov.io/github/ak-gupta/nbaspa?branch=master
 
 * Free software: MIT license
 * Documentation: https://nbaspa.readthedocs.io.

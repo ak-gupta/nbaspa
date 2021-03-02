@@ -51,9 +51,6 @@ def test_load_pbp(data_dir, header, pbp):
     output.sort_values(by=["GAME_ID", "EVENTNUM"], ascending=True, inplace=True)
     output.reset_index(drop=True, inplace=True)
 
-    print(output)
-    print(pbp)
-
     assert output.equals(pbp)
 
 def test_win_probability_loader(data_dir, header, win_prob):
@@ -66,9 +63,6 @@ def test_win_probability_loader(data_dir, header, win_prob):
     output.sort_values(by=["GAME_ID", "EVENT_NUM"], ascending=True, inplace=True)
     output.reset_index(drop=True, inplace=True)
     
-    print(output)
-    print(win_prob)
-
     assert output.equals(win_prob)
 
 def test_gamelog_loader(data_dir, gamelog):
@@ -81,9 +75,6 @@ def test_gamelog_loader(data_dir, gamelog):
     output.sort_values(by=["Team_ID", "GAME_DATE"], ascending=True, inplace=True)
     output.reset_index(drop=True, inplace=True)
     
-    print(output)
-    print(gamelog)
-
     assert output.equals(gamelog)
 
 def test_lineup_loader(data_dir, lineup_stats):
@@ -95,9 +86,6 @@ def test_lineup_loader(data_dir, lineup_stats):
     )
     output.sort_values(by=["GROUP_ID"], ascending=True, inplace=True)
     output.reset_index(drop=True, inplace=True)
-
-    print(output)
-    print(lineup_stats)
 
     assert output.equals(lineup_stats)
 
@@ -116,12 +104,6 @@ def test_rotation_loader(data_dir, header, homerotation, awayrotation):
         by=["GAME_ID", "PERSON_ID"], ascending=True, inplace=True
     )
     output["HomeTeam"].reset_index(drop=True, inplace=True)
-
-    print(output["AwayTeam"])
-    print(awayrotation)
-
-    print(output["HomeTeam"])
-    print(homerotation)
 
     assert output["AwayTeam"].equals(awayrotation)
     assert output["HomeTeam"].equals(homerotation)
@@ -147,9 +129,6 @@ def test_boxscore_loader(data_dir, header, boxscore):
     )
     output.sort_values(by=["GAME_ID", "PLAYER_ID"], ascending=True, inplace=True)
     output.reset_index(drop=True, inplace=True)
-
-    print(output)
-    print(boxscore)
 
     assert output.equals(boxscore)
 
