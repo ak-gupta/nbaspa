@@ -69,4 +69,3 @@ Model evaluation
 We will compare each survival model with the NBA win probability output using AUROC. Specifically, we will generate a plot
 describing the AUROC at each time step from 0 to 2880 seconds (48 minutes); this metric is based on a similar concept introduced
 in `scikit-survival <https://scikit-survival.readthedocs.io/en/latest/user_guide/evaluating-survival-models.html>`_.
-Additionally, we will use Concordance Index to generally evaluate the predictive power of each model.

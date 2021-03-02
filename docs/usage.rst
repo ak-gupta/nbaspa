@@ -67,7 +67,7 @@ Next, initialize :py:class:`nbaspa.data.factory.NBADataFactory` and download the
 .. important::
 
     We use `ratelimit <https://github.com/tomasbasham/ratelimit>`_ to prevent overloading the
-    NBA API. The ratelimiting is **very** conservative and limits to 5 calls every 5 minutes.
+    NBA API. The ratelimiting is **very** conservative and limits to 1 call every minute.
 
 ~~~~~~~~~~~~~~~~~~~~~~
 Command-line interface
@@ -274,7 +274,7 @@ Next, we can fit a model
 
 This CLI call will train a ``lifelines`` model with
 
-* a 70-30 train-tune split within the build dataset, and
+* a 75-25 train-tune split within the build dataset, and
 * a maximum of 100 ``hyperopt`` evaluations.
 
 You can modify these parameters with ``--splits`` and ``--max-evals``, respectively.

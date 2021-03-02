@@ -17,7 +17,7 @@ Performance
 
 .. important::
 
-    At this time the models have been trained on the 2017-18 and 2018-19 seasons.
+    At this time the models have been trained on the 2016-17, 2017-18, and 2018-19 seasons.
 
 Figure 1 shows the AUROC over game-time for each model.
 
@@ -31,6 +31,17 @@ model.
 .. image:: ../_static/auroc_lift.png
     :align: center
     :alt: Figure 2
+
+Overall, the average AUROC lift for each model is summarized below:
+
++-----------+---------+
+| Model     | Lift    |
+|           |         |
++===========+=========+
+| XGBoost   | -0.0545 |
++-----------+---------+
+| Lifelines | 0.00417 |
++-----------+---------+
 
 ---------------------
 Hyperparameter tuning
