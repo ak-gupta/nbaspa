@@ -3,6 +3,8 @@
 from datetime import datetime
 from pathlib import Path
 
+import pandas as pd
+
 from nbaspa.data.tasks import (
     GenericLoader,
     PlayByPlayLoader,
@@ -15,6 +17,8 @@ from nbaspa.data.tasks import (
     ShotZoneLoader,
     GeneralShootingLoader,
 )
+
+pd.options.display.max_columns = 35
 
 def test_load_scoreboard(data_dir, header, last_meeting):
     """Test loading scoreboard data."""
@@ -45,6 +49,9 @@ def test_load_pbp(data_dir, header, pbp):
         output_dir=data_dir / Path("2018-19")
     )
 
+    print(output)
+    print(pbp)
+
     assert output.sort_values(by=["GAME_ID", "EVENTNUM"], ascending=True).equals(
         pbp.sort_values(by=["GAME_ID", "EVENTNUM"], ascending=True)
     )
@@ -56,6 +63,10 @@ def test_win_probability_loader(data_dir, header, win_prob):
         header=header,
         output_dir=data_dir / Path("2018-19")
     )
+    
+    print(output)
+    print(win_prob)
+
     assert output.sort_values(by=["GAME_ID", "EVENT_NUM"], ascending=True).equals(
         win_prob.sort_values(by=["GAME_ID", "EVENT_NUM"], ascending=True)
     )
@@ -67,6 +78,10 @@ def test_gamelog_loader(data_dir, gamelog):
         season="2018-19",
         output_dir=data_dir / Path("2018-19")
     )
+    
+    print(output)
+    print(gamelog)
+
     assert output.sort_values(by=["Team_ID", "GAME_DATE"], ascending=True).equals(
         gamelog.sort_values(by=["Team_ID", "GAME_DATE"], ascending=True)
     )
@@ -78,6 +93,10 @@ def test_lineup_loader(data_dir, lineup_stats):
         season="2018-19",
         output_dir=data_dir / Path("2018-19")
     )
+
+    print(output)
+    print(lineup_stats)
+
     assert output.sort_values(by="GROUP_ID", ascending=True).equals(
         lineup_stats.sort_values(by="GROUP_ID", ascending=True)
     )
@@ -89,6 +108,13 @@ def test_rotation_loader(data_dir, header, homerotation, awayrotation):
         header=header,
         output_dir=data_dir / Path("2018-19"),
     )
+
+    print(output["AwayTeam"])
+    print(awayrotation)
+
+    print(output["HomeTeam"])
+    print(homerotation)
+
     assert output["AwayTeam"].sort_values(by=["GAME_ID", "PERSON_ID"], ascending=True).equals(
         awayrotation.sort_values(by=["GAME_ID", "PERSON_ID"], ascending=True)
     )
@@ -115,6 +141,10 @@ def test_boxscore_loader(data_dir, header, boxscore):
         header=header,
         output_dir=data_dir / Path("2018-19")
     )
+
+    print(output)
+    print(boxscore)
+
     assert output.sort_values(by=["GAME_ID", "PLAYER_ID"], ascending=True).equals(
         boxscore.sort_values(by=["GAME_ID", "PLAYER_ID"], ascending=True)
     )
