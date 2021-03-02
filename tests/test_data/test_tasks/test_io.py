@@ -45,7 +45,9 @@ def test_load_pbp(data_dir, header, pbp):
         output_dir=data_dir / Path("2018-19")
     )
 
-    assert output.equals(pbp)
+    assert output.sort_values(by=["GAME_ID", "EVENTNUM"], ascending=True).equals(
+        pbp.sort_values(by=["GAME_ID", "EVENTNUM"], ascending=True)
+    )
 
 def test_win_probability_loader(data_dir, header, win_prob):
     """Test loading NBA win probability data."""
@@ -54,7 +56,9 @@ def test_win_probability_loader(data_dir, header, win_prob):
         header=header,
         output_dir=data_dir / Path("2018-19")
     )
-    assert output.equals(win_prob)
+    assert output.sort_values(by=["GAME_ID", "EVENT_NUM"], ascending=True).equals(
+        win_prob.sort_values(by=["GAME_ID", "EVENT_NUM"], ascending=True)
+    )
 
 def test_gamelog_loader(data_dir, gamelog):
     """Test loading gamelogs."""
@@ -63,7 +67,9 @@ def test_gamelog_loader(data_dir, gamelog):
         season="2018-19",
         output_dir=data_dir / Path("2018-19")
     )
-    assert output.equals(gamelog)
+    assert output.sort_values(by=["Team_ID", "GAME_DATE"], ascending=True).equals(
+        gamelog.sort_values(by=["Team_ID", "GAME_DATE"], ascending=True)
+    )
 
 def test_lineup_loader(data_dir, lineup_stats):
     """Test loading lineup stats."""
@@ -72,7 +78,9 @@ def test_lineup_loader(data_dir, lineup_stats):
         season="2018-19",
         output_dir=data_dir / Path("2018-19")
     )
-    assert output.equals(lineup_stats)
+    assert output.sort_values(by="GROUP_ID", ascending=True).equals(
+        lineup_stats.sort_values(by="GROUP_ID", ascending=True)
+    )
 
 def test_rotation_loader(data_dir, header, homerotation, awayrotation):
     """Test loading the rotation data."""
@@ -81,8 +89,12 @@ def test_rotation_loader(data_dir, header, homerotation, awayrotation):
         header=header,
         output_dir=data_dir / Path("2018-19"),
     )
-    assert output["AwayTeam"].equals(awayrotation)
-    assert output["HomeTeam"].equals(homerotation)
+    assert output["AwayTeam"].sort_values(by=["GAME_ID", "PERSON_ID"], ascending=True).equals(
+        awayrotation.sort_values(by=["GAME_ID", "PERSON_ID"], ascending=True)
+    )
+    assert output["HomeTeam"].sort_values(by=["GAME_ID", "PERSON_ID"], ascending=True).equals(
+        homerotation.sort_values(by=["GAME_ID", "PERSON_ID"], ascending=True)
+    )
 
 def test_shotchart_loader(data_dir, header, shotchart):
     """Test loading the shotchart data."""
@@ -92,7 +104,9 @@ def test_shotchart_loader(data_dir, header, shotchart):
         season="2018-19",
         output_dir=data_dir / Path("2018-19")
     )
-    assert output.equals(shotchart)
+    assert output.sort_values(by=["GAME_ID", "GAME_EVENT_ID"], ascending=True).equals(
+        shotchart.sort_values(by=["GAME_ID", "GAME_EVENT_ID"], ascending=True)
+    )
 
 def test_boxscore_loader(data_dir, header, boxscore):
     """Test loading boxscore data."""
@@ -101,7 +115,9 @@ def test_boxscore_loader(data_dir, header, boxscore):
         header=header,
         output_dir=data_dir / Path("2018-19")
     )
-    assert output.equals(boxscore)
+    assert output.sort_values(by=["GAME_ID", "PLAYER_ID"], ascending=True).equals(
+        boxscore.sort_values(by=["GAME_ID", "PLAYER_ID"], ascending=True)
+    )
 
 def test_shotzone_loader(data_dir, boxscore, shotzonedashboard):
     """Test loading shotzone data."""
