@@ -2,9 +2,6 @@
 
 language: python
 dist: bionic
-python:
-    - "3.8"
-    - "3.7"
 
 # Install dependencies
 before_install:
@@ -21,10 +18,11 @@ jobs:
           name: "MyPy Static Typing"
           script: mypy nbaspa
         - stage: tests
+          python: "3.8"
           name: "Unit tests"
-          script: pytest
-        - name: "Code Coverage"
-          script: codecov
+          script:
+            - pytest
+            - codecov
 stages:
     - typing
     - tests
