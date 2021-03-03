@@ -13,8 +13,8 @@ from ...data.endpoints import BoxScoreTraditional
 class LoadRatingData(Task):
     """Load the clean NBA play-by-play data."""
 
-    def run(
-        self, GameID: str, output_dir: str, filesystem: Optional[str] = "file"
+    def run( # type: ignore
+        self, GameID: str, output_dir: str, filesystem: str = "file"
     ) -> pd.DataFrame:
         """Load the clean NBA play-by-play data.
 
@@ -46,8 +46,8 @@ class LoadRatingData(Task):
 class BoxScoreLoader(Task):
     """Load the boxscore data."""
 
-    def run(
-        self, GameID: str, output_dir: str, filesystem: Optional[str] = "file"
+    def run( # type: ignore
+        self, GameID: str, output_dir: str, filesystem: str = "file"
     ) -> pd.DataFrame:
         """Load the boxscore data.
 
