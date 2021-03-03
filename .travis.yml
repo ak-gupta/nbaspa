@@ -4,6 +4,7 @@ language: python
 dist: bionic
 python:
     - 3.8
+    - 3.7
 
 # Install dependencies
 before_install:
