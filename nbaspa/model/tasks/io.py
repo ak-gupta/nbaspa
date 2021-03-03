@@ -9,7 +9,7 @@ from prefect import Task, task
 
 
 @task
-def load_df(data_dir: str, dataset: Optional[str] = "build.csv") -> pd.DataFrame:
+def load_df(data_dir: str, dataset: str = "build.csv") -> pd.DataFrame:
     """Load the pandas dataframe.
 
     Parameters
@@ -32,7 +32,7 @@ def load_df(data_dir: str, dataset: Optional[str] = "build.csv") -> pd.DataFrame
 class LoadData(Task):
     """Load clean data to a DataFrame."""
 
-    def run(self, data_dir: str) -> pd.DataFrame:
+    def run(self, data_dir: str) -> pd.DataFrame: # type: ignore
         """Load clean data to a DataFrame.
 
         Parameters
@@ -57,7 +57,7 @@ class LoadData(Task):
 class LoadModel(Task):
     """Load model object using ``cloudpickle``."""
 
-    def run(self, filepath: str) -> Tuple:
+    def run(self, filepath: str) -> Tuple: # type: ignore
         """Load model object using ``cloudpickle``.
 
         Parameters
