@@ -11,9 +11,19 @@ before_install:
     - python -m pip install codecov
 install:
     - python -m pip install -r requirements.txt
-    - python -m pip install .[tests]
+    - python -m pip install .[dev]
 
-# Run tests
-script: pytest
+# Run testing and static typing
+jobs:
+    include:
+        - stage: typing
+          name: "MyPy Static Typing"
+          script: mypy nbaspa
+        - stage: tests
+          name: "Unit tests"
+          script: pytest
+stages:
+    - typing
+    - tests
 after_success:
     - codecov
