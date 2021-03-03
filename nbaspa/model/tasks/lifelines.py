@@ -3,7 +3,6 @@
 from typing import Dict, Optional
 
 from lifelines import CoxTimeVaryingFitter
-import numpy as np
 import pandas as pd
 from prefect import Task
 
@@ -13,7 +12,7 @@ from .meta import META
 class InitializeLifelines(Task):
     """Initialize a new ``lifelines`` model."""
 
-    def run(self, params: Optional[Dict] = None) -> CoxTimeVaryingFitter: # type: ignore
+    def run(self, params: Optional[Dict] = None) -> CoxTimeVaryingFitter:  # type: ignore
         """Initialize a new ``lifelines`` model.
 
         Parameters
@@ -32,7 +31,7 @@ class InitializeLifelines(Task):
 class FitLifelinesModel(Task):
     """Fit the lifelines model."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self, model: CoxTimeVaryingFitter, data: pd.DataFrame, **kwargs
     ) -> CoxTimeVaryingFitter:
         """Fit the lifelines model.

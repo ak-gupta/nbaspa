@@ -14,7 +14,7 @@ from .meta import META
 class ConcordanceIndex(Task):
     """Calculate the C-index."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         data: pd.DataFrame,
         predt: np.ndarray,
@@ -42,7 +42,7 @@ class ConcordanceIndex(Task):
 class AUROC(Task):
     """Calculate the AUROC score."""
 
-    def run(self, data: pd.DataFrame, mode: Optional[str] = "survival") -> float: # type: ignore
+    def run(self, data: pd.DataFrame, mode: Optional[str] = "survival") -> float:  # type: ignore
         """Calculate the AUROC score.
 
         Parameters
@@ -66,7 +66,7 @@ class AUROC(Task):
 class AUROCLift(Task):
     """Calculate the lift in AUROC between two sequences."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         benchmark: Union[List[float], np.ndarray],
         test: Union[List[float], np.ndarray],
@@ -100,7 +100,7 @@ class AUROCLift(Task):
 class MeanAUROCLift(Task):
     """Calculate the weighted average AUROC lift over gametime."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         lift: np.ndarray,
         timestep: List[int],

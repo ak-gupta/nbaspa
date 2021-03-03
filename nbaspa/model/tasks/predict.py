@@ -1,6 +1,5 @@
 """Create a task for getting the survival probability."""
 
-from pandas.core.algorithms import isin
 from lifelines import CoxTimeVaryingFitter
 from lifelines.utils import interpolate_at_times
 import numpy as np
@@ -14,7 +13,7 @@ from .meta import META
 class Predict(Task):
     """Get the partial hazard for an observation."""
 
-    def run(self, model, data: pd.DataFrame) -> np.ndarray: # type: ignore
+    def run(self, model, data: pd.DataFrame) -> np.ndarray:  # type: ignore
         """Get the partial hazard for an observation.
 
         Parameters
@@ -79,7 +78,7 @@ class Predict(Task):
 class WinProbability(Task):
     """Retrieve the win probability."""
 
-    def run(self, model, data: pd.DataFrame) -> pd.DataFrame: # type: ignore
+    def run(self, model, data: pd.DataFrame) -> pd.DataFrame:  # type: ignore
         """Retrieve the win probability.
 
         Parameters

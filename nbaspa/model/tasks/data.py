@@ -13,7 +13,7 @@ from .meta import META
 class SurvivalData(Task):
     """Create time-varying data in the ``lifelines`` format."""
 
-    def run(self, data: pd.DataFrame) -> pd.DataFrame: # type: ignore
+    def run(self, data: pd.DataFrame) -> pd.DataFrame:  # type: ignore
         """Create time-varying data in the ``lifelines`` format.
 
         Parameters
@@ -66,7 +66,7 @@ class SurvivalData(Task):
 class SegmentData(Task):
     """Split up the longform data."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         data: pd.DataFrame,
         splits: List[float] = [0.85],
@@ -113,7 +113,8 @@ class SegmentData(Task):
         for index, value in enumerate(keys):
             output[value] = data[data[META["id"]].isin(splits[index])].copy()
             self.logger.info(
-                f"Dataset ``{value}`` has {len(splits[index])} games with {len(output[value])} rows"
+                f"Dataset ``{value}`` has {len(splits[index])} games with {len(output[value])} "
+                "rows"
             )
 
         return output
@@ -122,7 +123,7 @@ class SegmentData(Task):
 class CollapseData(Task):
     """Collapse data for evaluation."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         data: pd.DataFrame,
         timestep: Optional[int] = None,
