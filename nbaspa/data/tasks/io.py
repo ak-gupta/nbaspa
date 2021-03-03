@@ -35,7 +35,7 @@ class GenericLoader(Task):
 
         super().__init__(**kwargs)
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         output_dir: str,
         filesystem: Optional[str] = "file",
@@ -69,7 +69,7 @@ class GenericLoader(Task):
 class PlayByPlayLoader(Task):
     """Load the play-by-data for a given day."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         header: pd.DataFrame,
         output_dir: str,
@@ -110,7 +110,7 @@ class PlayByPlayLoader(Task):
 class WinProbabilityLoader(Task):
     """Load the NBA win probability for each game in a day."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         header: pd.DataFrame,
         output_dir: str,
@@ -150,7 +150,7 @@ class GameLogLoader(Task):
 
     teams: Set = ParameterValues().TeamID
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         season: str,
         output_dir: str,
@@ -192,7 +192,7 @@ class LineupLoader(Task):
 
     teams: Set = ParameterValues().TeamID
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         season: str,
         output_dir: str,
@@ -232,7 +232,7 @@ class LineupLoader(Task):
 class RotationLoader(Task):
     """Load the team rotations for all games in a given day."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         header: pd.DataFrame,
         output_dir: str,
@@ -273,7 +273,7 @@ class RotationLoader(Task):
 class ShotChartLoader(Task):
     """Load the shotcharts for all games in a given day."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         header: pd.DataFrame,
         season: str,
@@ -314,7 +314,7 @@ class ShotChartLoader(Task):
 class BoxScoreLoader(Task):
     """Load all boxscores for games in in a given day."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         header: pd.DataFrame,
         output_dir: str,
@@ -352,7 +352,7 @@ class BoxScoreLoader(Task):
 class ShotZoneLoader(Task):
     """Load the shot zone data for each player in each game."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         boxscore: pd.DataFrame,
         output_dir: str,
@@ -397,7 +397,7 @@ class ShotZoneLoader(Task):
 class GeneralShootingLoader(Task):
     """Load the general shooting data for each player in each game."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         boxscore: pd.DataFrame,
         output_dir: str,
@@ -442,7 +442,7 @@ class GeneralShootingLoader(Task):
 class SaveData(Task):
     """Save the game data."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         data: pd.DataFrame,
         output_dir: str,

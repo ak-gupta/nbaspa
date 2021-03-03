@@ -3,7 +3,6 @@
 Create a class for base requests to the NBA API.
 """
 
-from abc import abstractmethod
 from copy import deepcopy
 import json
 import logging

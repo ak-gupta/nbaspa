@@ -7,7 +7,7 @@ from prefect import Task
 class AddNetRating(Task):
     """Add the net rating for each team."""
 
-    def run(self, pbp: pd.DataFrame, stats: pd.DataFrame) -> pd.DataFrame: # type: ignore
+    def run(self, pbp: pd.DataFrame, stats: pd.DataFrame) -> pd.DataFrame:  # type: ignore
         """Add the net rating for each team.
 
         Adds the following columns:

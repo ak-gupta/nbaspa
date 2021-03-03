@@ -123,7 +123,7 @@ def gen_pipeline() -> Flow:
         target = target_task(pbp=margin)
         team_id = team_id_task(pbp=target, header=scoreboard["GameHeader"])
         rating = rating_task(pbp=team_id, stats=stats["default"])
-        with case(mode, "rating"): # type: ignore
+        with case(mode, "rating"):  # type: ignore
             # Load shotchart and shot zone data
             shotchart = shotchart_loader(
                 header=scoreboard["GameHeader"],
@@ -146,7 +146,7 @@ def gen_pipeline() -> Flow:
                 shotzonedashboard=shotzonedashboard,
                 overallshooting=shooting,
             )
-        with case(mode, "model"): # type: ignore
+        with case(mode, "model"):  # type: ignore
             # Load data
             gamelog = log_loader(
                 season=season,
@@ -178,7 +178,7 @@ def gen_pipeline() -> Flow:
             deduped = dedupe_task(pbp=lineup)
         # Save
         final = merge(expected_val, deduped)
-        with case(save_data, True): # type: ignore
+        with case(save_data, True):  # type: ignore
             persist(data=final, output_dir=output_dir, filesystem=filesystem, mode=mode)
 
     return flow
