@@ -2,17 +2,27 @@
 
 language: python
 dist: bionic
-python:
-    - 3.8
 
 # Install dependencies
 before_install:
     - python -m pip install codecov
 install:
     - python -m pip install -r requirements.txt
-    - python -m pip install .[tests]
+    - python -m pip install .[dev]
 
-# Run tests
-script: pytest
-after_success:
-    - codecov
+# Run testing and static typing
+jobs:
+    include:
+        - stage: typing
+          python: "3.8"
+          name: "MyPy Static Typing"
+          script: mypy nbaspa
+        - stage: tests
+          python: "3.8"
+          name: "Unit tests"
+          script:
+            - pytest
+            - codecov
+stages:
+    - typing
+    - tests

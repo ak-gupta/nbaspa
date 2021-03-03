@@ -62,7 +62,7 @@ def run_pipeline(
     output_dir: str,
     GameID: str,
     filesystem: Optional[str] = "file",
-) -> State:
+) -> Optional[State]:
     """Run the pipeline.
 
     Parameters

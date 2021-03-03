@@ -33,7 +33,7 @@ DEFAULT_XGBOOST_SPACE: Dict = {
 class LifelinesTuning(Task):
     """Use ``hyperopt`` to choose ``lifelines`` hyperparameters."""
 
-    def run(
+    def run( # type: ignore
         self,
         train_data: pd.DataFrame,
         tune_data: pd.DataFrame,
@@ -112,7 +112,7 @@ class LifelinesTuning(Task):
 class XGBoostTuning(Task):
     """Use ``hyperopt`` to choose ``xgboost`` hyperparameters."""
 
-    def run(
+    def run( # type: ignore
         self,
         train_data: pd.DataFrame,
         tune_data: pd.DataFrame,

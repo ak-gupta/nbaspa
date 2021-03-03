@@ -4,7 +4,8 @@ Create a class for reading scoreboard data from the NBA API.
 """
 
 from datetime import datetime
-from typing import Dict, List
+from pathlib import Path
+from typing import Dict, List, Union
 
 from .base import BaseRequest
 from .parameters import DefaultParameters
@@ -14,19 +15,27 @@ class Scoreboard(BaseRequest):
     """Get the scoreboard for a given date."""
 
     endpoint: str = "scoreboardv2"
+    filename: str = "data_{GameDate}.json"
 
     @property
-    def filename(self) -> str:
-        """The output JSON filename.
+    def fpath(self) -> Union[None, Path]:
+        """Define the filepath.
 
         Returns
         -------
-        str
-            The filename.
+        Path
+            The path object.
         """
-        fmt = datetime.strptime(self.params["GameDate"], "%m/%d/%Y")
+        if self.output_dir is None:
+            return None
+        else:
+            fmt = datetime.strptime(self.params["GameDate"], "%m/%d/%Y")
 
-        return f"data_{fmt.strftime('%Y%m%d')}.json"
+            return Path(
+                self.output_dir,
+                self.endpoint,
+                self.filename.format(GameDate=fmt.strftime("%Y%m%d"))
+            )
 
     @property
     def defaults(self) -> Dict:

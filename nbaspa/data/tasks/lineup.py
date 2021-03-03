@@ -12,7 +12,7 @@ from ..endpoints.pbp import EventTypes
 class AddLineupPlusMinus(Task):
     """Add lineup plus minus."""
 
-    def run(
+    def run( # type: ignore
         self,
         pbp: pd.DataFrame,
         lineup_stats: pd.DataFrame,
@@ -64,8 +64,8 @@ class AddLineupPlusMinus(Task):
         # Loop through each game in the play by play dataset
         for name, game in grouped:
             # Set an empty lineup to start
-            home_lineup = set()
-            away_lineup = set()
+            home_lineup: Set[int] = set()
+            away_lineup: Set[int] = set()
             # Loop through each event in the game
             self.logger.info(f"Looping through each event in game {name}")
 

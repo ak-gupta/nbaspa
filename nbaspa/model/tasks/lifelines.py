@@ -13,7 +13,7 @@ from .meta import META
 class InitializeLifelines(Task):
     """Initialize a new ``lifelines`` model."""
 
-    def run(self, params: Optional[Dict] = None) -> CoxTimeVaryingFitter:
+    def run(self, params: Optional[Dict] = None) -> CoxTimeVaryingFitter: # type: ignore
         """Initialize a new ``lifelines`` model.
 
         Parameters
@@ -32,7 +32,7 @@ class InitializeLifelines(Task):
 class FitLifelinesModel(Task):
     """Fit the lifelines model."""
 
-    def run(
+    def run( # type: ignore
         self, model: CoxTimeVaryingFitter, data: pd.DataFrame, **kwargs
     ) -> CoxTimeVaryingFitter:
         """Fit the lifelines model.

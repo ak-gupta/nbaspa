@@ -1,6 +1,6 @@
 """Generate model build/evaluation framework."""
 
-from typing import Dict, List
+from typing import Dict, Optional
 
 import numpy as np
 import prefect
@@ -315,7 +315,7 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
     return flow
 
 
-def run_pipeline(flow: Flow, data_dir: str, output_dir: str, **kwargs) -> State:
+def run_pipeline(flow: Flow, data_dir: str, output_dir: str, **kwargs) -> Optional[State]:
     """Run a pipeline.
 
     Parameters
