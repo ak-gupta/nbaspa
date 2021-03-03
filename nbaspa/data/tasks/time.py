@@ -65,6 +65,6 @@ class DeDupeTime(Task):
             dupes = group.sort_values(
                 by=["TIME", "EVENTNUM"], ascending=True
             ).duplicated(subset="TIME", keep="last")
-            pbp.drop(dupes[dupes == True].index, inplace=True)
+            pbp.drop(dupes[dupes].index, inplace=True)
 
         return pbp
