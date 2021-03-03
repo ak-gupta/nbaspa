@@ -8,7 +8,7 @@ from prefect import Task
 class AddNBAWinProbability(Task):
     """Add the NBA win probability to the play-by-play dataset."""
 
-    def run(self, pbp: pd.DataFrame, winprob: pd.DataFrame) -> pd.DataFrame:
+    def run(self, pbp: pd.DataFrame, winprob: pd.DataFrame) -> pd.DataFrame: # type: ignore
         """Add the NBA win probability to the play-by-play dataset.
 
         Adds the following columns:

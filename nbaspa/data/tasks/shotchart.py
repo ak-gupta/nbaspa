@@ -10,7 +10,7 @@ from ..endpoints.pbp import EventTypes
 class AddShotDetail(Task):
     """Add shotchart details."""
 
-    def run(self, pbp: pd.DataFrame, shotchart: pd.DataFrame) -> pd.DataFrame:
+    def run(self, pbp: pd.DataFrame, shotchart: pd.DataFrame) -> pd.DataFrame: # type: ignore
         """Add shotchart detail.
 
         Adds the following columns:
@@ -53,7 +53,7 @@ class AddShotDetail(Task):
 class AddExpectedShotValue(Task):
     """Add the expected shot value based on the shooter and the zone."""
 
-    def run(
+    def run( # type: ignore
         self,
         pbp: pd.DataFrame,
         shotzonedashboard: pd.DataFrame,

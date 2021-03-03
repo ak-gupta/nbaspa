@@ -10,7 +10,7 @@ from prefect import Task
 class CreateTarget(Task):
     """Create the target boolean."""
 
-    def run(self, pbp: pd.DataFrame) -> pd.DataFrame:
+    def run(self, pbp: pd.DataFrame) -> pd.DataFrame: # type: ignore
         """Create the target boolean.
 
         Adds the following column:
