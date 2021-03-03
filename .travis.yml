@@ -17,6 +17,8 @@ jobs:
           python: "3.8"
           name: "MyPy Static Typing"
           script: mypy nbaspa
+        - name: "flake8"
+          script: flake8 nbaspa
         - stage: tests
           python: "3.8"
           name: "Unit tests"
