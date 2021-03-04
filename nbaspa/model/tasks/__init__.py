@@ -8,7 +8,7 @@ from .lifelines import (
     InitializeLifelines,
     FitLifelinesModel,
 )
-from .metrics import ConcordanceIndex, AUROC, AUROCLift, MeanAUROCLift
+from .metrics import AUROC, AUROCLift, MeanAUROCLift
 from .predict import Predict, WinProbability
 from .tuning import LifelinesTuning, XGBoostTuning
 from .visualization import PlotMetric, PlotProbability, PlotTuning
@@ -24,7 +24,6 @@ __all__: List[str] = [
     "InitializeLifelines",
     "FitLifelinesModel",
     "Predict",
-    "ConcordanceIndex",
     "AUROC",
     "AUROCLift",
     "MeanAUROCLift",

@@ -2,41 +2,12 @@
 
 from typing import Callable, List, Optional, Union
 
-from lifelines.utils import concordance_index
 import numpy as np
 import pandas as pd
 from prefect import Task
 from sklearn.metrics import roc_auc_score
 
 from .meta import META
-
-
-class ConcordanceIndex(Task):
-    """Calculate the C-index."""
-
-    def run(  # type: ignore
-        self,
-        data: pd.DataFrame,
-        predt: np.ndarray,
-    ) -> float:
-        """Calculate the C-index.
-
-        Parameters
-        ----------
-        data : pd.DataFrame
-            The test data.
-        predt : np.ndarray
-            The partial hazard prediction.
-
-        Returns
-        -------
-        float
-            The Concordance index.
-        """
-        cind = concordance_index(data["stop"], -predt, data[META["event"]])
-        self.logger.info(f"Model has a C-index of {np.round(cind, 3)}")
-
-        return cind
 
 
 class AUROC(Task):
