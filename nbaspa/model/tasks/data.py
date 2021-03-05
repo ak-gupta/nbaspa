@@ -54,10 +54,7 @@ class SurvivalData(Task):
         )
         # Add the NBA win probability to the dataset
         longform[META["benchmark"]] = longform.merge(
-            data,
-            left_on=("GAME_ID", "stop"),
-            right_on=("GAME_ID", "TIME"),
-            how="left"
+            data, left_on=("GAME_ID", "stop"), right_on=("GAME_ID", "TIME"), how="left"
         )[META["benchmark"]]
 
         return longform

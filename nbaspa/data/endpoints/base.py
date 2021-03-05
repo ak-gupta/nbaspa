@@ -207,7 +207,9 @@ class BaseRequest:
         if self.output_dir is None:
             return None
         else:
-            return Path(self.output_dir, self.endpoint, self.filename.format(**self.params))
+            return Path(
+                self.output_dir, self.endpoint, self.filename.format(**self.params)
+            )
 
     @property
     def params(self) -> Dict:

@@ -315,7 +315,9 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
     return flow
 
 
-def run_pipeline(flow: Flow, data_dir: str, output_dir: str, **kwargs) -> Optional[State]:
+def run_pipeline(
+    flow: Flow, data_dir: str, output_dir: str, **kwargs
+) -> Optional[State]:
     """Run a pipeline.
 
     Parameters
