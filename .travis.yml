@@ -3,6 +3,9 @@
 language: python
 dist: bionic
 
+env:
+    - PREFECT__FLOWS__CHECKPOINTING=true
+
 # Install dependencies
 before_install:
     - python -m pip install codecov
