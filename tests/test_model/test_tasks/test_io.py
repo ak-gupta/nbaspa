@@ -2,7 +2,10 @@
 
 from pathlib import Path
 
-from nbaspa.model.tasks import LoadData
+import cloudpickle
+from lifelines import CoxTimeVaryingFitter
+
+from nbaspa.model.tasks import LoadData, LoadModel
 
 def test_load_model_data(data, tmpdir):
     """Test loading fake model data."""
@@ -18,3 +21,16 @@ def test_load_model_data(data, tmpdir):
     output.reset_index(drop=True, inplace=True)
 
     assert output.equals(data)
+
+def test_load_model(tmpdir):
+    """Test writing and reading a model."""
+    model = CoxTimeVaryingFitter(penalizer=1.0)
+    location = tmpdir.mkdir("fake-model")
+    with open(Path(str(location), "mymodel.pkl"), "wb") as outfile:
+        cloudpickle.dump(model, outfile)
+    
+    tsk = LoadModel()
+    output = tsk.run(filepath=Path(str(location), "mymodel.pkl"))
+
+    assert isinstance(output, CoxTimeVaryingFitter)
+    assert output.penalizer == 1.0
