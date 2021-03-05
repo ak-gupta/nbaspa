@@ -3,7 +3,6 @@
 Create a class for base requests to the NBA API.
 """
 
-from abc import abstractmethod
 from copy import deepcopy
 import json
 import logging
@@ -208,7 +207,9 @@ class BaseRequest:
         if self.output_dir is None:
             return None
         else:
-            return Path(self.output_dir, self.endpoint, self.filename.format(**self.params))
+            return Path(
+                self.output_dir, self.endpoint, self.filename.format(**self.params)
+            )
 
     @property
     def params(self) -> Dict:

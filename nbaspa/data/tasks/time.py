@@ -10,7 +10,7 @@ from prefect import Task
 class SurvivalTime(Task):
     """Get the survival time."""
 
-    def run(self, pbp: pd.DataFrame) -> pd.DataFrame: # type: ignore
+    def run(self, pbp: pd.DataFrame) -> pd.DataFrame:  # type: ignore
         """Add survival time.
 
         Adds the following column:
@@ -45,7 +45,7 @@ class SurvivalTime(Task):
 class DeDupeTime(Task):
     """De-dupe time for model fitting."""
 
-    def run(self, pbp: pd.DataFrame) -> pd.DataFrame: # type: ignore
+    def run(self, pbp: pd.DataFrame) -> pd.DataFrame:  # type: ignore
         """De-dupe time for model fitting.
 
         Parameters
@@ -65,6 +65,6 @@ class DeDupeTime(Task):
             dupes = group.sort_values(
                 by=["TIME", "EVENTNUM"], ascending=True
             ).duplicated(subset="TIME", keep="last")
-            pbp.drop(dupes[dupes == True].index, inplace=True)
+            pbp.drop(dupes[dupes].index, inplace=True)
 
         return pbp

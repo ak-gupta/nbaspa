@@ -10,7 +10,7 @@ from prefect import Task
 class FillMargin(Task):
     """Ensure the margin is non-null."""
 
-    def run(self, pbp: pd.DataFrame) -> pd.DataFrame: # type: ignore
+    def run(self, pbp: pd.DataFrame) -> pd.DataFrame:  # type: ignore
         """Ensure the margin is non-null.
 
         Parameters

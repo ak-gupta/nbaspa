@@ -2,7 +2,6 @@
 
 from typing import Callable, List, Optional, Union
 
-from lifelines.utils import concordance_index
 import numpy as np
 import pandas as pd
 from prefect import Task
@@ -11,38 +10,10 @@ from sklearn.metrics import roc_auc_score
 from .meta import META
 
 
-class ConcordanceIndex(Task):
-    """Calculate the C-index."""
-
-    def run( # type: ignore
-        self,
-        data: pd.DataFrame,
-        predt: np.ndarray,
-    ) -> float:
-        """Calculate the C-index.
-
-        Parameters
-        ----------
-        data : pd.DataFrame
-            The test data.
-        predt : np.ndarray
-            The partial hazard prediction.
-
-        Returns
-        -------
-        float
-            The Concordance index.
-        """
-        cind = concordance_index(data["stop"], -predt, data[META["event"]])
-        self.logger.info(f"Model has a C-index of {np.round(cind, 3)}")
-
-        return cind
-
-
 class AUROC(Task):
     """Calculate the AUROC score."""
 
-    def run(self, data: pd.DataFrame, mode: Optional[str] = "survival") -> float: # type: ignore
+    def run(self, data: pd.DataFrame, mode: Optional[str] = "survival") -> float:  # type: ignore
         """Calculate the AUROC score.
 
         Parameters
@@ -66,7 +37,7 @@ class AUROC(Task):
 class AUROCLift(Task):
     """Calculate the lift in AUROC between two sequences."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         benchmark: Union[List[float], np.ndarray],
         test: Union[List[float], np.ndarray],
@@ -100,7 +71,7 @@ class AUROCLift(Task):
 class MeanAUROCLift(Task):
     """Calculate the weighted average AUROC lift over gametime."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         lift: np.ndarray,
         timestep: List[int],

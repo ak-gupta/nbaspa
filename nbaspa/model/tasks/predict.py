@@ -1,6 +1,5 @@
 """Create a task for getting the survival probability."""
 
-from pandas.core.algorithms import isin
 from lifelines import CoxTimeVaryingFitter
 from lifelines.utils import interpolate_at_times
 import numpy as np
@@ -11,75 +10,10 @@ import xgboost as xgb
 from .meta import META
 
 
-class Predict(Task):
-    """Get the partial hazard for an observation."""
-
-    def run(self, model, data: pd.DataFrame) -> np.ndarray: # type: ignore
-        """Get the partial hazard for an observation.
-
-        Parameters
-        ----------
-        model
-            The fitted model.
-        data : pd.DataFrame
-            The input dataframe.
-
-        Returns
-        -------
-        np.ndarray
-            The predicted values.
-        """
-        if isinstance(model, CoxTimeVaryingFitter):
-            return self._run_lifelines(model, data)
-        elif isinstance(model, xgb.Booster):
-            return self._run_xgboost(model, data)
-        else:
-            self.logger.error("No method specified for this model type")
-            raise NotImplementedError("No method specified for this model type")
-
-    @staticmethod
-    def _run_lifelines(model: CoxTimeVaryingFitter, data: pd.DataFrame) -> np.ndarray:
-        """Get the partial hazard for an observation.
-
-        Parameters
-        ----------
-        model : CoxTimeVaryingFitter
-            The fitted model.
-        data : pd.DataFrame
-            The input dataframe.
-
-        Returns
-        -------
-        np.ndarray
-            The predicted values.
-        """
-        return model.predict_partial_hazard(data)
-
-    @staticmethod
-    def _run_xgboost(model: xgb.Booster, data: pd.DataFrame) -> np.ndarray:
-        """Get the partial hazard for an observation.
-
-        Parameters
-        ----------
-        model : xgb.Booster
-            The fitted model.
-        data : pd.DataFrame
-            The input dataframe.
-
-        Returns
-        -------
-        np.ndarray
-            The predicted values.
-        """
-        dmat = xgb.DMatrix(data[META["static"] + META["dynamic"]])
-
-        return model.predict(dmat)
-
-
 class WinProbability(Task):
     """Retrieve the win probability."""
 
-    def run(self, model, data: pd.DataFrame) -> pd.DataFrame: # type: ignore
+    def run(self, model, data: pd.DataFrame) -> pd.DataFrame:  # type: ignore
         """Retrieve the win probability.
 
         Parameters

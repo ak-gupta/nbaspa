@@ -15,7 +15,7 @@ from .meta import META
 class PlotProbability(Task):
     """Plot the survival probability against the margin of the game."""
 
-    def run(self, data: pd.DataFrame, mode: Optional[str] = "survival"): # type: ignore
+    def run(self, data: pd.DataFrame, mode: Optional[str] = "survival"):  # type: ignore
         """Plot the survival probability against the margin.
 
         Parameters
@@ -41,7 +41,7 @@ class PlotProbability(Task):
                 ax=ax,
             )
             probplot.set(
-                title=f"Survival probability versus game margin",
+                title="Survival probability versus game margin",
                 xlabel="Margin (positive value means home team is winning)",
                 ylabel="Survival Probability",
             )
@@ -53,7 +53,7 @@ class PlotProbability(Task):
 class PlotMetric(Task):
     """Use seaborn to plot a metric over time."""
 
-    def run(self, times: List[int], metric: str, **kwargs: List[float]): # type: ignore
+    def run(self, times: List[int], metric: str, **kwargs: List[float]):  # type: ignore
         """Use ``seaborn`` to plot a metric over time.
 
         Parameters
@@ -88,7 +88,7 @@ class PlotMetric(Task):
 class PlotTuning(Task):
     """Create ``matplotlib`` plots to visualize hyperparameter tuning."""
 
-    def run(self, trials: Trials): # type: ignore
+    def run(self, trials: Trials):  # type: ignore
         """Create ``matplotlib`` plots to visualize hyperparameter tuning.
 
         Parameters

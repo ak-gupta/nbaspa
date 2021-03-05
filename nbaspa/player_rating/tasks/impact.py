@@ -55,7 +55,7 @@ class SimplePlayerImpact(Task):
     event_types = EventTypes()
     change_column: Optional[str] = None
 
-    def run(self, pbp: pd.DataFrame, mode: str = "nba") -> pd.DataFrame: # type: ignore
+    def run(self, pbp: pd.DataFrame, mode: str = "nba") -> pd.DataFrame:  # type: ignore
         """Add player impact to the data.
 
         This class will only calculate player impact for time periods in the game
@@ -81,7 +81,6 @@ class SimplePlayerImpact(Task):
             self.change_column = "NBA_WIN_PROB_CHANGE"
         else:
             raise NotImplementedError
-        types = EventTypes()
         # Initialize the column
         pbp["PLAYER1_IMPACT"] = 0
         pbp["PLAYER2_IMPACT"] = 0
@@ -392,7 +391,7 @@ class CompoundPlayerImpact(Task):
     event_types = EventTypes()
     change_column: Optional[str] = None
 
-    def run(self, pbp: pd.DataFrame, mode: str = "nba") -> pd.DataFrame: # type: ignore
+    def run(self, pbp: pd.DataFrame, mode: str = "nba") -> pd.DataFrame:  # type: ignore
         """Define player impact for time periods with multiple events.
 
         Parameters
@@ -784,7 +783,7 @@ class CompoundPlayerImpact(Task):
 class AggregateImpact(Task):
     """Aggregate player impact for a game."""
 
-    def run(self, pbp: pd.DataFrame, boxscore: pd.DataFrame) -> pd.DataFrame: # type: ignore
+    def run(self, pbp: pd.DataFrame, boxscore: pd.DataFrame) -> pd.DataFrame:  # type: ignore
         """Aggregate player impact for a game.
 
         Parameters

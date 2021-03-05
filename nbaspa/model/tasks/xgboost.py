@@ -2,7 +2,6 @@
 
 from typing import Dict, Optional
 
-import numpy as np
 import pandas as pd
 from prefect import Task
 import xgboost as xgb
@@ -13,7 +12,7 @@ from .meta import META
 class FitXGBoost(Task):
     """Fit the XGBoost model."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         train_data: pd.DataFrame,
         params: Optional[Dict] = None,

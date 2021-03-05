@@ -230,7 +230,7 @@ def gen_xgboost_pipeline() -> Flow:
     return flow
 
 
-def gen_evaluate_pipeline(**kwargs) -> Flow:
+def gen_evaluate_pipeline(step: int = 10, **kwargs) -> Flow:
     """Generate pipeline for evaluating models.
 
     Parameters
@@ -245,7 +245,7 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
         The generated pipeline.
     """
     # Create a time range for AUROC calculation -- start to the end of the fourth quarter
-    times = np.arange(2880, step=10)
+    times = np.arange(2880, step=step)
     # Initialize the tasks
     modelobjs: Dict = {}
     calc_sprob: Dict = {}
@@ -315,7 +315,9 @@ def gen_evaluate_pipeline(**kwargs) -> Flow:
     return flow
 
 
-def run_pipeline(flow: Flow, data_dir: str, output_dir: str, **kwargs) -> Optional[State]:
+def run_pipeline(
+    flow: Flow, data_dir: str, output_dir: str, **kwargs
+) -> Optional[State]:
     """Run a pipeline.
 
     Parameters

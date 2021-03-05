@@ -34,7 +34,7 @@ class Scoreboard(BaseRequest):
             return Path(
                 self.output_dir,
                 self.endpoint,
-                self.filename.format(GameDate=fmt.strftime("%Y%m%d"))
+                self.filename.format(GameDate=fmt.strftime("%Y%m%d")),
             )
 
     @property

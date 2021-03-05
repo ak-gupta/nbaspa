@@ -14,7 +14,7 @@ from prefect import Task
 class AddWinPercentage(Task):
     """Add team win percentage."""
 
-    def run(self, pbp: pd.DataFrame, gamelog: pd.DataFrame) -> pd.DataFrame: # type: ignore
+    def run(self, pbp: pd.DataFrame, gamelog: pd.DataFrame) -> pd.DataFrame:  # type: ignore
         """Add team win percentage entering the game.
 
         Adds the following columns:
@@ -81,7 +81,7 @@ class GamesInLastXDays(Task):
 
         super().__init__(**kwargs)
 
-    def run(self, pbp: pd.DataFrame, gamelog: pd.DataFrame) -> pd.DataFrame: # type: ignore
+    def run(self, pbp: pd.DataFrame, gamelog: pd.DataFrame) -> pd.DataFrame:  # type: ignore
         """Add the number of games in the last ``self.period`` days.
 
         Adds the following columns:

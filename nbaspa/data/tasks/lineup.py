@@ -12,7 +12,7 @@ from ..endpoints.pbp import EventTypes
 class AddLineupPlusMinus(Task):
     """Add lineup plus minus."""
 
-    def run( # type: ignore
+    def run(  # type: ignore
         self,
         pbp: pd.DataFrame,
         lineup_stats: pd.DataFrame,
@@ -89,8 +89,8 @@ class AddLineupPlusMinus(Task):
                             )
                         except ValueError:
                             self.logger.warning(
-                                "Unable to find lineup stats. Setting the lineup plus minus to the "
-                                "net rating"
+                                "Unable to find lineup stats. Setting the lineup plus minus to "
+                                "the net rating"
                             )
                             pbp.loc[index, "HOME_LINEUP_PLUS_MINUS"] = pbp.loc[
                                 index, "HOME_NET_RATING"
@@ -109,8 +109,8 @@ class AddLineupPlusMinus(Task):
                             pbp.loc[index, "HOME_LINEUP"] = "INVALID LINEUP"
                     else:
                         self.logger.debug(
-                            f"Visiting team substitution at {row['PCTIMESTRING']} ({row['TIME']}) in "
-                            f"period {row['PERIOD']}: {row['VISITORDESCRIPTION']}"
+                            f"Visiting team substitution at {row['PCTIMESTRING']} ({row['TIME']}) "
+                            f"in period {row['PERIOD']}: {row['VISITORDESCRIPTION']}"
                         )
                         # Get the updated lineup and plus minus value
                         try:
@@ -125,8 +125,8 @@ class AddLineupPlusMinus(Task):
                             )
                         except ValueError:
                             self.logger.warning(
-                                "Unable to find lineup stats. Setting the lineup plus minus to the "
-                                "net rating"
+                                "Unable to find lineup stats. Setting the lineup plus minus to "
+                                "the net rating"
                             )
                             pbp.loc[index, "VISITOR_LINEUP_PLUS_MINUS"] = pbp.loc[
                                 index, "VISITOR_NET_RATING"

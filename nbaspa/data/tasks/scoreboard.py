@@ -15,7 +15,7 @@ from prefect import Task
 class AddTeamID(Task):
     """Add the team identifiers and game date."""
 
-    def run(self, pbp: pd.DataFrame, header: pd.DataFrame) -> pd.DataFrame: # type: ignore
+    def run(self, pbp: pd.DataFrame, header: pd.DataFrame) -> pd.DataFrame:  # type: ignore
         """Add the team identifiers and game date.
 
         Adds the following columns:
@@ -49,7 +49,7 @@ class AddTeamID(Task):
 class AddLastMeetingResult(Task):
     """Add the last meeting result."""
 
-    def run(self, pbp: pd.DataFrame, last_meeting: pd.DataFrame) -> pd.DataFrame: # type: ignore
+    def run(self, pbp: pd.DataFrame, last_meeting: pd.DataFrame) -> pd.DataFrame:  # type: ignore
         """Add an indicator to show who won the last meeting.
 
         Adds the following column:

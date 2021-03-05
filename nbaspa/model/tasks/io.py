@@ -1,7 +1,7 @@
 """I/O tasks for the model fitting/evaluation pipelines."""
 
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Tuple
 
 import cloudpickle
 import pandas as pd
@@ -32,7 +32,7 @@ def load_df(data_dir: str, dataset: str = "build.csv") -> pd.DataFrame:
 class LoadData(Task):
     """Load clean data to a DataFrame."""
 
-    def run(self, data_dir: str) -> pd.DataFrame: # type: ignore
+    def run(self, data_dir: str) -> pd.DataFrame:  # type: ignore
         """Load clean data to a DataFrame.
 
         Parameters
@@ -57,7 +57,7 @@ class LoadData(Task):
 class LoadModel(Task):
     """Load model object using ``cloudpickle``."""
 
-    def run(self, filepath: str) -> Tuple: # type: ignore
+    def run(self, filepath: str) -> Tuple:  # type: ignore
         """Load model object using ``cloudpickle``.
 
         Parameters
