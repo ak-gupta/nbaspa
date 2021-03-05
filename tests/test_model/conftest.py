@@ -21,7 +21,6 @@ def data():
             "VISITOR_GAMES_IN_LAST_3_DAYS": np.random.randint(0, 2, size=150),
             "VISITOR_GAMES_IN_LAST_5_DAYS": np.random.randint(0, 3, size=150),
             "VISITOR_GAMES_IN_LAST_7_DAYS": np.random.randint(2, 4, size=150),
-            "WIN": np.random.binomial(1, 0.5, size=150),
         }
     )
     np.random.shuffle(gamenets)
@@ -30,18 +29,26 @@ def data():
     static_df["VISITOR_NET_RATING"] = gamenets
     # Create the dynamic df
     dfs = []
-    for _, row in static_df.iterrows():
+    for index, row in static_df.iterrows():
+        np.random.seed(index)
         new = pd.DataFrame(
             {
                 "TIME": np.sort(np.random.randint(0, 2880, size=100)),
-                "SCOREMARGIN": np.random.randint(-20, 20, size=100),
+                "WIN": False,
                 "NBA_WIN_PROB": np.round(np.random.uniform(0.0, 0.999, size=100), 3),
-                "HOME_LINEUP_PLUS_MINUS": 0.0,
-                "VISITOR_LINEUP_PLUS_MINUS": 0.0
             }
         )
         for idx, value in row.iteritems():
             new[idx] = value
+        
+        lineup = np.round(np.repeat(np.random.uniform(-3.0, 3.0, size=10), 10), 3)
+        np.random.shuffle(lineup)
+        new["HOME_LINEUP_PLUS_MINUS"] = lineup
+        np.random.shuffle(lineup)
+        new["VISITOR_LINEUP_PLUS_MINUS"] = lineup
+        steps = np.random.choice([-3, -2, -1, 0, 1, 2, 3], size=99)
+        new["SCOREMARGIN"] = np.concatenate([np.zeros(1,), steps]).cumsum(0)
+        new.loc[99, "WIN"] = new.loc[99, "SCOREMARGIN"] > 0
 
         dfs.append(new)
     
