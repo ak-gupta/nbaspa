@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 
-from nbaspa.model.tasks import SurvivalData, SegmentData
+from nbaspa.model.tasks import CollapseData, SurvivalData, SegmentData
 
 def test_lifelines_data():
     """Test creating the lifelines data."""
@@ -92,3 +92,28 @@ def test_segment_data():
     assert len(np.unique(output["train"]["GAME_ID"])) == 6
     assert len(np.unique(output["tune"]["GAME_ID"])) == 2
     assert len(np.unique(output["stop"]["GAME_ID"])) == 2
+
+def test_collapse_data_lr(data):
+    """Test collapsing the data."""
+    pre = SurvivalData()
+    df = pre.run(data)
+    # Check collapsing the data to the final row
+    tsk = CollapseData()
+    output = tsk.run(data=df)
+
+    assert len(output) == 150
+    assert output.equals(
+        df.groupby("GAME_ID").tail(n=1)
+    )
+
+def test_collapse_data_zero(data):
+    """Test collapsing the data to the first row."""
+    pre = SurvivalData()
+    df = pre.run(data)
+    # Collapse
+    tsk = CollapseData()
+    output = tsk.run(data=df, timestep=0)
+
+    assert all(output["HOME_LINEUP_PLUS_MINUS"] == 0.0)
+    assert all(output["VISITOR_LINEUP_PLUS_MINUS"] == 0.0)
+    assert all(output["SCOREMARGIN"] == 0.0)
