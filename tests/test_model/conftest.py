@@ -1,5 +1,7 @@
 """Define some fixtures."""
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -57,3 +59,13 @@ def data():
     final.reset_index(drop=True, inplace=True)
     
     return final
+
+@pytest.fixture(scope="session")
+def gamelocation(data, tmp_path_factory):
+    """Write data to a temporary directory."""
+    location = tmp_path_factory.mktemp("data")
+    Path(location, "2018-19", "model-data").mkdir(parents=True)
+    for name, game in data.groupby("GAME_ID"):
+        game.to_csv(Path(location, "2018-19", "model-data", f"data_{name}.csv"), sep="|")
+    
+    return str(location)
