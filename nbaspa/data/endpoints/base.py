@@ -3,12 +3,11 @@
 Create a class for base requests to the NBA API.
 """
 
-from abc import abstractmethod
 from copy import deepcopy
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import fsspec
 import pandas as pd
@@ -75,7 +74,7 @@ class BaseRequest:
         self.fs = fsspec.filesystem(filesystem)
         self.params = params
 
-        self._response: requests.Response = None
+        self._response: Optional[requests.Response] = None
         self._raw_data: Dict = {}
 
     def get(self):
@@ -197,7 +196,7 @@ class BaseRequest:
         return ["default"]
 
     @property
-    def fpath(self) -> Path:
+    def fpath(self) -> Union[None, Path]:
         """Define the filepath.
 
         Returns
@@ -205,7 +204,12 @@ class BaseRequest:
         Path
             The path object.
         """
-        return Path(self.output_dir, self.endpoint, self.filename.format(**self.params))
+        if self.output_dir is None:
+            return None
+        else:
+            return Path(
+                self.output_dir, self.endpoint, self.filename.format(**self.params)
+            )
 
     @property
     def params(self) -> Dict:

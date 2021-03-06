@@ -102,8 +102,8 @@ def test_model_cleaning_pipeline_nosave(data_dir, modeldata):
     flow = gen_pipeline()
     output = run_pipeline(
         flow=flow,
-        data_dir=data_dir / Path("2018-19"),
-        output_dir=data_dir / Path("2018-19"),
+        data_dir=str(data_dir / "2018-19"),
+        output_dir=str(data_dir / "2018-19"),
         save_data=False,
         mode="model",
         Season="2018-19",
@@ -120,7 +120,7 @@ def test_model_cleaning_pipeline_save(data_dir, modeldata, tmpdir):
     flow = gen_pipeline()
     run_pipeline(
         flow=flow,
-        data_dir=data_dir / Path("2018-19"),
+        data_dir=str(data_dir / "2018-19"),
         output_dir=str(location),
         save_data=True,
         mode="model",
@@ -146,8 +146,8 @@ def test_rating_data_pipeline_nosave(data_dir, ratingdata):
     flow = gen_pipeline()
     output = run_pipeline(
         flow=flow,
-        data_dir=data_dir / Path("2018-19"),
-        output_dir=data_dir / Path("2018-19"),
+        data_dir=str(data_dir / "2018-19"),
+        output_dir=str(data_dir / "2018-19"),
         save_data=False,
         mode="rating",
         Season="2018-19",
@@ -164,7 +164,7 @@ def test_rating_data_pipeline_save(data_dir, ratingdata, tmpdir):
     flow = gen_pipeline()
     run_pipeline(
         flow=flow,
-        data_dir=data_dir / Path("2018-19"),
+        data_dir=str(data_dir / "2018-19"),
         output_dir=str(location),
         save_data=True,
         mode="rating",

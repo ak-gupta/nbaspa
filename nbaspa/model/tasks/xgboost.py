@@ -2,7 +2,6 @@
 
 from typing import Dict, Optional
 
-import numpy as np
 import pandas as pd
 from prefect import Task
 import xgboost as xgb
@@ -13,7 +12,7 @@ from .meta import META
 class FitXGBoost(Task):
     """Fit the XGBoost model."""
 
-    def run(
+    def run(  # type: ignore
         self,
         train_data: pd.DataFrame,
         params: Optional[Dict] = None,
@@ -60,7 +59,8 @@ class FitXGBoost(Task):
 
         self.logger.info("Training the model...")
         initial_params = {"objective": "survival:cox", "seed": seed}
-        initial_params.update(params)
+        if params is not None:
+            initial_params.update(params)
         model = xgb.train(initial_params, dtrain, evals=evals, **kwargs)
         self.logger.info("Model training complete...")
 

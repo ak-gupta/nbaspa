@@ -34,8 +34,8 @@ def model(data_dir, output_dir, season):
         calls.append(
             {
                 "flow": flow,
-                "data_dir": Path(data_dir, season),
-                "output_dir": Path(output_dir, season),
+                "data_dir": str(Path(data_dir, season)),
+                "output_dir": str(Path(output_dir, season)),
                 "save_data": True,
                 "mode": "model",
                 "Season": season,
@@ -89,8 +89,8 @@ def rating(data_dir, output_dir, season):
         calls.append(
             {
                 "flow": flow,
-                "data_dir": Path(data_dir, season),
-                "output_dir": Path(output_dir, season),
+                "data_dir": str(Path(data_dir, season)),
+                "output_dir": str(Path(output_dir, season)),
                 "save_data": True,
                 "mode": "rating",
                 "Season": season,

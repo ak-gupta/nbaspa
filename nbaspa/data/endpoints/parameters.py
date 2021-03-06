@@ -20,7 +20,7 @@ else:
 SEASONS: Dict = {
     "2015-16": {
         "START": datetime.datetime.strptime("2015-10-27", "%Y-%m-%d"),
-        "END": datetime.datetime.strptime("2016-04-13", "%Y-%m-%d")
+        "END": datetime.datetime.strptime("2016-04-13", "%Y-%m-%d"),
     },
     "2016-17": {
         "START": datetime.datetime.strptime("2016-10-25", "%Y-%m-%d"),
@@ -179,7 +179,7 @@ class ParameterValues:
         pass
 
     @property
-    def PORound(self) -> Set[str]:
+    def PORound(self) -> Set[int]:
         """The playoff round.
 
         0 indicates all rounds, 1 retrieves the first round, etc.
@@ -207,12 +207,12 @@ class ParameterValues:
         return {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
     @property
-    def StartPeriod(self) -> Set[str]:
+    def StartPeriod(self) -> Set[int]:
         """Restrict the start of the data pull."""
         return self.Period
 
     @property
-    def EndPeriod(self) -> Set[str]:
+    def EndPeriod(self) -> Set[int]:
         """Restrict the end of the data pull."""
         return self.Period
 
@@ -365,12 +365,12 @@ class ParameterValues:
         pass
 
     @property
-    def TeamID(self) -> Set[str]:
+    def TeamID(self) -> Set[int]:
         """Unique team-level identifier."""
         return set([0] + [idval for idval in range(1610612737, 1610612767)])
 
     @property
-    def OpponentTeamID(self) -> Set[str]:
+    def OpponentTeamID(self) -> Set[int]:
         """Opponent TeamID."""
         return self.TeamID
 

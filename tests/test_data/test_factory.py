@@ -45,7 +45,7 @@ def test_get(mock_sess):
     factory.get()
     end = datetime.datetime.now()
 
-    assert (end - start).seconds >= 55
+    assert (end - start).seconds >= 50
 
     mock_sess.assert_has_calls(
         [

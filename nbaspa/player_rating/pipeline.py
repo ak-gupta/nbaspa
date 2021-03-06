@@ -2,11 +2,8 @@
 
 from typing import Optional
 
-from prefect import case, Flow, Parameter
+from prefect import Flow, Parameter
 from prefect.engine.state import State
-from prefect.tasks.control_flow import merge
-
-import pandas as pd
 
 from .tasks import (
     AggregateImpact,
@@ -62,7 +59,7 @@ def run_pipeline(
     output_dir: str,
     GameID: str,
     filesystem: Optional[str] = "file",
-) -> State:
+) -> Optional[State]:
     """Run the pipeline.
 
     Parameters
