@@ -19,21 +19,25 @@ else:
 
 SEASONS: Dict = {
     "2015-16": {
-        "START": datetime.datetime.strptime("2015-10-27", "%Y-%m-%d"),
-        "END": datetime.datetime.strptime("2016-04-13", "%Y-%m-%d"),
+        "START": datetime.datetime(year=2015, month=10, day=27),
+        "END": datetime.datetime(year=2016, month=4, day=13),
     },
     "2016-17": {
-        "START": datetime.datetime.strptime("2016-10-25", "%Y-%m-%d"),
-        "END": datetime.datetime.strptime("2017-04-12", "%Y-%m-%d"),
+        "START": datetime.datetime(year=2016, month=10, day=25),
+        "END": datetime.datetime(year=2017, month=4, day=12),
     },
     "2017-18": {
-        "START": datetime.datetime.strptime("2017-10-17", "%Y-%m-%d"),
-        "END": datetime.datetime.strptime("2018-04-11", "%Y-%m-%d"),
+        "START": datetime.datetime(year=2017, month=10, day=17),
+        "END": datetime.datetime(year=2018, month=4, day=11),
     },
     "2018-19": {
-        "START": datetime.datetime.strptime("2018-10-16", "%Y-%m-%d"),
-        "END": datetime.datetime.strptime("2019-04-10", "%Y-%m-%d"),
+        "START": datetime.datetime(year=2018, month=10, day=16),
+        "END": datetime.datetime(year=2019, month=4, day=10),
     },
+    "2019-20": {
+        "START": datetime.datetime(year=2019, month=10, day=22),
+        "END": datetime.datetime(year=2020, month=3, day=10)
+    }
 }
 
 
