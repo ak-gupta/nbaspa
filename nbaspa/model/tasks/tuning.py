@@ -19,10 +19,10 @@ DEFAULT_LIFELINES_SPACE: Dict = {
 
 DEFAULT_XGBOOST_SPACE: Dict = {
     "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01),
-    "subsample": hp.uniform("subsample", 0.85, 0.95),
-    "max_delta_step": hp.quniform("max_delta_step", 5, 9, 1),
-    "max_depth": hp.quniform("max_depth", 2, 5, 1),
-    "gamma": hp.uniform("gamma", 6, 7),
+    "subsample": hp.uniform("subsample", 0.8, 1),
+    "max_delta_step": hp.uniform("max_delta_step", 0, 2),
+    "max_depth": hp.quniform("max_depth", 2, 10, 1),
+    "gamma": hp.uniform("gamma", 0, 9),
     "reg_alpha": hp.uniform("reg_alpha", 0, 1),
     "reg_lambda": hp.uniform("reg_lambda", 0, 1),
     "colsample_bytree": hp.uniform("colsample_bytree", 0.2, 0.6),
@@ -150,9 +150,14 @@ class XGBoostTuning(Task):
         train = train_data.copy()
         train.loc[train[META["event"]] == 0, "stop"] = -train["stop"]
         dtrain = xgb.DMatrix(train[META["static"] + META["dynamic"]], train["stop"])
+        tune = tune_data.copy()
+        tune.loc[tune[META["event"]] == 0, "stop"] = -tune["stop"]
+        dtune = xgb.DMatrix(tune[META["static"] + META["dynamic"]], tune["stop"])
+
         evals = [
-            (dtrain, "train"),
+            (dtrain, "train"), (dtune, "tune")
         ]
+
         if stopping_data is not None:
             self.logger.info("Converting stopping data to ``xgb.DMatrix``")
             stop = stopping_data.copy()
@@ -160,20 +165,18 @@ class XGBoostTuning(Task):
             dstop = xgb.DMatrix(stop[META["static"] + META["dynamic"]], stop["stop"])
             evals.append((dstop, "stopping"))
 
-        tune = tune_data.copy()
-        tune.loc[tune[META["event"]] == 0, "stop"] = -tune["stop"]
-        dtune = xgb.DMatrix(tune[META["static"] + META["dynamic"]], tune["stop"])
 
         # Create an internal function for fitting, trainin, evaluating
         def func(params):
-            model = xgb.train(
+            progress = {}
+            _ = xgb.train(
                 {
                     "learning_rate": params["learning_rate"],
                     "subsample": params["subsample"],
                     "max_delta_step": params["max_delta_step"],
                     "max_depth": int(params["max_depth"]),
                     "gamma": params["gamma"],
-                    "reg_alpha": int(params["reg_alpha"]),
+                    "reg_alpha": params["reg_alpha"],
                     "reg_lambda": params["reg_lambda"],
                     "colsample_bytree": params["colsample_bytree"],
                     "min_child_weight": int(params["min_child_weight"]),
@@ -181,14 +184,12 @@ class XGBoostTuning(Task):
                 },
                 dtrain,
                 evals=evals,
+                evals_result=progress,
                 **kwargs,
             )
-            predt = model.predict(dtune)
 
             return {
-                "loss": -concordance_index(
-                    tune_data["stop"], -predt, tune_data[META["event"]]
-                ),
+                "loss": progress["tune"]["cox-nloglik"][-1],
                 "status": STATUS_OK,
             }
 
