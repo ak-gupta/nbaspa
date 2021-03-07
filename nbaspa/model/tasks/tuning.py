@@ -18,15 +18,15 @@ DEFAULT_LIFELINES_SPACE: Dict = {
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
-    "learning_rate": hp.uniform("learning_rate", 0.05, 0.5),
-    "subsample": hp.uniform("subsample", 0.8, 1),
-    "max_delta_step": hp.quniform("max_delta_step", 0, 10, 1),
-    "max_depth": hp.quniform("max_depth", 2, 20, 1),
-    "gamma": hp.uniform("gamma", 5, 9),
-    "reg_alpha": hp.quniform("reg_alpha", 0, 50, 1),
+    "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01),
+    "subsample": hp.uniform("subsample", 0.85, 0.95),
+    "max_delta_step": hp.quniform("max_delta_step", 5, 9, 1),
+    "max_depth": hp.quniform("max_depth", 2, 5, 1),
+    "gamma": hp.uniform("gamma", 6, 7),
+    "reg_alpha": hp.uniform("reg_alpha", 0, 1),
     "reg_lambda": hp.uniform("reg_lambda", 0, 1),
     "colsample_bytree": hp.uniform("colsample_bytree", 0.2, 0.6),
-    "min_child_weight": hp.quniform("min_child_weight", 0, 10, 1),
+    "min_child_weight": hp.quniform("min_child_weight", 0, 9, 1),
 }
 
 
@@ -168,6 +168,9 @@ class XGBoostTuning(Task):
         def func(params):
             model = xgb.train(
                 {
+                    "learning_rate": params["learning_rate"],
+                    "subsample": params["subsample"],
+                    "max_delta_step": params["max_delta_step"],
                     "max_depth": int(params["max_depth"]),
                     "gamma": params["gamma"],
                     "reg_alpha": int(params["reg_alpha"]),
@@ -202,7 +205,6 @@ class XGBoostTuning(Task):
         for param in [
             "max_delta_step",
             "max_depth",
-            "reg_alpha",
             "min_child_weight",
         ]:
             best[param] = int(best[param])
