@@ -105,11 +105,11 @@ class PlotTuning(Task):
         params = set(trials.trials[0]["misc"]["vals"].keys())
         # Parse trials object
         data = {
-            "trial": [trial["tid"] for trial in trials.trials],
-            "loss": [trial["result"]["loss"] for trial in trials.trials],
+            "trial": [trial["tid"] for trial in trials.trials if "loss" in trial.get("result", {})],
+            "loss": [trial["result"]["loss"] for trial in trials.trials if "loss" in trial.get("result", {})],
         }
         for param in params:
-            data[param] = [trial["misc"]["vals"][param][0] for trial in trials.trials]
+            data[param] = [trial["misc"]["vals"][param][0] for trial in trials.trials if "loss" in trial.get("result", {})]
 
         df = pd.DataFrame(data)
         df["best"] = False

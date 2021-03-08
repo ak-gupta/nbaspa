@@ -22,10 +22,10 @@ DEFAULT_XGBOOST_SPACE: Dict = {
     "subsample": hp.uniform("subsample", 0.8, 1),
     "max_delta_step": hp.uniform("max_delta_step", 0, 2),
     "max_depth": hp.quniform("max_depth", 2, 10, 1),
-    "gamma": hp.uniform("gamma", 0, 9),
+    "gamma": hp.uniform("gamma", 0, 1),
     "reg_alpha": hp.uniform("reg_alpha", 0, 1),
     "reg_lambda": hp.uniform("reg_lambda", 0, 1),
-    "colsample_bytree": hp.uniform("colsample_bytree", 0.2, 0.6),
+    "colsample_bytree": hp.uniform("colsample_bytree", 0.45, 0.75),
     "min_child_weight": hp.quniform("min_child_weight", 0, 9, 1),
 }
 
@@ -111,6 +111,8 @@ class LifelinesTuning(Task):
 
 class XGBoostTuning(Task):
     """Use ``hyperopt`` to choose ``xgboost`` hyperparameters."""
+    best_: Dict = None
+    metric_: float = 0.0
 
     def run(  # type: ignore
         self,
@@ -150,13 +152,8 @@ class XGBoostTuning(Task):
         train = train_data.copy()
         train.loc[train[META["event"]] == 0, "stop"] = -train["stop"]
         dtrain = xgb.DMatrix(train[META["static"] + META["dynamic"]], train["stop"])
-        tune = tune_data.copy()
-        tune.loc[tune[META["event"]] == 0, "stop"] = -tune["stop"]
-        dtune = xgb.DMatrix(tune[META["static"] + META["dynamic"]], tune["stop"])
 
-        evals = [
-            (dtrain, "train"), (dtune, "tune")
-        ]
+        evals = [(dtrain, "train")]
 
         if stopping_data is not None:
             self.logger.info("Converting stopping data to ``xgb.DMatrix``")
@@ -165,11 +162,13 @@ class XGBoostTuning(Task):
             dstop = xgb.DMatrix(stop[META["static"] + META["dynamic"]], stop["stop"])
             evals.append((dstop, "stopping"))
 
+        tune = tune_data.copy()
+        tune.loc[tune[META["event"]] == 0, "stop"] = -tune["stop"]
+        dtune = xgb.DMatrix(tune[META["static"] + META["dynamic"]], tune["stop"])
 
         # Create an internal function for fitting, trainin, evaluating
         def func(params):
-            progress = {}
-            _ = xgb.train(
+            model = xgb.train(
                 {
                     "learning_rate": params["learning_rate"],
                     "subsample": params["subsample"],
@@ -184,30 +183,40 @@ class XGBoostTuning(Task):
                 },
                 dtrain,
                 evals=evals,
-                evals_result=progress,
                 **kwargs,
             )
+            predt = model.predict(dtune)
+            metric = -concordance_index(
+                tune_data["stop"], -predt, tune_data[META["event"]]
+            )
+            if metric < self.metric_:
+                self.metric_ = metric
+                self.best_ = params
 
             return {
-                "loss": progress["tune"]["cox-nloglik"][-1],
+                "loss": metric,
                 "status": STATUS_OK,
             }
 
         # Run the hyperparameter tuning
         trials = Trials()
-        best = fmin(
-            func,
-            param_space,
-            algo=tpe.suggest,
-            max_evals=max_evals,
-            trials=trials,
-            rstate=np.random.RandomState(seed),
-        )
-        for param in [
-            "max_delta_step",
-            "max_depth",
-            "min_child_weight",
-        ]:
-            best[param] = int(best[param])
+        try:
+            fmin(
+                func,
+                param_space,
+                algo=tpe.suggest,
+                max_evals=max_evals,
+                trials=trials,
+                rstate=np.random.RandomState(seed),
+            )
+        except KeyboardInterrupt:
+            self.logger.warning("Interrupted... Returning current results.")
+        finally:
+            for param in [
+                "max_delta_step",
+                "max_depth",
+                "min_child_weight",
+            ]:
+                self.best_[param] = int(self.best_[param])
 
-        return {"best": best, "trials": trials}
+        return {"best": self.best_, "trials": trials}
