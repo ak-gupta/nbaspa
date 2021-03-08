@@ -18,14 +18,14 @@ DEFAULT_LIFELINES_SPACE: Dict = {
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
-    "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01),
-    "subsample": hp.uniform("subsample", 0.8, 1),
-    "max_delta_step": hp.uniform("max_delta_step", 0, 2),
+    "learning_rate": hp.uniform("learning_rate", 0.0001, 0.1),
+    "subsample": hp.uniform("subsample", 0, 1),
+    "max_delta_step": hp.uniform("max_delta_step", 0, 9),
     "max_depth": hp.quniform("max_depth", 2, 10, 1),
-    "gamma": hp.uniform("gamma", 0, 1),
+    "gamma": hp.uniform("gamma", 0, 10),
     "reg_alpha": hp.uniform("reg_alpha", 0, 1),
     "reg_lambda": hp.uniform("reg_lambda", 0, 1),
-    "colsample_bytree": hp.uniform("colsample_bytree", 0.45, 0.75),
+    "colsample_bytree": hp.uniform("colsample_bytree", 0.0001, 1),
     "min_child_weight": hp.quniform("min_child_weight", 0, 9, 1),
 }
 
@@ -112,7 +112,7 @@ class LifelinesTuning(Task):
 class XGBoostTuning(Task):
     """Use ``hyperopt`` to choose ``xgboost`` hyperparameters."""
     best_: Dict = None
-    metric_: float = 0.0
+    metric_: float = 1e20
 
     def run(  # type: ignore
         self,
@@ -152,8 +152,11 @@ class XGBoostTuning(Task):
         train = train_data.copy()
         train.loc[train[META["event"]] == 0, "stop"] = -train["stop"]
         dtrain = xgb.DMatrix(train[META["static"] + META["dynamic"]], train["stop"])
+        tune = tune_data.copy()
+        tune.loc[tune[META["event"]] == 0, "stop"] = -tune["stop"]
+        dtune = xgb.DMatrix(tune[META["static"] + META["dynamic"]], tune["stop"])
 
-        evals = [(dtrain, "train")]
+        evals = [(dtrain, "train"), (dtune, "tune")]
 
         if stopping_data is not None:
             self.logger.info("Converting stopping data to ``xgb.DMatrix``")
@@ -162,12 +165,10 @@ class XGBoostTuning(Task):
             dstop = xgb.DMatrix(stop[META["static"] + META["dynamic"]], stop["stop"])
             evals.append((dstop, "stopping"))
 
-        tune = tune_data.copy()
-        tune.loc[tune[META["event"]] == 0, "stop"] = -tune["stop"]
-        dtune = xgb.DMatrix(tune[META["static"] + META["dynamic"]], tune["stop"])
 
         # Create an internal function for fitting, trainin, evaluating
         def func(params):
+            progress = {}
             model = xgb.train(
                 {
                     "learning_rate": params["learning_rate"],
@@ -183,18 +184,17 @@ class XGBoostTuning(Task):
                 },
                 dtrain,
                 evals=evals,
+                evals_result=progress,
+                verbose_eval=False,
                 **kwargs,
             )
-            predt = model.predict(dtune)
-            metric = -concordance_index(
-                tune_data["stop"], -predt, tune_data[META["event"]]
-            )
-            if metric < self.metric_:
-                self.metric_ = metric
+
+            if progress["tune"]["cox-nloglik"][-1] < self.metric_:
+                self.metric_ = progress["tune"]["cox-nloglik"][-1]
                 self.best_ = params
 
             return {
-                "loss": metric,
+                "loss": progress["tune"]["cox-nloglik"][-1],
                 "status": STATUS_OK,
             }
 

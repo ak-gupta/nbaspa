@@ -81,35 +81,10 @@ class WinProbability(Task):
         np.ndarray
             The updated dataset.
         """
-        # Get the cumulative hazard using ``lifelines``
         # First, get the partial hazard values
         hazard = model.predict(xgb.DMatrix(data[META["static"] + META["dynamic"]]))
-        # Get the unique failure times
-        unique_death_times = np.unique(
-            data.loc[data[META["event"]] == 1, "stop"].values
-        )
-        baseline_hazard_ = pd.DataFrame(
-            np.zeros_like(unique_death_times),
-            index=unique_death_times,
-            columns=["baseline hazard"],
-        )
-
-        for t in unique_death_times:
-            ix = (data["start"].values < t) & (t <= data["stop"].values)
-
-            events_at_t = data[META["event"]].values[ix]
-            stops_at_t = data["stop"].values[ix]
-            hazards_at_t = hazard[ix]
-
-            deaths = events_at_t & (stops_at_t == t)
-
-            death_counts = deaths.sum()
-            baseline_hazard_.loc[t] = death_counts / hazards_at_t.sum()
-
-        cumulative_hazard_ = baseline_hazard_.cumsum()
-
         # Get the cumulative probability
-        c0 = interpolate_at_times(cumulative_hazard_, data["stop"].values)
+        c0 = interpolate_at_times(model.cumulative_hazard_, data["stop"].values)
         new = data.copy()
         new[META["survival"]] = 1 - np.exp(-(c0 * hazard))
 
