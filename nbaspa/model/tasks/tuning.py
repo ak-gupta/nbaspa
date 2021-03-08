@@ -168,7 +168,6 @@ class XGBoostTuning(Task):
 
         # Create an internal function for fitting, trainin, evaluating
         def func(params):
-            progress = {}
             model = xgb.train(
                 {
                     "learning_rate": params["learning_rate"],
@@ -184,17 +183,20 @@ class XGBoostTuning(Task):
                 },
                 dtrain,
                 evals=evals,
-                evals_result=progress,
                 verbose_eval=False,
                 **kwargs,
             )
+            predt = model.predict(dtune)
+            metric = -concordance_index(
+                tune_data["stop"], -predt, tune_data[META["event"]]
+            )
 
-            if progress["tune"]["cox-nloglik"][-1] < self.metric_:
-                self.metric_ = progress["tune"]["cox-nloglik"][-1]
+            if metric < self.metric_:
+                self.metric_ = metric
                 self.best_ = params
 
             return {
-                "loss": progress["tune"]["cox-nloglik"][-1],
+                "loss": metric,
                 "status": STATUS_OK,
             }
 
