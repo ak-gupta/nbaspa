@@ -37,9 +37,9 @@ Overall, the average AUROC lift for each model is summarized below:
 | Model     | Lift    |
 |           |         |
 +===========+=========+
-| XGBoost   | -0.0545 |
+| XGBoost   | 0.00149 |
 +-----------+---------+
-| Lifelines | 0.00417 |
+| Lifelines | 0.00437 |
 +-----------+---------+
 
 ---------------------
