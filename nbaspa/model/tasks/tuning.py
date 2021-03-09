@@ -32,7 +32,8 @@ DEFAULT_XGBOOST_SPACE: Dict = {
 
 class LifelinesTuning(Task):
     """Use ``hyperopt`` to choose ``lifelines`` hyperparameters."""
-    best_: Dict = None
+
+    best_: Dict = {}
     metric_: float = 1e20
 
     def run(  # type: ignore
@@ -90,7 +91,7 @@ class LifelinesTuning(Task):
 
             if metric < self.metric_:
                 self.metric_ = metric
-                self.best_ = params
+                self.best_.update(params)
 
             return {
                 "loss": metric,
@@ -122,7 +123,8 @@ class LifelinesTuning(Task):
 
 class XGBoostTuning(Task):
     """Use ``hyperopt`` to choose ``xgboost`` hyperparameters."""
-    best_: Dict = None
+
+    best_: Dict = {}
     metric_: float = 1e20
 
     def run(  # type: ignore
@@ -176,7 +178,6 @@ class XGBoostTuning(Task):
             dstop = xgb.DMatrix(stop[META["static"] + META["dynamic"]], stop["stop"])
             evals.append((dstop, "stopping"))
 
-
         # Create an internal function for fitting, trainin, evaluating
         def func(params):
             model = xgb.train(
@@ -204,7 +205,7 @@ class XGBoostTuning(Task):
 
             if metric < self.metric_:
                 self.metric_ = metric
-                self.best_ = params
+                self.best_.update(params)
 
             return {
                 "loss": metric,

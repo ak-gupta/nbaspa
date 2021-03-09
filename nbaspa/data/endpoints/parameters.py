@@ -36,8 +36,8 @@ SEASONS: Dict = {
     },
     "2019-20": {
         "START": datetime.datetime(year=2019, month=10, day=22),
-        "END": datetime.datetime(year=2020, month=3, day=10)
-    }
+        "END": datetime.datetime(year=2020, month=3, day=10),
+    },
 }
 
 

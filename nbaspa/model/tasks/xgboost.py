@@ -2,7 +2,6 @@
 
 from typing import Dict, Optional
 
-from lifelines.utils import interpolate_at_times
 import numpy as np
 import pandas as pd
 from prefect import Task

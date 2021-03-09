@@ -6,10 +6,9 @@ Performance
 Overview
 --------
 
-* The XGBoost model is underperforming relative to expectation. Hyperparameter tuning is
-  one potential source of improvement; another source is additional data.
-* The Lifelines model closely mirrors the performance of the NBA model, with a noticeable
-  advantage in pre-game prediction.
+* The XGBoost and Lifelines models are performing similarly.
+* Both models perform similarly to the NBA's win probability, with a noticeable uptick in
+  pre-game performance.
 
 -----------
 Performance
@@ -17,7 +16,7 @@ Performance
 
 .. important::
 
-    At this time the models have been trained on the 2016-17, 2017-18, and 2018-19 seasons.
+    At this time the models have been trained on the 2015-16, 2016-17, 2017-18, and 2018-19 seasons.
 
 Figure 1 shows the AUROC over game-time for each model.
 
@@ -48,14 +47,14 @@ Hyperparameter tuning
 ---------------------
 
 Figure 3 shows the hyperparameter tuning results for the ``lifelines`` model. The tuning was done
-using 100 evaluations.
+using 1 000 evaluations.
 
 .. image:: ../_static/lifelines-tuning.png
     :align: center
     :alt: Figure 3
 
 Figure 4 shows the hyperparameter tuning results for the ``xgboost`` model. The tuning was done
-using 300 evaluations.
+using 10 000 evaluations.
 
 .. image:: ../_static/xgboost-tuning.png
     :align: center
