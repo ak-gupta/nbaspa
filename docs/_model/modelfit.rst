@@ -60,7 +60,31 @@ We will use the following hyperparameter search space for the ``lifelines`` mode
 XGBoost
 ~~~~~~~
 
-Details coming soon.
+Based on discussions with `heytheredli <>`_ and iteratively limiting the range for each parameter
+to maximize the effectiveness of the search, we used the following space:
+
++----------------------+---------------------------+
+| Hyperparameter       | Search space              |
+|                      |                           |
++======================+===========================+
+| ``learning_rate``    | :math:`Unif(0.0001, 0.1)` |
++----------------------+---------------------------+
+| ``subsample``        | :math:`Unif(0, 1)`        |
++----------------------+---------------------------+
+| ``max_delta_step``   | :math:`Unif(0, 1)`        |
++----------------------+---------------------------+
+| ``max_depth``        | :math:`QUnif(2, 10, 1)`   |
++----------------------+---------------------------+
+| ``gamma``            | :math:`Unif(0, 10)`       |
++----------------------+---------------------------+
+| ``reg_alpha``        | :math:`Unif(0, 1)`        |
++----------------------+---------------------------+
+| ``reg_lambda``       | :math:`Unif(0, 1)`        |
++----------------------+---------------------------+
+| ``colsample_bytree`` | :math:`Unif(0.0001, 1)`   |
++----------------------+---------------------------+
+| ``min_child_weight`` | :math:`QUnif(0, 9, 1)`    |
++----------------------+---------------------------+
 
 ----------------
 Model evaluation
