@@ -36,10 +36,8 @@ def test_lifelines_tuning(survivaldata):
     assert len(output["trials"].trials) <= 10
     assert "l1_ratio" in output["best"]
     assert "penalizer" in output["best"]
-    assert output["best"]["l1_ratio"] >= 0.0
-    assert output["best"]["l1_ratio"] <= 1.0
-    assert output["best"]["penalizer"] >= 0.0
-    assert output["best"]["penalizer"] <= 1.0
+    assert hasattr(tsk, "best_")
+    assert hasattr(tsk, "metric_")
 
 def test_xgboost_tuning(survivaldata):
     """Test running hyperparameter tuning with XGBoost."""
@@ -54,21 +52,14 @@ def test_xgboost_tuning(survivaldata):
 
     assert isinstance(output, dict)
     assert len(output["trials"].trials) <= 10
-    assert output["best"]["learning_rate"] >= 0.05
-    assert output["best"]["learning_rate"] <= 0.5
-    assert output["best"]["subsample"] >= 0.8
-    assert output["best"]["subsample"] <= 1.0
-    assert output["best"]["max_delta_step"] >= 0
-    assert output["best"]["max_delta_step"] <= 10
-    assert output["best"]["max_depth"] >= 2
-    assert output["best"]["max_depth"] <= 20
-    assert output["best"]["gamma"] >= 5
-    assert output["best"]["gamma"] <= 9
-    assert output["best"]["reg_alpha"] >= 0
-    assert output["best"]["reg_alpha"] <= 50
-    assert output["best"]["reg_lambda"] >= 0.0
-    assert output["best"]["reg_lambda"] <= 1
-    assert output["best"]["colsample_bytree"] >= 0.2
-    assert output["best"]["colsample_bytree"] <= 0.6
-    assert output["best"]["min_child_weight"] >= 0
-    assert output["best"]["min_child_weight"] <= 10
+    assert hasattr(tsk, "best_")
+    assert hasattr(tsk, "metric_")
+    assert "learning_rate" in output["best"]
+    assert "subsample" in output["best"]
+    assert "max_delta_step" in output["best"]
+    assert "max_depth" in output["best"]
+    assert "gamma" in output["best"]
+    assert "reg_alpha" in output["best"]
+    assert "reg_lambda" in output["best"]
+    assert "colsample_bytree" in output["best"]
+    assert "min_child_weight" in output["best"]
