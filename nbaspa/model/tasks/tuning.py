@@ -18,20 +18,23 @@ DEFAULT_LIFELINES_SPACE: Dict = {
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
-    "learning_rate": hp.uniform("learning_rate", 0.05, 0.5),
-    "subsample": hp.uniform("subsample", 0.8, 1),
-    "max_delta_step": hp.quniform("max_delta_step", 0, 10, 1),
-    "max_depth": hp.quniform("max_depth", 2, 20, 1),
-    "gamma": hp.uniform("gamma", 5, 9),
-    "reg_alpha": hp.quniform("reg_alpha", 0, 50, 1),
+    "learning_rate": hp.uniform("learning_rate", 0.0001, 0.1),
+    "subsample": hp.uniform("subsample", 0, 1),
+    "max_delta_step": hp.uniform("max_delta_step", 0, 9),
+    "max_depth": hp.quniform("max_depth", 2, 10, 1),
+    "gamma": hp.uniform("gamma", 0, 10),
+    "reg_alpha": hp.uniform("reg_alpha", 0, 1),
     "reg_lambda": hp.uniform("reg_lambda", 0, 1),
-    "colsample_bytree": hp.uniform("colsample_bytree", 0.2, 0.6),
-    "min_child_weight": hp.quniform("min_child_weight", 0, 10, 1),
+    "colsample_bytree": hp.uniform("colsample_bytree", 0.0001, 1),
+    "min_child_weight": hp.quniform("min_child_weight", 0, 9, 1),
 }
 
 
 class LifelinesTuning(Task):
     """Use ``hyperopt`` to choose ``lifelines`` hyperparameters."""
+
+    best_: Dict = {}
+    metric_: float = 1e20
 
     def run(  # type: ignore
         self,
@@ -82,35 +85,47 @@ class LifelinesTuning(Task):
                 stop_col="stop",
             )
             predt = model.predict_partial_hazard(tune_data)
+            metric = -concordance_index(
+                tune_data["stop"], -predt, tune_data[META["event"]]
+            )
+
+            if metric < self.metric_:
+                self.metric_ = metric
+                self.best_.update(params)
 
             return {
-                "loss": -concordance_index(
-                    tune_data["stop"], -predt, tune_data[META["event"]]
-                ),
+                "loss": metric,
                 "status": STATUS_OK,
             }
 
         # Run the hyperparameter tuning
         trials = Trials()
-        best = fmin(
-            func,
-            param_space,
-            algo=tpe.suggest,
-            max_evals=max_evals,
-            trials=trials,
-            rstate=np.random.RandomState(seed),
-        )
-        best = {**best, **kwargs}
-        self.logger.info(
-            f"The best model uses a ``penalizer`` value of {np.round(best['penalizer'], 3)} "
-            f"and a ``l1_ratio`` value of {np.round(best['l1_ratio'], 3)}"
-        )
+        try:
+            fmin(
+                func,
+                param_space,
+                algo=tpe.suggest,
+                max_evals=max_evals,
+                trials=trials,
+                rstate=np.random.RandomState(seed),
+            )
+        except KeyboardInterrupt:
+            self.logger.warning("Interrupted... Returning current results.")
+        finally:
+            best = {**self.best_, **kwargs}
+            self.logger.info(
+                f"The best model uses a ``penalizer`` value of {np.round(best['penalizer'], 3)} "
+                f"and a ``l1_ratio`` value of {np.round(best['l1_ratio'], 3)}"
+            )
 
         return {"best": best, "trials": trials}
 
 
 class XGBoostTuning(Task):
     """Use ``hyperopt`` to choose ``xgboost`` hyperparameters."""
+
+    best_: Dict = {}
+    metric_: float = 1e20
 
     def run(  # type: ignore
         self,
@@ -150,9 +165,12 @@ class XGBoostTuning(Task):
         train = train_data.copy()
         train.loc[train[META["event"]] == 0, "stop"] = -train["stop"]
         dtrain = xgb.DMatrix(train[META["static"] + META["dynamic"]], train["stop"])
-        evals = [
-            (dtrain, "train"),
-        ]
+        tune = tune_data.copy()
+        tune.loc[tune[META["event"]] == 0, "stop"] = -tune["stop"]
+        dtune = xgb.DMatrix(tune[META["static"] + META["dynamic"]], tune["stop"])
+
+        evals = [(dtrain, "train"), (dtune, "tune")]
+
         if stopping_data is not None:
             self.logger.info("Converting stopping data to ``xgb.DMatrix``")
             stop = stopping_data.copy()
@@ -160,17 +178,16 @@ class XGBoostTuning(Task):
             dstop = xgb.DMatrix(stop[META["static"] + META["dynamic"]], stop["stop"])
             evals.append((dstop, "stopping"))
 
-        tune = tune_data.copy()
-        tune.loc[tune[META["event"]] == 0, "stop"] = -tune["stop"]
-        dtune = xgb.DMatrix(tune[META["static"] + META["dynamic"]], tune["stop"])
-
         # Create an internal function for fitting, trainin, evaluating
         def func(params):
             model = xgb.train(
                 {
+                    "learning_rate": params["learning_rate"],
+                    "subsample": params["subsample"],
+                    "max_delta_step": params["max_delta_step"],
                     "max_depth": int(params["max_depth"]),
                     "gamma": params["gamma"],
-                    "reg_alpha": int(params["reg_alpha"]),
+                    "reg_alpha": params["reg_alpha"],
                     "reg_lambda": params["reg_lambda"],
                     "colsample_bytree": params["colsample_bytree"],
                     "min_child_weight": int(params["min_child_weight"]),
@@ -178,33 +195,42 @@ class XGBoostTuning(Task):
                 },
                 dtrain,
                 evals=evals,
+                verbose_eval=False,
                 **kwargs,
             )
             predt = model.predict(dtune)
+            metric = -concordance_index(
+                tune_data["stop"], -predt, tune_data[META["event"]]
+            )
+
+            if metric < self.metric_:
+                self.metric_ = metric
+                self.best_.update(params)
 
             return {
-                "loss": -concordance_index(
-                    tune_data["stop"], -predt, tune_data[META["event"]]
-                ),
+                "loss": metric,
                 "status": STATUS_OK,
             }
 
         # Run the hyperparameter tuning
         trials = Trials()
-        best = fmin(
-            func,
-            param_space,
-            algo=tpe.suggest,
-            max_evals=max_evals,
-            trials=trials,
-            rstate=np.random.RandomState(seed),
-        )
-        for param in [
-            "max_delta_step",
-            "max_depth",
-            "reg_alpha",
-            "min_child_weight",
-        ]:
-            best[param] = int(best[param])
+        try:
+            fmin(
+                func,
+                param_space,
+                algo=tpe.suggest,
+                max_evals=max_evals,
+                trials=trials,
+                rstate=np.random.RandomState(seed),
+            )
+        except KeyboardInterrupt:
+            self.logger.warning("Interrupted... Returning current results.")
+        finally:
+            for param in [
+                "max_delta_step",
+                "max_depth",
+                "min_child_weight",
+            ]:
+                self.best_[param] = int(self.best_[param])
 
-        return {"best": best, "trials": trials}
+        return {"best": self.best_, "trials": trials}
