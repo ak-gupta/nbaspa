@@ -60,8 +60,9 @@ We will use the following hyperparameter search space for the ``lifelines`` mode
 XGBoost
 ~~~~~~~
 
-Based on discussions with `heytheredli <>`_ and iteratively limiting the range for each parameter
-to maximize the effectiveness of the search, we used the following space:
+Based on discussions with `heytheredli <https://github.com/heytheredli/>`_ and
+iteratively limiting the range for each parameter to maximize the effectiveness
+of the search, we used the following space:
 
 +----------------------+---------------------------+
 | Hyperparameter       | Search space              |
