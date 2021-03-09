@@ -32,6 +32,8 @@ DEFAULT_XGBOOST_SPACE: Dict = {
 
 class LifelinesTuning(Task):
     """Use ``hyperopt`` to choose ``lifelines`` hyperparameters."""
+    best_: Dict = None
+    metric_: float = 1e20
 
     def run(  # type: ignore
         self,
@@ -82,29 +84,38 @@ class LifelinesTuning(Task):
                 stop_col="stop",
             )
             predt = model.predict_partial_hazard(tune_data)
+            metric = -concordance_index(
+                tune_data["stop"], -predt, tune_data[META["event"]]
+            )
+
+            if metric < self.metric_:
+                self.metric_ = metric
+                self.best_ = params
 
             return {
-                "loss": -concordance_index(
-                    tune_data["stop"], -predt, tune_data[META["event"]]
-                ),
+                "loss": metric,
                 "status": STATUS_OK,
             }
 
         # Run the hyperparameter tuning
         trials = Trials()
-        best = fmin(
-            func,
-            param_space,
-            algo=tpe.suggest,
-            max_evals=max_evals,
-            trials=trials,
-            rstate=np.random.RandomState(seed),
-        )
-        best = {**best, **kwargs}
-        self.logger.info(
-            f"The best model uses a ``penalizer`` value of {np.round(best['penalizer'], 3)} "
-            f"and a ``l1_ratio`` value of {np.round(best['l1_ratio'], 3)}"
-        )
+        try:
+            fmin(
+                func,
+                param_space,
+                algo=tpe.suggest,
+                max_evals=max_evals,
+                trials=trials,
+                rstate=np.random.RandomState(seed),
+            )
+        except KeyboardInterrupt:
+            self.logger.warning("Interrupted... Returning current results.")
+        finally:
+            best = {**self.best_, **kwargs}
+            self.logger.info(
+                f"The best model uses a ``penalizer`` value of {np.round(best['penalizer'], 3)} "
+                f"and a ``l1_ratio`` value of {np.round(best['l1_ratio'], 3)}"
+            )
 
         return {"best": best, "trials": trials}
 

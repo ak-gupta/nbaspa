@@ -2,24 +2,30 @@
 
 from unittest.mock import patch
 
+import numpy as np
 import xgboost as xgb
 
 from nbaspa.model.tasks import FitXGBoost, SurvivalData, SegmentData
 
+@patch("xgboost.Booster")
 @patch("xgboost.DMatrix")
 @patch("xgboost.train")
-def test_fit_xgboost(mock_train, mock_dmatrix, data):
+def test_fit_xgboost(mock_train, mock_dmatrix, mock_boos, data):
     """Test fitting an XGBoost model."""
     pre = SurvivalData()
     df = pre.run(data)
     train = df.copy()
     train.loc[train["WIN"] == 0, "stop"] = -train["stop"]
 
+    mock_train.return_value = mock_boos
+    mock_boos.predict.return_value = np.zeros(len(df))
+
     tsk = FitXGBoost()
     _ = tsk.run(train_data=df)
 
     assert mock_dmatrix.call_count == 1
     assert mock_train.call_count == 1
+    assert mock_boos.predict.call_count == 1
 
     args, kwargs = mock_dmatrix.call_args_list[0]
 
@@ -51,9 +57,10 @@ def test_fit_xgboost(mock_train, mock_dmatrix, data):
     assert args[1] == mock_dmatrix.return_value
     assert kwargs["evals"] == [(mock_dmatrix.return_value, "train")]
 
+@patch("xgboost.Booster")
 @patch("xgboost.DMatrix")
 @patch("xgboost.train")
-def test_fit_xgboost_stopping(mock_train, mock_dmatrix, data):
+def test_fit_xgboost_stopping(mock_train, mock_dmatrix, mock_boos, data):
     """Test fitting an XGBoost model."""
     ranged = SurvivalData()
     df = ranged.run(data)
@@ -63,6 +70,9 @@ def test_fit_xgboost_stopping(mock_train, mock_dmatrix, data):
     train.loc[train["WIN"] == 0, "stop"] = -train["stop"]
     stop = segdata["stop"].copy()
     stop.loc[stop["WIN"] == 0, "stop"] = -stop["stop"]
+
+    mock_train.return_value = mock_boos
+    mock_boos.predict.return_value = np.zeros(len(train))
 
     tsk = FitXGBoost()
     _ = tsk.run(
@@ -74,6 +84,7 @@ def test_fit_xgboost_stopping(mock_train, mock_dmatrix, data):
 
     assert mock_dmatrix.call_count == 2
     assert mock_train.call_count == 1
+    assert mock_boos.predict.call_count == 1
 
     targs, _ = mock_dmatrix.call_args_list[0]
 
