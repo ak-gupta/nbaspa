@@ -1,8 +1,9 @@
 """Hyperparameter tuning tasks."""
 
+from pprint import pformat
 from typing import Dict, Optional
 
-from hyperopt import fmin, hp, STATUS_OK, tpe, Trials
+from hyperopt import fmin, hp, STATUS_OK, atpe, Trials
 from lifelines import CoxTimeVaryingFitter
 from lifelines.utils import concordance_index
 import numpy as np
@@ -18,14 +19,14 @@ DEFAULT_LIFELINES_SPACE: Dict = {
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
-    "learning_rate": hp.uniform("learning_rate", 0.0001, 0.1),
-    "subsample": hp.uniform("subsample", 0, 1),
+    "learning_rate": hp.uniform("learning_rate", 0.001, 0.01),
+    "subsample": hp.uniform("subsample", 0.5, 0.9),
     "max_delta_step": hp.uniform("max_delta_step", 0, 9),
     "max_depth": hp.quniform("max_depth", 2, 10, 1),
     "gamma": hp.uniform("gamma", 0, 10),
     "reg_alpha": hp.uniform("reg_alpha", 0, 1),
     "reg_lambda": hp.uniform("reg_lambda", 0, 1),
-    "colsample_bytree": hp.uniform("colsample_bytree", 0.0001, 1),
+    "colsample_bytree": hp.uniform("colsample_bytree", 0.5, 0.9),
     "min_child_weight": hp.quniform("min_child_weight", 0, 9, 1),
 }
 
@@ -104,7 +105,7 @@ class LifelinesTuning(Task):
             fmin(
                 func,
                 param_space,
-                algo=tpe.suggest,
+                algo=atpe.suggest,
                 max_evals=max_evals,
                 trials=trials,
                 rstate=np.random.RandomState(seed),
@@ -114,8 +115,7 @@ class LifelinesTuning(Task):
         finally:
             best = {**self.best_, **kwargs}
             self.logger.info(
-                f"The best model uses a ``penalizer`` value of {np.round(best['penalizer'], 3)} "
-                f"and a ``l1_ratio`` value of {np.round(best['l1_ratio'], 3)}"
+                f"The best model has the following parameter values:\n\n{pformat(best)}\n"
             )
 
         return {"best": best, "trials": trials}
@@ -206,6 +206,9 @@ class XGBoostTuning(Task):
             if metric < self.metric_:
                 self.metric_ = metric
                 self.best_.update(params)
+                self.logger.info(
+                    f"New best metric value of {self.metric_} with \n\n{pformat(self.best_)}\n"
+                )
 
             return {
                 "loss": metric,
@@ -218,7 +221,7 @@ class XGBoostTuning(Task):
             fmin(
                 func,
                 param_space,
-                algo=tpe.suggest,
+                algo=atpe.suggest,
                 max_evals=max_evals,
                 trials=trials,
                 rstate=np.random.RandomState(seed),
@@ -232,5 +235,8 @@ class XGBoostTuning(Task):
                 "min_child_weight",
             ]:
                 self.best_[param] = int(self.best_[param])
+            self.logger.info(
+                f"The best model has the following parameter values:\n\n{pformat(self.best_)}\n"
+            )
 
         return {"best": self.best_, "trials": trials}

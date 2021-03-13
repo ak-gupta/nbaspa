@@ -225,6 +225,7 @@ def gen_xgboost_pipeline() -> Flow:
             stopping_data=stop,
             early_stopping_rounds=25,
             num_boost_round=10000,
+            verbose_eval=False,
         )
 
     return flow

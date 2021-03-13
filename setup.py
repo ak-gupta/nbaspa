@@ -13,6 +13,7 @@ REQUIREMENTS = [
     "fsspec>=0.8.5,<=0.8.5",
     "hyperopt>=0.2.5,<=0.2.5",
     "lifelines>=0.25.9,<=0.25.9",
+    "lightgbm>=3.1.1,<=3.1.1",
     "matplotlib>=3.3.4,<=3.3.4",
     "pandas>=1.2.1,<=1.2.1",
     "prefect>=0.14.5,<=0.14.5",
