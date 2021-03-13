@@ -19,15 +19,15 @@ DEFAULT_LIFELINES_SPACE: Dict = {
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
-    "learning_rate": hp.uniform("learning_rate", 0.001, 0.01),
-    "subsample": hp.uniform("subsample", 0.5, 0.9),
+    "learning_rate": hp.uniform("learning_rate", 0.001, 0.05),
+    "subsample": hp.uniform("subsample", 0.2, 0.9),
     "max_delta_step": hp.uniform("max_delta_step", 0, 9),
     "max_depth": hp.quniform("max_depth", 2, 10, 1),
-    "gamma": hp.uniform("gamma", 0, 10),
+    "gamma": hp.uniform("gamma", 0, 20),
     "reg_alpha": hp.uniform("reg_alpha", 0, 1),
     "reg_lambda": hp.uniform("reg_lambda", 0, 1),
     "colsample_bytree": hp.uniform("colsample_bytree", 0.5, 0.9),
-    "min_child_weight": hp.quniform("min_child_weight", 0, 9, 1),
+    "min_child_weight": hp.quniform("min_child_weight", 0, 20, 1),
 }
 
 
