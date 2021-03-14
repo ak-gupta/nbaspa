@@ -23,7 +23,7 @@ DEFAULT_XGBOOST_SPACE: Dict = {
     "subsample": hp.uniform("subsample", 0.2, 0.9),
     "max_delta_step": hp.uniform("max_delta_step", 0, 9),
     "max_depth": hp.quniform("max_depth", 2, 10, 1),
-    "gamma": hp.uniform("gamma", 0, 20),
+    "gamma": hp.uniform("gamma", 0, 10),
     "reg_alpha": hp.uniform("reg_alpha", 0, 1),
     "reg_lambda": hp.uniform("reg_lambda", 0, 1),
     "colsample_bytree": hp.uniform("colsample_bytree", 0.5, 0.9),
