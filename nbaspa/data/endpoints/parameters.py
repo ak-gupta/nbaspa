@@ -18,6 +18,10 @@ else:
     CURRENT_SEASON_YEAR = str(TODAY.year - 1)
 
 SEASONS: Dict = {
+    "2013-14": {
+        "START": datetime.datetime(year=2013, month=10, day=29),
+        "END": datetime.datetime(year=2014, month=4, day=16)
+    },
     "2014-15": {
         "START": datetime.datetime(year=2014, month=10, day=28),
         "END": datetime.datetime(year=2015, month=4, day=15)
