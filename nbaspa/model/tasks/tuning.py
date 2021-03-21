@@ -27,7 +27,7 @@ DEFAULT_XGBOOST_SPACE: Dict = {
     "reg_alpha": hp.uniform("reg_alpha", 0, 0.5),
     "reg_lambda": hp.uniform("reg_lambda", 0, 0.1),
     "colsample_bytree": hp.uniform("colsample_bytree", 0.85, 0.9),
-    "min_child_weight": hp.quniform("min_child_weight", 10, 20, 1),
+    "min_child_weight": hp.quniform("min_child_weight", 10, 15, 1),
 }
 
 
