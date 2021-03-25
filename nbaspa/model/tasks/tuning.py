@@ -19,14 +19,15 @@ DEFAULT_LIFELINES_SPACE: Dict = {
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
-    "learning_rate": hp.uniform("learning_rate", 0.001, 0.005),
-    "subsample": hp.uniform("subsample", 0.4, 0.5),
-    "max_delta_step": hp.uniform("max_delta_step", 0.5, 1.5),
-    "max_depth": hp.quniform("max_depth", 2, 10, 1),
-    "gamma": hp.uniform("gamma", 10, 11),
-    "reg_alpha": hp.uniform("reg_alpha", 0, 0.5),
-    "reg_lambda": hp.uniform("reg_lambda", 0, 0.1),
-    "colsample_bytree": hp.uniform("colsample_bytree", 0.85, 0.9),
+    "learning_rate": hp.uniform("learning_rate", 0.001, 0.01),
+    "subsample": hp.uniform("subsample", 0.2, 0.4),
+    "max_delta_step": hp.uniform("max_delta_step", 2, 6),
+    "max_depth": hp.quniform("max_depth", 2, 6, 1),
+    "gamma": hp.uniform("gamma", 11, 13),
+    "reg_alpha": hp.uniform("reg_alpha", 0, 1),
+    "reg_lambda": hp.uniform("reg_lambda", 0, 1),
+    "colsample_bytree": hp.uniform("colsample_bytree", 0.8, 0.9),
+    "colsample_bylevel": hp.uniform("colsample_bylevel", 0.8, 0.9),
     "min_child_weight": hp.quniform("min_child_weight", 10, 15, 1),
 }
 
@@ -93,6 +94,9 @@ class LifelinesTuning(Task):
             if metric < self.metric_:
                 self.metric_ = metric
                 self.best_.update(params)
+                self.logger.info(
+                    f"New best metric value of {self.metric_} with \n\n{pformat(self.best_)}\n"
+                )
 
             return {
                 "loss": metric,
@@ -190,6 +194,7 @@ class XGBoostTuning(Task):
                     "reg_alpha": params["reg_alpha"],
                     "reg_lambda": params["reg_lambda"],
                     "colsample_bytree": params["colsample_bytree"],
+                    "colsample_bylevel": params["colsample_bylevel"],
                     "min_child_weight": int(params["min_child_weight"]),
                     "objective": "survival:cox",
                 },
@@ -230,7 +235,6 @@ class XGBoostTuning(Task):
             self.logger.warning("Interrupted... Returning current results.")
         finally:
             for param in [
-                "max_delta_step",
                 "max_depth",
                 "min_child_weight",
             ]:
