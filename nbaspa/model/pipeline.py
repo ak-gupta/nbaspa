@@ -6,7 +6,7 @@ import numpy as np
 import prefect
 from prefect import Flow, Parameter, unmapped
 from prefect.engine.results import LocalResult
-from prefect.engine.serializers import PandasSerializer
+from prefect.engine.serializers import JSONSerializer, PandasSerializer
 from prefect.engine.state import State
 from prefect.tasks.core.operators import GetItem
 
@@ -108,6 +108,15 @@ def gen_lifelines_pipeline() -> Flow:
             dir=".", location="{output_dir}/models/{today}/lifelines/tuning.pkl"
         ),
     )
+    retrieve_best = GetItem(
+        name="Get best parameters",
+        checkpoint=True,
+        result=LocalResult(
+            dir=".",
+            location="{output_dir}/models/{today}/lifelines/params.json",
+            serializer=JSONSerializer()
+        )
+    )
     tuneplots = PlotTuning(
         name="Plot lifelines hyperparameter tuning",
         checkpoint=True,
@@ -143,6 +152,7 @@ def gen_lifelines_pipeline() -> Flow:
         params = tuning(
             train_data=data["train"], tune_data=tune, max_evals=max_evals, seed=seed
         )
+        _ = retrieve_best(task_result=params, key="best")
         tuneplots(params["trials"])
         model_obj = model(params["best"])
         _ = trained(model=model_obj, data=data["train"])
@@ -174,6 +184,15 @@ def gen_xgboost_pipeline() -> Flow:
             dir=".",
             location="{output_dir}/models/{today}/xgboost/tuning.pkl",
         ),
+    )
+    retrieve_best = GetItem(
+        name="Get best parameters",
+        checkpoint=True,
+        result=LocalResult(
+            dir=".",
+            location="{output_dir}/models/{today}/xgboost/params.json",
+            serializer=JSONSerializer()
+        )
     )
     tuneplots = PlotTuning(
         name="Plot XGBoost hyperparameter tuning",
@@ -217,6 +236,7 @@ def gen_xgboost_pipeline() -> Flow:
             max_evals=max_evals,
             seed=seed,
         )
+        _ = retrieve_best(task_result=params, key="best")
         tuneplots(params["trials"])
         # Fit the model
         _ = trained(

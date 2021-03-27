@@ -14,8 +14,8 @@ import xgboost as xgb
 from .meta import META
 
 DEFAULT_LIFELINES_SPACE: Dict = {
-    "penalizer": hp.uniform("penalizer", 0, 1),
-    "l1_ratio": hp.uniform("l1_ratio", 0, 1),
+    "penalizer": hp.uniform("penalizer", 0, 0.1),
+    "l1_ratio": hp.uniform("l1_ratio", 0.5, 1),
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
@@ -23,11 +23,11 @@ DEFAULT_XGBOOST_SPACE: Dict = {
     "subsample": hp.uniform("subsample", 0.2, 0.4),
     "max_delta_step": hp.uniform("max_delta_step", 2, 6),
     "max_depth": hp.quniform("max_depth", 2, 6, 1),
-    "gamma": hp.uniform("gamma", 11, 13),
+    "gamma": hp.uniform("gamma", 10, 14),
     "reg_alpha": hp.uniform("reg_alpha", 0, 1),
     "reg_lambda": hp.uniform("reg_lambda", 0, 1),
-    "colsample_bytree": hp.uniform("colsample_bytree", 0.8, 0.9),
-    "colsample_bylevel": hp.uniform("colsample_bylevel", 0.8, 0.9),
+    "colsample_bytree": hp.uniform("colsample_bytree", 0.5, 0.9),
+    "colsample_bylevel": hp.uniform("colsample_bylevel", 0.5, 0.9),
     "min_child_weight": hp.quniform("min_child_weight", 10, 15, 1),
 }
 
