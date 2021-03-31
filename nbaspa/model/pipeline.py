@@ -172,6 +172,8 @@ def gen_xgboost_pipeline() -> Flow:
     Flow
         Generated pipeline.
     """
+    # Create a time range for AUROC calculation -- start to the end of the fourth quarter
+    times = np.arange(2880, step=10)
     # Initialize tasks
     segdata = SegmentData(name="Split data")
     train_data = CollapseData(name="Create training data")
@@ -224,7 +226,7 @@ def gen_xgboost_pipeline() -> Flow:
         data = segdata(build, splits=splits, keys=["train", "stop", "tune"], seed=seed)
         # Collapse data to the final row
         train = train_data(data["train"])
-        tune = tune_data(data["tune"])
+        tune = tune_data.map(data=unmapped(data["tune"]), timestep=times)
         stop = stop_data(data["stop"])
         # Run hyperparameter tuning
         params = tuning(
