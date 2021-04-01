@@ -98,6 +98,8 @@ def gen_lifelines_pipeline() -> Flow:
     Flow
         The generated pipeline.
     """
+    # Create a time range for AUROC calculation -- start to the end of the fourth quarter
+    times = np.arange(2880, step=10)
     # Initialize tasks
     segdata = SegmentData(name="Split data")
     tune_data = CollapseData(name="Create tuning data")
@@ -114,8 +116,8 @@ def gen_lifelines_pipeline() -> Flow:
         result=LocalResult(
             dir=".",
             location="{output_dir}/models/{today}/lifelines/params.json",
-            serializer=JSONSerializer()
-        )
+            serializer=JSONSerializer(),
+        ),
     )
     tuneplots = PlotTuning(
         name="Plot lifelines hyperparameter tuning",
@@ -147,7 +149,7 @@ def gen_lifelines_pipeline() -> Flow:
         # Segment the data
         data = segdata(build, splits=splits, keys=["train", "tune"], seed=seed)
         # Collapse the data to the final row for Concordance calculations
-        tune = tune_data(data["train"])
+        tune = tune_data.map(data=unmapped(data["train"]), timestep=times)
         # Run hyperparameter tuning
         params = tuning(
             train_data=data["train"], tune_data=tune, max_evals=max_evals, seed=seed
@@ -193,8 +195,8 @@ def gen_xgboost_pipeline() -> Flow:
         result=LocalResult(
             dir=".",
             location="{output_dir}/models/{today}/xgboost/params.json",
-            serializer=JSONSerializer()
-        )
+            serializer=JSONSerializer(),
+        ),
     )
     tuneplots = PlotTuning(
         name="Plot XGBoost hyperparameter tuning",

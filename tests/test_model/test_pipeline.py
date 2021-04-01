@@ -21,7 +21,9 @@ TODAY = datetime.now()
 def test_data_pipeline(gamelocation):
     """Test game location."""
     flow = gen_data_pipeline()
-    output = run_pipeline(flow=flow, data_dir=gamelocation, output_dir=gamelocation)
+    output = run_pipeline(
+        flow=flow, data_dir=gamelocation, output_dir=gamelocation, seed=42
+    )
 
     assert output.is_successful()
     assert Path(gamelocation, "models", "build.csv").is_file()
@@ -70,7 +72,8 @@ def test_lifelines_pipelines(gamelocation):
         flow=flow,
         data_dir=gamelocation,
         output_dir=gamelocation,
-        max_evals=5
+        max_evals=5,
+        seed=42
     )
 
     assert output.is_successful()
@@ -78,8 +81,10 @@ def test_lifelines_pipelines(gamelocation):
     assert Path(gamelocation, "models", TODAY.strftime("%Y-%m-%d"), "lifelines", "tuning.pkl").is_file()
     assert Path(gamelocation, "models", TODAY.strftime("%Y-%m-%d"), "lifelines", "hyperparameter-tuning.png").is_file()
 
-def test_xgboost_pipeline(gamelocation):
+@patch("nbaspa.model.tasks.tuning.roc_auc_score")
+def test_xgboost_pipeline(mock_auc, gamelocation):
     """Test fitting XGBoost model."""
+    mock_auc.return_value = 0.5
     # Create and run the XGBoost flow
     flow = gen_xgboost_pipeline()
     output = run_pipeline(
@@ -87,7 +92,8 @@ def test_xgboost_pipeline(gamelocation):
         data_dir=gamelocation,
         output_dir=gamelocation,
         max_evals=5,
-        splits=[0.5, 0.25]
+        splits=[0.5, 0.25],
+        seed=42
     )
 
     assert output.is_successful()

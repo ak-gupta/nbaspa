@@ -71,6 +71,7 @@ class FitXGBoost(Task):
 
         return model
 
+
 def _generate_cumulative_hazard(
     model: xgb.Booster,
     train_data: pd.DataFrame,
@@ -86,7 +87,7 @@ def _generate_cumulative_hazard(
         The training dataset.
     dtrain : xgb.DMatrix
         The training dataset.
-    
+
     Returns
     -------
     np.ndarray

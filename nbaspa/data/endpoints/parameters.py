@@ -20,19 +20,19 @@ else:
 SEASONS: Dict = {
     "2011-12": {
         "START": datetime.datetime(year=2011, month=12, day=25),
-        "END": datetime.datetime(year=2012, month=4, day=26)
+        "END": datetime.datetime(year=2012, month=4, day=26),
     },
     "2012-13": {
         "START": datetime.datetime(year=2012, month=10, day=30),
-        "END": datetime.datetime(year=2013, month=4, day=17)
+        "END": datetime.datetime(year=2013, month=4, day=17),
     },
     "2013-14": {
         "START": datetime.datetime(year=2013, month=10, day=29),
-        "END": datetime.datetime(year=2014, month=4, day=16)
+        "END": datetime.datetime(year=2014, month=4, day=16),
     },
     "2014-15": {
         "START": datetime.datetime(year=2014, month=10, day=28),
-        "END": datetime.datetime(year=2015, month=4, day=15)
+        "END": datetime.datetime(year=2015, month=4, day=15),
     },
     "2015-16": {
         "START": datetime.datetime(year=2015, month=10, day=27),

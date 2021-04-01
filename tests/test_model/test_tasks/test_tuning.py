@@ -15,7 +15,7 @@ def survivaldata(data):
     pre = SurvivalData()
     df = pre.run(data)
     seg = SegmentData()
-    segdata = seg.run(data=df, splits=[0.6, 0.2], keys=["train", "tune", "stop"])
+    segdata = seg.run(data=df, splits=[0.6, 0.2], keys=["train", "tune", "stop"], seed=42)
 
     return segdata["train"], segdata["tune"], segdata["stop"]
 
@@ -28,7 +28,7 @@ def test_lifelines_tuning(survivaldata):
     tsk = LifelinesTuning()
     output = tsk.run(
         train_data=train,
-        tune_data=tune,
+        tune_data=[tune],
         max_evals=10,
     )
 
@@ -45,7 +45,7 @@ def test_xgboost_tuning(survivaldata):
     tsk = XGBoostTuning()
     output = tsk.run(
         train_data=train,
-        tune_data=tune,
+        tune_data=[tune],
         stopping_data=stop,
         max_evals=10,
     )

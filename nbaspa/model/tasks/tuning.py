@@ -97,7 +97,7 @@ class LifelinesTuning(Task):
                 metric.append(
                     roc_auc_score(
                         y_true=dataset[META["event"]],
-                        y_score=1 - np.exp(-(c0 * predt.values))
+                        y_score=1 - np.exp(-(c0 * predt.values)),
                     )
                 )
             metric = -np.average(np.array(metric))
@@ -219,14 +219,15 @@ class XGBoostTuning(Task):
             for dataset in tune_data:
                 tuning = dataset.copy()
                 tuning.loc[tuning[META["event"]] == 0, "stop"] = -tuning["stop"]
-                dtune = xgb.DMatrix(tuning[META["static"] + META["dynamic"]], tuning["stop"])
+                dtune = xgb.DMatrix(
+                    tuning[META["static"] + META["dynamic"]], tuning["stop"]
+                )
 
                 predt = model.predict(dtune)
                 c0 = interpolate_at_times(cumulative_hazard_, dataset["stop"].values)
                 metric.append(
                     roc_auc_score(
-                        y_true=dataset[META["event"]],
-                        y_score=1 - np.exp(-(c0 * predt))
+                        y_true=tuning[META["event"]].values, y_score=1 - np.exp(-(c0 * predt))
                     )
                 )
 
