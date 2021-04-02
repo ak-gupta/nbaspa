@@ -99,7 +99,7 @@ def gen_lifelines_pipeline() -> Flow:
         The generated pipeline.
     """
     # Create a time range for AUROC calculation -- start to the end of the fourth quarter
-    times = np.arange(2880, step=10)
+    times = np.arange(2890, step=10)
     # Initialize tasks
     segdata = SegmentData(name="Split data")
     tune_data = CollapseData(name="Create tuning data")
@@ -175,7 +175,7 @@ def gen_xgboost_pipeline() -> Flow:
         Generated pipeline.
     """
     # Create a time range for AUROC calculation -- start to the end of the fourth quarter
-    times = np.arange(2880, step=10)
+    times = np.arange(2890, step=10)
     # Initialize tasks
     segdata = SegmentData(name="Split data")
     train_data = CollapseData(name="Create training data")
@@ -235,7 +235,7 @@ def gen_xgboost_pipeline() -> Flow:
             train_data=train,
             tune_data=tune,
             stopping_data=stop,
-            early_stopping_rounds=25,
+            early_stopping_rounds=10,
             num_boost_round=10000,
             max_evals=max_evals,
             seed=seed,
@@ -247,7 +247,7 @@ def gen_xgboost_pipeline() -> Flow:
             params=params["best"],
             train_data=train,
             stopping_data=stop,
-            early_stopping_rounds=25,
+            early_stopping_rounds=10,
             num_boost_round=10000,
             verbose_eval=False,
         )
@@ -270,7 +270,7 @@ def gen_evaluate_pipeline(step: int = 10, **kwargs) -> Flow:
         The generated pipeline.
     """
     # Create a time range for AUROC calculation -- start to the end of the fourth quarter
-    times = np.arange(2880, step=step)
+    times = np.arange(2890, step=step)
     # Initialize the tasks
     modelobjs: Dict = {}
     calc_sprob: Dict = {}

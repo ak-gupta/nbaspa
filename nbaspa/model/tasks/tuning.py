@@ -16,21 +16,22 @@ from .meta import META
 from .xgboost import _generate_cumulative_hazard
 
 DEFAULT_LIFELINES_SPACE: Dict = {
-    "penalizer": hp.uniform("penalizer", 0, 0.1),
-    "l1_ratio": hp.uniform("l1_ratio", 0.5, 1),
+    "penalizer": hp.uniform("penalizer", 0, 1),
+    "l1_ratio": hp.uniform("l1_ratio", 0, 1),
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
-    "learning_rate": hp.uniform("learning_rate", 0.001, 0.01),
-    "subsample": hp.uniform("subsample", 0.3, 0.9),
-    "max_delta_step": hp.uniform("max_delta_step", 2, 6),
-    "max_depth": hp.quniform("max_depth", 2, 6, 1),
-    "gamma": hp.uniform("gamma", 10, 14),
+    "learning_rate": hp.uniform("learning_rate", 0.000001, 0.01),
+    "subsample": hp.uniform("subsample", 0.01, 0.9),
+    "max_delta_step": hp.uniform("max_delta_step", 1, 15),
+    "max_depth": hp.quniform("max_depth", 2, 10, 1),
+    "gamma": hp.uniform("gamma", 8, 16),
     "reg_alpha": hp.uniform("reg_alpha", 0, 1),
     "reg_lambda": hp.uniform("reg_lambda", 0, 1),
-    "colsample_bytree": hp.uniform("colsample_bytree", 0.5, 0.9),
-    "colsample_bylevel": hp.uniform("colsample_bylevel", 0.5, 0.9),
-    "min_child_weight": hp.quniform("min_child_weight", 10, 15, 1),
+    "colsample_bytree": hp.uniform("colsample_bytree", 0.0001, 1),
+    "colsample_bylevel": hp.uniform("colsample_bylevel", 0.0001, 1),
+    "colsample_bynode": hp.uniform("colsample_bynode", 0.0001, 1),
+    "min_child_weight": hp.quniform("min_child_weight", 1, 50, 1),
 }
 
 
@@ -204,6 +205,7 @@ class XGBoostTuning(Task):
                     "reg_lambda": params["reg_lambda"],
                     "colsample_bytree": params["colsample_bytree"],
                     "colsample_bylevel": params["colsample_bylevel"],
+                    "colsample_bynode": params["colsample_bynode"],
                     "min_child_weight": int(params["min_child_weight"]),
                     "objective": "survival:cox",
                 },
