@@ -235,7 +235,6 @@ def gen_xgboost_pipeline() -> Flow:
             train_data=train,
             tune_data=tune,
             stopping_data=stop,
-            early_stopping_rounds=10,
             num_boost_round=10000,
             max_evals=max_evals,
             seed=seed,
@@ -247,7 +246,7 @@ def gen_xgboost_pipeline() -> Flow:
             params=params["best"],
             train_data=train,
             stopping_data=stop,
-            early_stopping_rounds=10,
+            early_stopping_rounds=params["best"]["early_stopping_rounds"],
             num_boost_round=10000,
             verbose_eval=False,
         )
@@ -283,7 +282,7 @@ def gen_evaluate_pipeline(step: int = 10, **kwargs) -> Flow:
             name=f"Calculate survival probability for model {key}"
         )
         sprob_auc[key] = AUROC(name=f"Calculate Cox PH AUROC for model {key}")
-        calc_lift[key] = AUROCLift(name=f"Calculate AUROC life for model {key}")
+        calc_lift[key] = AUROCLift(name=f"Calculate AUROC lift for model {key}")
         average_lift[key] = MeanAUROCLift(
             name=f"Calculate average AUROC lift for model {key}"
         )
@@ -334,7 +333,7 @@ def gen_evaluate_pipeline(step: int = 10, **kwargs) -> Flow:
         }
         # Plot the AUROC over game-time
         aucplot(times=times, metric="AUROC", nba=metric_benchmark, **metric)
-        liftplot(times=times, metric="AUROC Lift", **lift)
+        liftplot(times=times, metric="AUROC Lift", percentage=True, **lift)
         _ = {key: average_lift[key](lift=lift[key], timestep=times) for key in kwargs}
 
     return flow

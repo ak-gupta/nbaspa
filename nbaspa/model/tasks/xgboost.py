@@ -61,6 +61,10 @@ class FitXGBoost(Task):
         self.logger.info("Training the model...")
         initial_params = {"objective": "survival:cox", "seed": seed}
         if params is not None:
+            if "early_stopping_rounds" in params:
+                params.pop("early_stopping_rounds")
+            if "num_boost_round" in params:
+                params.pop("num_boost_round")
             initial_params.update(params)
         model = xgb.train(initial_params, dtrain, evals=evals, **kwargs)
         self.logger.info("Model training complete...")

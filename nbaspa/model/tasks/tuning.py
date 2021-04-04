@@ -22,16 +22,17 @@ DEFAULT_LIFELINES_SPACE: Dict = {
 
 DEFAULT_XGBOOST_SPACE: Dict = {
     "learning_rate": hp.uniform("learning_rate", 0.000001, 0.01),
-    "subsample": hp.uniform("subsample", 0.01, 0.9),
-    "max_delta_step": hp.uniform("max_delta_step", 1, 15),
+    "subsample": hp.uniform("subsample", 0.3, 0.5),
+    "max_delta_step": hp.uniform("max_delta_step", 8, 10),
     "max_depth": hp.quniform("max_depth", 2, 10, 1),
-    "gamma": hp.uniform("gamma", 8, 16),
+    "gamma": hp.uniform("gamma", 12, 14),
     "reg_alpha": hp.uniform("reg_alpha", 0, 1),
     "reg_lambda": hp.uniform("reg_lambda", 0, 1),
-    "colsample_bytree": hp.uniform("colsample_bytree", 0.0001, 1),
-    "colsample_bylevel": hp.uniform("colsample_bylevel", 0.0001, 1),
-    "colsample_bynode": hp.uniform("colsample_bynode", 0.0001, 1),
-    "min_child_weight": hp.quniform("min_child_weight", 1, 50, 1),
+    "colsample_bytree": hp.uniform("colsample_bytree", 0.001, 0.1),
+    "colsample_bylevel": hp.uniform("colsample_bylevel", 0.5, 0.9),
+    "colsample_bynode": hp.uniform("colsample_bynode", 0.001, 0.1),
+    "min_child_weight": hp.quniform("min_child_weight", 0, 10, 1),
+    "early_stopping_rounds": hp.quniform("early_stopping_rounds", 1, 25, 2),
 }
 
 
@@ -212,6 +213,7 @@ class XGBoostTuning(Task):
                 dtrain,
                 evals=evals,
                 verbose_eval=False,
+                early_stopping_rounds=int(params["early_stopping_rounds"]),
                 **kwargs,
             )
             cumulative_hazard_ = _generate_cumulative_hazard(
@@ -264,6 +266,7 @@ class XGBoostTuning(Task):
             for param in [
                 "max_depth",
                 "min_child_weight",
+                "early_stopping_rounds",
             ]:
                 self.best_[param] = int(self.best_[param])
             self.logger.info(
