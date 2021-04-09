@@ -115,6 +115,8 @@ class MeanAUROCLift(Task):
             weights = None
 
         result = np.average(lift, weights=weights)
-        self.logger.info(f"Found a weighted average AUROC lift of {np.round(result * 100, 3)}%")
+        self.logger.info(
+            f"Found a weighted average AUROC lift of {np.round(result * 100, 3)}%"
+        )
 
         return result
