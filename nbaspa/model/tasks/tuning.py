@@ -21,22 +21,17 @@ DEFAULT_LIFELINES_SPACE: Dict = {
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
-    "learning_rate": hp.uniform("learning_rate", 0.01, 0.05),
-    "subsample": hp.uniform("subsample", 0.3, 0.5),
+    "learning_rate": hp.uniform("learning_rate", 0.005, 0.05),
+    "subsample": hp.uniform("subsample", 0.4, 0.5),
     "max_delta_step": hp.uniform("max_delta_step", 0.9, 1),
-    "max_depth": hp.quniform("max_depth", 2, 16, 1),
-    "gamma": hp.uniform("gamma", 0, 1),
-    "reg_alpha": hp.uniform("reg_alpha", 0, 0.2),
+    "max_depth": hp.quniform("max_depth", 2, 15, 1),
+    "gamma": hp.uniform("gamma", 0.7, 0.9),
+    "reg_alpha": hp.uniform("reg_alpha", 0, 0.3),
     "reg_lambda": hp.uniform("reg_lambda", 0.1, 0.3),
     "colsample_bytree": hp.uniform("colsample_bytree", 0.8, 1),
     "colsample_bylevel": hp.uniform("colsample_bylevel", 0.4, 0.6),
-    "colsample_bynode": hp.uniform("colsample_bynode", 0.3, 0.5),
-    "min_child_weight": hp.quniform("min_child_weight", 200, 300, 5),
-    "monotone_constraints": str(
-        tuple(
-            int(col == "SCOREMARGIN") for col in META["static"] + META["dynamic"]
-        )
-    )
+    "colsample_bynode": hp.uniform("colsample_bynode", 0.4, 0.6),
+    "min_child_weight": hp.quniform("min_child_weight", 220, 240, 1),
 }
 
 
