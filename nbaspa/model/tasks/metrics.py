@@ -65,7 +65,9 @@ class AUROCLift(Task):
         self.logger.info(f"Test model has average AUROC of {np.round(np.average(test), 3)}")
         if isinstance(benchmark, list):
             benchmark = np.array(benchmark)
-        self.logger.info(f"Benchmark model has average AUROC of {np.round(np.average(benchmark), 3)}")
+        self.logger.info(
+            f"Benchmark model has average AUROC of {np.round(np.average(benchmark), 3)}"
+        )
 
         return (test/benchmark) - 1
 
