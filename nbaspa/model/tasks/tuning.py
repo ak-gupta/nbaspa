@@ -16,22 +16,25 @@ from .meta import META
 from .xgboost import _generate_cumulative_hazard
 
 DEFAULT_LIFELINES_SPACE: Dict = {
-    "penalizer": hp.uniform("penalizer", 0, 1),
-    "l1_ratio": hp.uniform("l1_ratio", 0, 1),
+    "penalizer": hp.uniform("penalizer", 0, 0.3),
+    "l1_ratio": hp.uniform("l1_ratio", 0, 0.01),
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
-    "learning_rate": hp.uniform("learning_rate", 0.005, 0.05),
-    "subsample": hp.uniform("subsample", 0.4, 0.5),
-    "max_delta_step": hp.uniform("max_delta_step", 0.9, 1),
-    "max_depth": hp.quniform("max_depth", 2, 15, 1),
-    "gamma": hp.uniform("gamma", 0.7, 0.9),
-    "reg_alpha": hp.uniform("reg_alpha", 0, 0.3),
+    "learning_rate": 0.01,
+    "subsample": hp.uniform("subsample", 0.75, 0.9),
+    "max_delta_step": 1,
+    "max_depth": hp.quniform("max_depth", 5, 15, 1),
+    "gamma": hp.uniform("gamma", 0.6, 0.9),
+    "reg_alpha": hp.uniform("reg_alpha", 0, 0.1),
     "reg_lambda": hp.uniform("reg_lambda", 0.1, 0.3),
-    "colsample_bytree": hp.uniform("colsample_bytree", 0.8, 1),
+    "colsample_bytree": hp.uniform("colsample_bytree", 0.3, 0.7),
     "colsample_bylevel": hp.uniform("colsample_bylevel", 0.4, 0.6),
-    "colsample_bynode": hp.uniform("colsample_bynode", 0.4, 0.6),
-    "min_child_weight": hp.quniform("min_child_weight", 220, 240, 1),
+    "colsample_bynode": hp.uniform("colsample_bynode", 0.7, 1),
+    "min_child_weight": hp.quniform("min_child_weight", 450, 480, 1),
+    "monotone_constraints": str(
+        tuple(int(col == "SCOREMARGIN") for col in META["static"] + META["dynamic"])
+    ),
 }
 
 
@@ -207,6 +210,7 @@ class XGBoostTuning(Task):
                     "colsample_bylevel": params["colsample_bylevel"],
                     "colsample_bynode": params["colsample_bynode"],
                     "min_child_weight": int(params["min_child_weight"]),
+                    "monotone_constraints": params["monotone_constraints"],
                     "objective": "survival:cox",
                 },
                 dtrain,
