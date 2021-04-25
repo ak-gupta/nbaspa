@@ -61,34 +61,64 @@ class FitXGBoost(Task):
         self.logger.info("Training the model...")
         initial_params = {"objective": "survival:cox", "seed": seed}
         if params is not None:
+            if "early_stopping_rounds" in params:
+                params.pop("early_stopping_rounds")
+            if "num_boost_round" in params:
+                params.pop("num_boost_round")
             initial_params.update(params)
         model = xgb.train(initial_params, dtrain, evals=evals, **kwargs)
         self.logger.info("Model training complete...")
         # Get the cumulative hazard using ``lifelines``
-        # First, get the partial hazard values
-        hazard = model.predict(dtrain)
-        # Get the unique failure times
-        unique_death_times = np.unique(
-            train_data.loc[train_data[META["event"]] == 1, "stop"].values
+        model.cumulative_hazard_ = _generate_cumulative_hazard(
+            model=model, train_data=train_data, dtrain=dtrain
         )
-        baseline_hazard_ = pd.DataFrame(
-            np.zeros_like(unique_death_times),
-            index=unique_death_times,
-            columns=["baseline hazard"],
-        )
-
-        for t in unique_death_times:
-            ix = (train_data["start"].values < t) & (t <= train_data["stop"].values)
-
-            events_at_t = train_data[META["event"]].values[ix]
-            stops_at_t = train_data["stop"].values[ix]
-            hazards_at_t = hazard[ix]
-
-            deaths = events_at_t & (stops_at_t == t)
-
-            death_counts = deaths.sum()
-            baseline_hazard_.loc[t] = death_counts / hazards_at_t.sum()
-
-        model.cumulative_hazard_ = baseline_hazard_.cumsum()
 
         return model
+
+
+def _generate_cumulative_hazard(
+    model: xgb.Booster,
+    train_data: pd.DataFrame,
+    dtrain: xgb.DMatrix,
+) -> np.ndarray:
+    """Generate the cumulative hazard.
+
+    Parameters
+    ----------
+    model : xgb.Booster
+        The trained model.
+    train_data : pd.DataFrame
+        The training dataset.
+    dtrain : xgb.DMatrix
+        The training dataset.
+
+    Returns
+    -------
+    np.ndarray
+        The array output.
+    """
+    # First, get the partial hazard values
+    hazard = model.predict(dtrain)
+    # Get the unique failure times
+    unique_death_times = np.unique(
+        train_data.loc[train_data[META["event"]] == 1, "stop"].values
+    )
+    baseline_hazard_ = pd.DataFrame(
+        np.zeros_like(unique_death_times),
+        index=unique_death_times,
+        columns=["baseline hazard"],
+    )
+
+    for t in unique_death_times:
+        ix = (train_data["start"].values < t) & (t <= train_data["stop"].values)
+
+        events_at_t = train_data[META["event"]].values[ix]
+        stops_at_t = train_data["stop"].values[ix]
+        hazards_at_t = hazard[ix]
+
+        deaths = events_at_t & (stops_at_t == t)
+
+        death_counts = deaths.sum()
+        baseline_hazard_.loc[t] = death_counts / hazards_at_t.sum()
+
+    return baseline_hazard_.cumsum()

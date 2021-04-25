@@ -24,4 +24,4 @@ def test_auroc_lift():
     tsk = AUROCLift()
     output = tsk.run(benchmark=[0.5, 0.55, 0.6], test=[0.6, 0.65, 0.65])
 
-    assert np.allclose(output, np.array([0.1, 0.1, 0.05]))
+    assert np.allclose(output, np.array([0.2, 0.18181818, 0.083333333]))

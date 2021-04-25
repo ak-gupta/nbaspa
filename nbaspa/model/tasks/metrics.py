@@ -62,10 +62,14 @@ class AUROCLift(Task):
         """
         if isinstance(test, list):
             test = np.array(test)
+        self.logger.info(f"Test model has average AUROC of {np.round(np.average(test), 3)}")
         if isinstance(benchmark, list):
             benchmark = np.array(benchmark)
+        self.logger.info(
+            f"Benchmark model has average AUROC of {np.round(np.average(benchmark), 3)}"
+        )
 
-        return test - benchmark
+        return (test/benchmark) - 1
 
 
 class MeanAUROCLift(Task):
@@ -113,6 +117,8 @@ class MeanAUROCLift(Task):
             weights = None
 
         result = np.average(lift, weights=weights)
-        self.logger.info(f"Found a weighted average AUROC lift of {result}")
+        self.logger.info(
+            f"Found a weighted average AUROC lift of {np.round(result * 100, 3)}%"
+        )
 
         return result

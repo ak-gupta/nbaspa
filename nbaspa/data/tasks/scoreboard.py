@@ -79,9 +79,21 @@ class AddLastMeetingResult(Task):
             < last_meeting["LAST_GAME_VISITOR_TEAM_POINTS"],
             "LAST_GAME_TEAM_ID",
         ] = last_meeting["LAST_GAME_VISITOR_TEAM_ID"]
-        last_meeting["LAST_GAME_TEAM_ID"] = last_meeting["LAST_GAME_TEAM_ID"].astype(
-            int
-        )
+        try:
+            last_meeting["LAST_GAME_TEAM_ID"] = last_meeting[
+                "LAST_GAME_TEAM_ID"
+            ].astype(int)
+        except ValueError:
+            self.logger.warning(
+                f"Dropping {sum(pd.isnull(last_meeting['LAST_GAME_TEAM_ID']))} rows with null "
+                "last meeting results"
+            )
+            last_meeting = last_meeting[
+                ~pd.isnull(last_meeting["LAST_GAME_TEAM_ID"])
+            ].copy()
+            last_meeting["LAST_GAME_TEAM_ID"] = last_meeting[
+                "LAST_GAME_TEAM_ID"
+            ].astype(int)
         # Merge with the pbp dataframe
         pbp = pbp.merge(
             last_meeting[["GAME_ID", "LAST_GAME_TEAM_ID"]], on="GAME_ID", how="left"

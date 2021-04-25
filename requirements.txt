@@ -66,6 +66,8 @@ kiwisolver==1.3.1
     # via matplotlib
 lifelines==0.25.9
     # via nbaspa (setup.py)
+lightgbm==3.1.1
+    # via nbaspa (setup.py)
 marshmallow-oneofschema==2.1.0
     # via prefect
 marshmallow==3.10.0
@@ -93,6 +95,7 @@ numpy==1.20.1
     #   formulaic
     #   hyperopt
     #   lifelines
+    #   lightgbm
     #   matplotlib
     #   pandas
     #   scikit-learn
@@ -145,13 +148,16 @@ requests==2.25.1
     #   nbaspa (setup.py)
     #   prefect
 scikit-learn==0.24.1
-    # via nbaspa (setup.py)
+    # via
+    #   lightgbm
+    #   nbaspa (setup.py)
 scipy==1.6.0
     # via
     #   autograd-gamma
     #   formulaic
     #   hyperopt
     #   lifelines
+    #   lightgbm
     #   scikit-learn
     #   seaborn
     #   xgboost
@@ -188,6 +194,8 @@ urllib3==1.26.3
     #   requests
 websocket-client==0.57.0
     # via docker
+wheel==0.36.2
+    # via lightgbm
 wrapt==1.12.1
     # via formulaic
 xgboost==1.3.3

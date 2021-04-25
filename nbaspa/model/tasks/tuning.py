@@ -1,32 +1,40 @@
 """Hyperparameter tuning tasks."""
 
-from typing import Dict, Optional
+from pprint import pformat
+from typing import Dict, List, Optional
 
-from hyperopt import fmin, hp, STATUS_OK, tpe, Trials
+from hyperopt import fmin, hp, STATUS_OK, atpe, Trials
 from lifelines import CoxTimeVaryingFitter
-from lifelines.utils import concordance_index
+from lifelines.utils import interpolate_at_times
 import numpy as np
 import pandas as pd
 from prefect import Task
+from sklearn.metrics import roc_auc_score
 import xgboost as xgb
 
 from .meta import META
+from .xgboost import _generate_cumulative_hazard
 
 DEFAULT_LIFELINES_SPACE: Dict = {
-    "penalizer": hp.uniform("penalizer", 0, 1),
-    "l1_ratio": hp.uniform("l1_ratio", 0, 1),
+    "penalizer": hp.uniform("penalizer", 0, 0.3),
+    "l1_ratio": hp.uniform("l1_ratio", 0, 0.01),
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
-    "learning_rate": hp.uniform("learning_rate", 0.0001, 0.1),
-    "subsample": hp.uniform("subsample", 0, 1),
-    "max_delta_step": hp.uniform("max_delta_step", 0, 9),
-    "max_depth": hp.quniform("max_depth", 2, 10, 1),
-    "gamma": hp.uniform("gamma", 0, 10),
-    "reg_alpha": hp.uniform("reg_alpha", 0, 1),
-    "reg_lambda": hp.uniform("reg_lambda", 0, 1),
-    "colsample_bytree": hp.uniform("colsample_bytree", 0.0001, 1),
-    "min_child_weight": hp.quniform("min_child_weight", 0, 9, 1),
+    "learning_rate": 0.01,
+    "subsample": hp.uniform("subsample", 0.75, 0.9),
+    "max_delta_step": 1,
+    "max_depth": hp.quniform("max_depth", 5, 15, 1),
+    "gamma": hp.uniform("gamma", 0.6, 0.9),
+    "reg_alpha": hp.uniform("reg_alpha", 0, 0.1),
+    "reg_lambda": hp.uniform("reg_lambda", 0.1, 0.3),
+    "colsample_bytree": hp.uniform("colsample_bytree", 0.3, 0.7),
+    "colsample_bylevel": hp.uniform("colsample_bylevel", 0.4, 0.6),
+    "colsample_bynode": hp.uniform("colsample_bynode", 0.7, 1),
+    "min_child_weight": hp.quniform("min_child_weight", 450, 480, 1),
+    "monotone_constraints": str(
+        tuple(int(col == "SCOREMARGIN") for col in META["static"] + META["dynamic"])
+    ),
 }
 
 
@@ -39,7 +47,7 @@ class LifelinesTuning(Task):
     def run(  # type: ignore
         self,
         train_data: pd.DataFrame,
-        tune_data: pd.DataFrame,
+        tune_data: List[pd.DataFrame],
         param_space: Optional[Dict] = DEFAULT_LIFELINES_SPACE,
         max_evals: Optional[int] = 100,
         seed: Optional[int] = 42,
@@ -51,8 +59,8 @@ class LifelinesTuning(Task):
         ----------
         train_data : pd.DataFrame
             The training data.
-        tune_data : pd.DataFrame
-            Tuning data.
+        tune_data : List[pd.DataFrame]
+            A list of tuning dataframes at various timestamps.
         param_space : Dict, optional (default DEFAULT_LIFELINES_SPACE)
             The space for the hyperparameters
         max_exals : int, optional (default 100)
@@ -84,14 +92,26 @@ class LifelinesTuning(Task):
                 start_col="start",
                 stop_col="stop",
             )
-            predt = model.predict_partial_hazard(tune_data)
-            metric = -concordance_index(
-                tune_data["stop"], -predt, tune_data[META["event"]]
-            )
+            metric: List[float] = []
+            for dataset in tune_data:
+                predt = model.predict_partial_hazard(dataset)
+                c0 = interpolate_at_times(
+                    model.baseline_cumulative_hazard_, dataset["stop"].values
+                )
+                metric.append(
+                    roc_auc_score(
+                        y_true=dataset[META["event"]],
+                        y_score=1 - np.exp(-(c0 * predt.values)),
+                    )
+                )
+            metric = -np.average(np.array(metric))
 
             if metric < self.metric_:
                 self.metric_ = metric
                 self.best_.update(params)
+                self.logger.info(
+                    f"New best metric value of {self.metric_} with \n\n{pformat(self.best_)}\n"
+                )
 
             return {
                 "loss": metric,
@@ -104,7 +124,7 @@ class LifelinesTuning(Task):
             fmin(
                 func,
                 param_space,
-                algo=tpe.suggest,
+                algo=atpe.suggest,
                 max_evals=max_evals,
                 trials=trials,
                 rstate=np.random.RandomState(seed),
@@ -114,8 +134,7 @@ class LifelinesTuning(Task):
         finally:
             best = {**self.best_, **kwargs}
             self.logger.info(
-                f"The best model uses a ``penalizer`` value of {np.round(best['penalizer'], 3)} "
-                f"and a ``l1_ratio`` value of {np.round(best['l1_ratio'], 3)}"
+                f"The best model has the following parameter values:\n\n{pformat(best)}\n"
             )
 
         return {"best": best, "trials": trials}
@@ -130,7 +149,7 @@ class XGBoostTuning(Task):
     def run(  # type: ignore
         self,
         train_data: pd.DataFrame,
-        tune_data: pd.DataFrame,
+        tune_data: List[pd.DataFrame],
         param_space: Optional[Dict] = DEFAULT_XGBOOST_SPACE,
         stopping_data: Optional[pd.DataFrame] = None,
         max_evals: Optional[int] = 100,
@@ -143,8 +162,8 @@ class XGBoostTuning(Task):
         ----------
         train_data : pd.DataFrame
             The training data.
-        tune_data : pd.DataFrame
-            Tuning data.
+        tune_data : List[pd.DataFrame]
+            A list of tuning dataframes at various timestamps.
         param_space : dict, optional (default DEFAULT_XGBOOST_SPACE)
             The space for the hyperparameters.
         stopping_data : pd.DataFrame, optional (default None)
@@ -165,11 +184,8 @@ class XGBoostTuning(Task):
         train = train_data.copy()
         train.loc[train[META["event"]] == 0, "stop"] = -train["stop"]
         dtrain = xgb.DMatrix(train[META["static"] + META["dynamic"]], train["stop"])
-        tune = tune_data.copy()
-        tune.loc[tune[META["event"]] == 0, "stop"] = -tune["stop"]
-        dtune = xgb.DMatrix(tune[META["static"] + META["dynamic"]], tune["stop"])
 
-        evals = [(dtrain, "train"), (dtune, "tune")]
+        evals = [(dtrain, "train")]
 
         if stopping_data is not None:
             self.logger.info("Converting stopping data to ``xgb.DMatrix``")
@@ -180,6 +196,7 @@ class XGBoostTuning(Task):
 
         # Create an internal function for fitting, trainin, evaluating
         def func(params):
+            # Train the model
             model = xgb.train(
                 {
                     "learning_rate": params["learning_rate"],
@@ -190,7 +207,10 @@ class XGBoostTuning(Task):
                     "reg_alpha": params["reg_alpha"],
                     "reg_lambda": params["reg_lambda"],
                     "colsample_bytree": params["colsample_bytree"],
+                    "colsample_bylevel": params["colsample_bylevel"],
+                    "colsample_bynode": params["colsample_bynode"],
                     "min_child_weight": int(params["min_child_weight"]),
+                    "monotone_constraints": params["monotone_constraints"],
                     "objective": "survival:cox",
                 },
                 dtrain,
@@ -198,14 +218,33 @@ class XGBoostTuning(Task):
                 verbose_eval=False,
                 **kwargs,
             )
-            predt = model.predict(dtune)
-            metric = -concordance_index(
-                tune_data["stop"], -predt, tune_data[META["event"]]
+            cumulative_hazard_ = _generate_cumulative_hazard(
+                model=model, train_data=train_data, dtrain=dtrain
             )
+            metric: List[float] = []
+            for dataset in tune_data:
+                tuning = dataset.copy()
+                tuning.loc[tuning[META["event"]] == 0, "stop"] = -tuning["stop"]
+                dtune = xgb.DMatrix(
+                    tuning[META["static"] + META["dynamic"]], tuning["stop"]
+                )
+
+                predt = model.predict(dtune)
+                c0 = interpolate_at_times(cumulative_hazard_, dataset["stop"].values)
+                metric.append(
+                    roc_auc_score(
+                        y_true=tuning[META["event"]].values, y_score=1 - np.exp(-(c0 * predt))
+                    )
+                )
+
+            metric = -np.average(np.array(metric))
 
             if metric < self.metric_:
                 self.metric_ = metric
                 self.best_.update(params)
+                self.logger.info(
+                    f"New best metric value of {self.metric_} with \n\n{pformat(self.best_)}\n"
+                )
 
             return {
                 "loss": metric,
@@ -218,7 +257,7 @@ class XGBoostTuning(Task):
             fmin(
                 func,
                 param_space,
-                algo=tpe.suggest,
+                algo=atpe.suggest,
                 max_evals=max_evals,
                 trials=trials,
                 rstate=np.random.RandomState(seed),
@@ -227,10 +266,12 @@ class XGBoostTuning(Task):
             self.logger.warning("Interrupted... Returning current results.")
         finally:
             for param in [
-                "max_delta_step",
                 "max_depth",
                 "min_child_weight",
             ]:
                 self.best_[param] = int(self.best_[param])
+            self.logger.info(
+                f"The best model has the following parameter values:\n\n{pformat(self.best_)}\n"
+            )
 
         return {"best": self.best_, "trials": trials}
