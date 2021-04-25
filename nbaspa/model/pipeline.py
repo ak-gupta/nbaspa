@@ -6,7 +6,7 @@ import numpy as np
 import prefect
 from prefect import Flow, Parameter, unmapped
 from prefect.engine.results import LocalResult
-from prefect.engine.serializers import PandasSerializer
+from prefect.engine.serializers import JSONSerializer, PandasSerializer
 from prefect.engine.state import State
 from prefect.tasks.core.operators import GetItem
 
@@ -98,6 +98,8 @@ def gen_lifelines_pipeline() -> Flow:
     Flow
         The generated pipeline.
     """
+    # Create a time range for AUROC calculation -- start to the end of the fourth quarter
+    times = np.arange(2890, step=10)
     # Initialize tasks
     segdata = SegmentData(name="Split data")
     tune_data = CollapseData(name="Create tuning data")
@@ -106,6 +108,15 @@ def gen_lifelines_pipeline() -> Flow:
         checkpoint=True,
         result=LocalResult(
             dir=".", location="{output_dir}/models/{today}/lifelines/tuning.pkl"
+        ),
+    )
+    retrieve_best = GetItem(
+        name="Get best parameters",
+        checkpoint=True,
+        result=LocalResult(
+            dir=".",
+            location="{output_dir}/models/{today}/lifelines/params.json",
+            serializer=JSONSerializer(),
         ),
     )
     tuneplots = PlotTuning(
@@ -138,11 +149,12 @@ def gen_lifelines_pipeline() -> Flow:
         # Segment the data
         data = segdata(build, splits=splits, keys=["train", "tune"], seed=seed)
         # Collapse the data to the final row for Concordance calculations
-        tune = tune_data(data["train"])
+        tune = tune_data.map(data=unmapped(data["train"]), timestep=times)
         # Run hyperparameter tuning
         params = tuning(
             train_data=data["train"], tune_data=tune, max_evals=max_evals, seed=seed
         )
+        _ = retrieve_best(task_result=params, key="best")
         tuneplots(params["trials"])
         model_obj = model(params["best"])
         _ = trained(model=model_obj, data=data["train"])
@@ -162,6 +174,8 @@ def gen_xgboost_pipeline() -> Flow:
     Flow
         Generated pipeline.
     """
+    # Create a time range for AUROC calculation -- start to the end of the fourth quarter
+    times = np.arange(2890, step=10)
     # Initialize tasks
     segdata = SegmentData(name="Split data")
     train_data = CollapseData(name="Create training data")
@@ -173,6 +187,15 @@ def gen_xgboost_pipeline() -> Flow:
         result=LocalResult(
             dir=".",
             location="{output_dir}/models/{today}/xgboost/tuning.pkl",
+        ),
+    )
+    retrieve_best = GetItem(
+        name="Get best parameters",
+        checkpoint=True,
+        result=LocalResult(
+            dir=".",
+            location="{output_dir}/models/{today}/xgboost/params.json",
+            serializer=JSONSerializer(),
         ),
     )
     tuneplots = PlotTuning(
@@ -205,26 +228,28 @@ def gen_xgboost_pipeline() -> Flow:
         data = segdata(build, splits=splits, keys=["train", "stop", "tune"], seed=seed)
         # Collapse data to the final row
         train = train_data(data["train"])
-        tune = tune_data(data["tune"])
+        tune = tune_data.map(data=unmapped(data["tune"]), timestep=times)
         stop = stop_data(data["stop"])
         # Run hyperparameter tuning
         params = tuning(
             train_data=train,
             tune_data=tune,
             stopping_data=stop,
-            early_stopping_rounds=25,
+            early_stopping_rounds=5,
             num_boost_round=10000,
             max_evals=max_evals,
             seed=seed,
         )
+        _ = retrieve_best(task_result=params, key="best")
         tuneplots(params["trials"])
         # Fit the model
         _ = trained(
             params=params["best"],
             train_data=train,
             stopping_data=stop,
-            early_stopping_rounds=25,
+            early_stopping_rounds=5,
             num_boost_round=10000,
+            verbose_eval=False,
         )
 
     return flow
@@ -245,7 +270,7 @@ def gen_evaluate_pipeline(step: int = 10, **kwargs) -> Flow:
         The generated pipeline.
     """
     # Create a time range for AUROC calculation -- start to the end of the fourth quarter
-    times = np.arange(2880, step=step)
+    times = np.arange(2890, step=step)
     # Initialize the tasks
     modelobjs: Dict = {}
     calc_sprob: Dict = {}
@@ -258,7 +283,7 @@ def gen_evaluate_pipeline(step: int = 10, **kwargs) -> Flow:
             name=f"Calculate survival probability for model {key}"
         )
         sprob_auc[key] = AUROC(name=f"Calculate Cox PH AUROC for model {key}")
-        calc_lift[key] = AUROCLift(name=f"Calculate AUROC life for model {key}")
+        calc_lift[key] = AUROCLift(name=f"Calculate AUROC lift for model {key}")
         average_lift[key] = MeanAUROCLift(
             name=f"Calculate average AUROC lift for model {key}"
         )
@@ -309,7 +334,7 @@ def gen_evaluate_pipeline(step: int = 10, **kwargs) -> Flow:
         }
         # Plot the AUROC over game-time
         aucplot(times=times, metric="AUROC", nba=metric_benchmark, **metric)
-        liftplot(times=times, metric="AUROC Lift", **lift)
+        liftplot(times=times, metric="AUROC Lift", percentage=True, **lift)
         _ = {key: average_lift[key](lift=lift[key], timestep=times) for key in kwargs}
 
     return flow

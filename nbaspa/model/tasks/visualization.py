@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from hyperopt import Trials
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 from prefect import Task
@@ -53,7 +54,13 @@ class PlotProbability(Task):
 class PlotMetric(Task):
     """Use seaborn to plot a metric over time."""
 
-    def run(self, times: List[int], metric: str, **kwargs: List[float]):  # type: ignore
+    def run(  # type: ignore
+        self,
+        times: List[int],
+        metric: str,
+        percentage: Optional[bool] = False,
+        **kwargs: List[float]
+    ):
         """Use ``seaborn`` to plot a metric over time.
 
         Parameters
@@ -62,6 +69,8 @@ class PlotMetric(Task):
             The list of time steps for each metric sequence.
         metric : str
             The metric name.
+        percentage : bool, optional (default False)
+            Whether or not the metric is a percentage.
         **kwargs
             Each model type to plot. The value is a list of float
             values repesenting the metric values.
@@ -81,6 +90,8 @@ class PlotMetric(Task):
             sns.lineplot(x="time", y="value", hue="model", data=data, ax=ax).set(
                 title=f"{metric} value over game-time", xlabel="Time", ylabel=metric
             )
+            if percentage:
+                ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
 
         return fig
 
