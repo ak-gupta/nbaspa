@@ -51,12 +51,21 @@ def gen_data_pipeline() -> Flow:
     load = LoadData(name="Load clean model data")
     format_data = SurvivalData(name="Convert input data to ranged form")
     segdata = SegmentData(name="Split data")
-    retrieve_build = GetItem(
-        name="Get build data",
+    retrieve_train = GetItem(
+        name="Get training data",
         checkpoint=True,
         result=LocalResult(
             dir=".",
-            location="{output_dir}/models/build.csv",
+            location="{output_dir}/models/train.csv",
+            serializer=PandasSerializer(file_type="csv", serialize_kwargs={"sep": "|"}),
+        ),
+    )
+    retrieve_tune = GetItem(
+        name="Get tuning data",
+        checkpoint=True,
+        result=LocalResult(
+            dir=".",
+            location="{output_dir}/models/tune.csv",
             serializer=PandasSerializer(file_type="csv", serialize_kwargs={"sep": "|"}),
         ),
     )
@@ -73,14 +82,15 @@ def gen_data_pipeline() -> Flow:
     with Flow(name="Split data into build and holdout") as flow:
         # Set up parameters
         data_dir = Parameter("data_dir", "nba-data")
-        splits = Parameter("splits", [0.8, 0.2])
+        splits = Parameter("splits", [0.6, 0.2, 0.2])
         seed = Parameter("seed", 42)
         # Load the data
         basedata = load(data_dir=data_dir)
         # Format the data
         alldata = format_data(basedata)
-        data = segdata(alldata, splits=splits, keys=["build", "holdout"], seed=seed)
-        _ = retrieve_build(task_result=data, key="build")
+        data = segdata(alldata, splits=splits, keys=["train", "tune", "holdout"], seed=seed)
+        _ = retrieve_train(task_result=data, key="train")
+        _ = retrieve_tune(task_result=data, key="tune")
         _ = retrieve_hold(task_result=data, key="holdout")
 
     return flow
@@ -101,7 +111,6 @@ def gen_lifelines_pipeline() -> Flow:
     # Create a time range for AUROC calculation -- start to the end of the fourth quarter
     times = np.arange(2890, step=10)
     # Initialize tasks
-    segdata = SegmentData(name="Split data")
     tune_data = CollapseData(name="Create tuning data")
     tuning = LifelinesTuning(
         name="Run lifelines hyperparameter tuning",
@@ -141,23 +150,21 @@ def gen_lifelines_pipeline() -> Flow:
     with Flow(name="Train Cox model") as flow:
         # Define some parameters
         data_dir = Parameter("data_dir", "nba-data")
-        splits = Parameter("splits", [0.75, 0.25])
         max_evals = Parameter("max_evals", 100)
         seed = Parameter("seed", 42)
         # Load the data
-        build = load_df(data_dir=data_dir, dataset="build.csv")
-        # Segment the data
-        data = segdata(build, splits=splits, keys=["train", "tune"], seed=seed)
+        train = load_df(data_dir=data_dir, dataset="train.csv")
+        rawtune = load_df(data_dir=data_dir, dataset="tune.csv")
         # Collapse the data to the final row for Concordance calculations
-        tune = tune_data.map(data=unmapped(data["train"]), timestep=times)
+        tune = tune_data.map(data=unmapped(rawtune), timestep=times)
         # Run hyperparameter tuning
         params = tuning(
-            train_data=data["train"], tune_data=tune, max_evals=max_evals, seed=seed
+            train_data=train, tune_data=tune, max_evals=max_evals, seed=seed
         )
         _ = retrieve_best(task_result=params, key="best")
         tuneplots(params["trials"])
         model_obj = model(params["best"])
-        _ = trained(model=model_obj, data=data["train"])
+        _ = trained(model=model_obj, data=train)
 
     return flow
 
@@ -177,7 +184,6 @@ def gen_xgboost_pipeline() -> Flow:
     # Create a time range for AUROC calculation -- start to the end of the fourth quarter
     times = np.arange(2890, step=10)
     # Initialize tasks
-    segdata = SegmentData(name="Split data")
     train_data = CollapseData(name="Create training data")
     tune_data = CollapseData(name="Create tuning data")
     stop_data = CollapseData(name="Create stopping data")
@@ -219,17 +225,15 @@ def gen_xgboost_pipeline() -> Flow:
     with Flow(name="Train Cox model") as flow:
         # Define some parameters
         data_dir = Parameter("data_dir", "nba-data")
-        splits = Parameter("splits", [0.5, 0.25, 0.25])
         max_evals = Parameter("max_evals", 100)
         seed = Parameter("seed", 42)
         # Load the data
-        build = load_df(data_dir=data_dir, dataset="build.csv")
-        # Segment data into train, stop, tune
-        data = segdata(build, splits=splits, keys=["train", "stop", "tune"], seed=seed)
+        rawtrain = load_df(data_dir=data_dir, dataset="train.csv")
+        rawtune = load_df(data_dir=data_dir, dataset="tune.csv")
         # Collapse data to the final row
-        train = train_data(data["train"])
-        tune = tune_data.map(data=unmapped(data["tune"]), timestep=times)
-        stop = stop_data(data["stop"])
+        train = train_data(rawtrain)
+        tune = tune_data.map(data=unmapped(rawtune), timestep=times)
+        stop = stop_data(rawtune)
         # Run hyperparameter tuning
         params = tuning(
             train_data=train,

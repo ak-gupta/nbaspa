@@ -25,11 +25,10 @@ models. The **build** dataset will be broken down for each model:
 |               +----------------+-----------------------------+----------------------------------+
 |               | Tune           | 25% (20%)                   | Hyperparameter tuning data.      |
 +---------------+----------------+-----------------------------+----------------------------------+
-| ``xgboost``   | Train          | 50% (40%)                   | Model training data.             |
+| ``xgboost``   | Train          | 75% (60%)                   | Model training data.             |
 |               +----------------+-----------------------------+----------------------------------+
-|               | Stopping       | 25% (20%)                   | Data for early stopping [*]_     |
-|               +----------------+-----------------------------+----------------------------------+
-|               | Tune           | 25% (20%)                   | Hyperparameter tuning data.      |
+|               | Stopping/Tune  | 25% (20%)                   | | Data for tuning and early      |
+|               |                |                             | | stopping [*]_                  |
 +---------------+----------------+-----------------------------+----------------------------------+
 
 .. [*] We will use `early stopping <https://xgboost.readthedocs.io/en/latest/python/python_intro.html#early-stopping>`_

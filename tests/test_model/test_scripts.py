@@ -19,7 +19,8 @@ def test_build_cli(gamelocation):
     )
 
     assert result.exit_code == 0
-    assert Path(gamelocation, "models", "build.csv").is_file()
+    assert Path(gamelocation, "models", "train.csv").is_file()
+    assert Path(gamelocation, "models", "tune.csv").is_file()
     assert Path(gamelocation, "models", "holdout.csv").is_file()
 
 def test_train_xgboost_cli(gamelocation):
@@ -30,9 +31,6 @@ def test_train_xgboost_cli(gamelocation):
         [
             f"--data-dir={gamelocation}",
             f"--output-dir={gamelocation}",
-            "--splits=0.5",
-            "--splits=0.25",
-            "--splits=0.25",
             "--max-evals=5",
             "--model=xgboost"
         ]
@@ -46,8 +44,13 @@ def test_train_xgboost_cli(gamelocation):
 def test_train_lifelines_cli(gamelocation):
     """Test training a lifelines model."""
     # Drop null rows in the existing data because of weirdness in random nulls
-    build = pd.read_csv(
-        Path(gamelocation, "models", "build.csv"),
+    dftrain = pd.read_csv(
+        Path(gamelocation, "models", "train.csv"),
+        sep="|",
+        dtype={"GAME_ID": str}
+    )
+    tune = pd.read_csv(
+        Path(gamelocation, "models", "tune.csv"),
         sep="|",
         dtype={"GAME_ID": str}
     )
@@ -57,9 +60,13 @@ def test_train_lifelines_cli(gamelocation):
         dtype={"GAME_ID": str}
     )
     # Drop nulls because of the weirdness with random data
-    build = build.dropna()
-    build.to_csv(
-        Path(gamelocation, "models", "build.csv"), sep="|"
+    dftrain = dftrain.dropna()
+    dftrain.to_csv(
+        Path(gamelocation, "models", "train.csv"), sep="|"
+    )
+    tune = tune.dropna()
+    tune.to_csv(
+        Path(gamelocation, "models", "tune.csv"), sep="|"
     )
     holdout = holdout.dropna()
     holdout.to_csv(

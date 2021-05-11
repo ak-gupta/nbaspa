@@ -10,19 +10,19 @@ import pytest
 def data():
     """Create some test model input data."""
     netrating = np.random.uniform(-5.0, 5.0, size=30)
-    gamenets = np.round(np.repeat(netrating, 5), 1)
+    gamenets = np.round(np.random.choice(netrating, 200))
     static_df = pd.DataFrame(
         {
-            "GAME_ID": [f"00218DUMMY{idx}" for idx in range(1, 151)],
-            "HOME_W_PCT": np.round(np.random.uniform(0.3, 0.7, size=150), 2),
-            "VISITOR_W_PCT": np.round(np.random.uniform(0.3, 0.7, size=150), 2),
-            "LAST_GAME_WIN": np.random.binomial(1, 0.5, size=150),
-            "HOME_GAMES_IN_LAST_3_DAYS": np.random.randint(0, 2, size=150),
-            "HOME_GAMES_IN_LAST_5_DAYS": np.random.randint(0, 3, size=150),
-            "HOME_GAMES_IN_LAST_7_DAYS": np.random.randint(2, 4, size=150),
-            "VISITOR_GAMES_IN_LAST_3_DAYS": np.random.randint(0, 2, size=150),
-            "VISITOR_GAMES_IN_LAST_5_DAYS": np.random.randint(0, 3, size=150),
-            "VISITOR_GAMES_IN_LAST_7_DAYS": np.random.randint(2, 4, size=150),
+            "GAME_ID": [f"00218DUMMY{idx}" for idx in range(1, 201)],
+            "HOME_W_PCT": np.round(np.random.uniform(0.3, 0.7, size=200), 2),
+            "VISITOR_W_PCT": np.round(np.random.uniform(0.3, 0.7, size=200), 2),
+            "LAST_GAME_WIN": np.random.binomial(1, 0.5, size=200),
+            "HOME_GAMES_IN_LAST_3_DAYS": np.random.randint(0, 2, size=200),
+            "HOME_GAMES_IN_LAST_5_DAYS": np.random.randint(0, 3, size=200),
+            "HOME_GAMES_IN_LAST_7_DAYS": np.random.randint(2, 4, size=200),
+            "VISITOR_GAMES_IN_LAST_3_DAYS": np.random.randint(0, 2, size=200),
+            "VISITOR_GAMES_IN_LAST_5_DAYS": np.random.randint(0, 3, size=200),
+            "VISITOR_GAMES_IN_LAST_7_DAYS": np.random.randint(2, 4, size=200),
         }
     )
     np.random.shuffle(gamenets)

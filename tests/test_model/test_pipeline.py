@@ -26,11 +26,17 @@ def test_data_pipeline(gamelocation):
     )
 
     assert output.is_successful()
-    assert Path(gamelocation, "models", "build.csv").is_file()
+    assert Path(gamelocation, "models", "train.csv").is_file()
+    assert Path(gamelocation, "models", "tune.csv").is_file()
     assert Path(gamelocation, "models", "holdout.csv").is_file()
 
-    build = pd.read_csv(
-        Path(gamelocation, "models", "build.csv"),
+    train = pd.read_csv(
+        Path(gamelocation, "models", "train.csv"),
+        sep="|",
+        dtype={"GAME_ID": str}
+    )
+    tune = pd.read_csv(
+        Path(gamelocation, "models", "tune.csv"),
         sep="|",
         dtype={"GAME_ID": str}
     )
@@ -40,14 +46,20 @@ def test_data_pipeline(gamelocation):
         dtype={"GAME_ID": str}
     )
 
-    assert len(np.unique(build["GAME_ID"].values)) == 120
-    assert len(np.unique(holdout["GAME_ID"].values)) == 30
+    assert len(np.unique(train["GAME_ID"].values)) == 120
+    assert len(np.unique(tune["GAME_ID"].values)) == 40
+    assert len(np.unique(holdout["GAME_ID"].values)) == 40
 
 def test_lifelines_pipelines(gamelocation):
     """Test fitting a lifelines model."""
     # Create and run the flow
-    build = pd.read_csv(
-        Path(gamelocation, "models", "build.csv"),
+    train = pd.read_csv(
+        Path(gamelocation, "models", "train.csv"),
+        sep="|",
+        dtype={"GAME_ID": str}
+    )
+    tune = pd.read_csv(
+        Path(gamelocation, "models", "tune.csv"),
         sep="|",
         dtype={"GAME_ID": str}
     )
@@ -57,9 +69,13 @@ def test_lifelines_pipelines(gamelocation):
         dtype={"GAME_ID": str}
     )
     # Drop nulls because of the weirdness with random data
-    build = build.dropna()
-    build.to_csv(
-        Path(gamelocation, "models", "build.csv"), sep="|"
+    train = train.dropna()
+    train.to_csv(
+        Path(gamelocation, "models", "train.csv"), sep="|"
+    )
+    tune = tune.dropna()
+    tune.to_csv(
+        Path(gamelocation, "models", "tune.csv"), sep="|"
     )
     holdout = holdout.dropna()
     holdout.to_csv(
@@ -92,7 +108,6 @@ def test_xgboost_pipeline(mock_auc, gamelocation):
         data_dir=gamelocation,
         output_dir=gamelocation,
         max_evals=5,
-        splits=[0.5, 0.25],
         seed=42
     )
 

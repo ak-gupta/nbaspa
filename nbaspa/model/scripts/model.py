@@ -22,15 +22,15 @@ def model():
 @click.option("--output-dir", help="Path to the output directory.")
 @click.option(
     "--splits",
-    type=click.Tuple([float, float]),
-    default=(0.8, 0.2),
+    type=click.Tuple([float, float, float]),
+    default=(0.6, 0.2, 0.2),
     help="Percentage splits for build and holdout data",
 )
 @click.option("--seed", default=42, type=int, help="Random seed for segmentation")
 def build(data_dir, output_dir, splits, seed):
-    """Split the entire dataset into build and holdout sets.
+    """Split the entire dataset into train, tune, and holdout sets.
 
-    Saves the data to ``build.csv`` and ``holdout.csv`` within the ``models``
+    Saves the data to ``train.csv``, ``tune.csv``, and ``holdout.csv`` within the ``models``
     subfolder in ``data_dir``.
     """
     flow = gen_data_pipeline()
@@ -43,15 +43,8 @@ def build(data_dir, output_dir, splits, seed):
 @click.option("--data-dir", help="Path to the data directory.")
 @click.option("--output-dir", help="Path to the output directory.")
 @click.option(
-    "--splits",
-    type=float,
-    multiple=True,
-    default=(0.75, 0.25),
-    help="Percentage splits for train, stopping, and tune data",
-)
-@click.option(
     "--max-evals",
-    default=100,
+    default=5000,
     type=int,
     help="Number of hyperparameter tuning iterations",
 )
@@ -62,14 +55,13 @@ def build(data_dir, output_dir, splits, seed):
     default="lifelines",
     help="Whether to fit an XGBoost or lifelines model",
 )
-def train(data_dir, output_dir, splits, max_evals, seed, model):
+def train(data_dir, output_dir, max_evals, seed, model):
     """Train the survival analysis model.
 
     The model training involves
 
     \b
-    * Loading the ``build.csv`` data,
-    * Segment the data,
+    * Loading the training and stopping/tuning data,
     * Tune the parameters using ``hyperopt``, and
     * Fit the model using the best parameters.
 
@@ -83,19 +75,12 @@ def train(data_dir, output_dir, splits, max_evals, seed, model):
     if model == "lifelines":
         flow = gen_lifelines_pipeline()
     else:
-        if len(splits) < 3:
-            click.secho(
-                "Please provide 3 values for split (one for train, stop, and tune)",
-                fg="red",
-            )
-            raise ValueError
         flow = gen_xgboost_pipeline()
 
     run_pipeline(
         flow=flow,
         data_dir=data_dir,
         output_dir=output_dir,
-        splits=splits,
         max_evals=max_evals,
         seed=seed,
     )
@@ -110,7 +95,10 @@ def train(data_dir, output_dir, splits, max_evals, seed, model):
     type=click.Tuple([str, str]),
     help="Alias and location for model pickle files",
 )
-def evaluate(data_dir, output_dir, model):
+@click.option(
+    "--step", type=int, default=10, help="Number of seconds between each measurement of AUROC"
+)
+def evaluate(data_dir, output_dir, model, step):
     """Evaluate the models using AUROC over time."""
-    flow = gen_evaluate_pipeline(**{name: location for name, location in model})
+    flow = gen_evaluate_pipeline(**{name: location for name, location in model}, step=step)
     run_pipeline(flow, data_dir=data_dir, output_dir=output_dir)
