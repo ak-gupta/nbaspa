@@ -45,17 +45,13 @@ class FitXGBoost(Task):
         """
         # Create datasets
         self.logger.info("Converting training data to ``xgb.DMatrix``")
-        train = train_data.copy()
-        train.loc[train[META["event"]] == 0, "stop"] = -train["stop"]
-        dtrain = xgb.DMatrix(train[META["static"] + META["dynamic"]], train["stop"])
+        dtrain = _convert_data(data=train_data)
         evals = [
             (dtrain, "train"),
         ]
         if stopping_data is not None:
             self.logger.info("Converting stopping data to ``xgb.DMatrix``")
-            stop = stopping_data.copy()
-            stop.loc[stop[META["event"]] == 0, "stop"] = -stop["stop"]
-            dstop = xgb.DMatrix(stop[META["static"] + META["dynamic"]], stop["stop"])
+            dstop = _convert_data(data=stopping_data)
             evals.append((dstop, "stopping"))
 
         self.logger.info("Training the model...")
@@ -75,6 +71,25 @@ class FitXGBoost(Task):
 
         return model
 
+
+def _convert_data(data: pd.DataFrame) -> xgb.DMatrix:
+    """Convert the input dataframe to the format expected by XGBoost.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The input data.
+    
+    Returns
+    -------
+    xgb.DMatrix
+        The output object for XGBoost.
+    """
+    df = data.copy()
+    df.loc[df[META["event"]] == 0, "stop"] = -df["stop"]
+    dmat = xgb.DMatrix(df[META["static"] + META["dynamic"]], df["stop"])
+
+    return dmat
 
 def _generate_cumulative_hazard(
     model: xgb.Booster,

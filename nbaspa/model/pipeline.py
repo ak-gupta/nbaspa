@@ -239,7 +239,7 @@ def gen_xgboost_pipeline() -> Flow:
             train_data=train,
             tune_data=tune,
             stopping_data=stop,
-            early_stopping_rounds=5,
+            early_stopping_rounds=25,
             num_boost_round=10000,
             max_evals=max_evals,
             seed=seed,
@@ -251,7 +251,7 @@ def gen_xgboost_pipeline() -> Flow:
             params=params["best"],
             train_data=train,
             stopping_data=stop,
-            early_stopping_rounds=5,
+            early_stopping_rounds=25,
             num_boost_round=10000,
             verbose_eval=False,
         )
