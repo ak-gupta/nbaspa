@@ -20,6 +20,7 @@ REQUIREMENTS = [
     "ratelimit>=2.2.1,<=2.2.1",
     "requests>=2.25.1,<=2.25.1",
     "scikit-learn>=0.24.1,<=0.24.1",
+    "shap[plots]>=0.39.0,<=0.39.0",
     "seaborn>=0.11.1,<=0.11.1",
     "xgboost>=1.3.3,<=1.3.3"
 ]

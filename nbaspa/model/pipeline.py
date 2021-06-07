@@ -29,6 +29,8 @@ from .tasks import (
     AUROCLift,
     MeanAUROCLift,
     PlotMetric,
+    PlotShapSummary,
+    XGBoostShap
 )
 
 
@@ -220,6 +222,16 @@ def gen_xgboost_pipeline() -> Flow:
             dir=".", location="{output_dir}/models/{today}/xgboost/model.pkl"
         ),
     )
+    calcshap = XGBoostShap(name="Calculate SHAP Values")
+    plotshap = PlotShapSummary(
+        name="Plot SHAP values",
+        checkpoint=True,
+        result=LocalResult(
+            serializer=Plot(),
+            dir=".",
+            location="{output_dir}/models/{today}/xgboost/shap-summary.png"
+        ),
+    )
 
     # Generate the flow
     with Flow(name="Train Cox model") as flow:
@@ -247,7 +259,7 @@ def gen_xgboost_pipeline() -> Flow:
         _ = retrieve_best(task_result=params, key="best")
         tuneplots(params["trials"])
         # Fit the model
-        _ = trained(
+        model = trained(
             params=params["best"],
             train_data=train,
             stopping_data=stop,
@@ -255,6 +267,9 @@ def gen_xgboost_pipeline() -> Flow:
             num_boost_round=10000,
             verbose_eval=False,
         )
+        # SHAP
+        shap_values = calcshap(model=model, train_data=train)
+        _ = plotshap(shap_values=shap_values)
 
     return flow
 

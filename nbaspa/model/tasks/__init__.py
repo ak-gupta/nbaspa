@@ -11,8 +11,8 @@ from .lifelines import (
 from .metrics import AUROC, AUROCLift, MeanAUROCLift
 from .predict import WinProbability
 from .tuning import LifelinesTuning, XGBoostTuning
-from .visualization import PlotMetric, PlotProbability, PlotTuning
-from .xgboost import FitXGBoost
+from .visualization import PlotMetric, PlotProbability, PlotTuning, PlotShapSummary
+from .xgboost import FitXGBoost, XGBoostShap
 
 __all__: List[str] = [
     "SurvivalData",
@@ -32,5 +32,7 @@ __all__: List[str] = [
     "LifelinesTuning",
     "XGBoostTuning",
     "PlotTuning",
+    "PlotShapSummary",
     "FitXGBoost",
+    "XGBoostShap"
 ]

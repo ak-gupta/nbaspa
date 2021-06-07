@@ -1,10 +1,11 @@
 """Tasks for XGBoost."""
 
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 from prefect import Task
+import shap
 import xgboost as xgb
 
 from .meta import META
@@ -71,25 +72,55 @@ class FitXGBoost(Task):
 
         return model
 
+class XGBoostShap(Task):
+    """Calculate the SHAP values for the XGBoost model."""
 
-def _convert_data(data: pd.DataFrame) -> xgb.DMatrix:
+    def run(  # type: ignore
+        self,
+        model: xgb.Booster,
+        train_data: pd.DataFrame,
+    ) -> List:
+        """Calculate the SHAP values.
+
+        Parameters
+        ----------
+        model : xgb.Booster
+            The trained model object.
+        train_data : pd.DataFrame
+            The raw training data.
+        
+        Returns
+        -------
+        shap.Explainer
+            The SHAP values.
+        """
+        dtrain = _convert_data(data=train_data, dmat=False)
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer(dtrain[META["static"] + META["dynamic"]])
+
+        return shap_values
+
+def _convert_data(data: pd.DataFrame, dmat: bool = True) -> Union[xgb.DMatrix, pd.DataFrame]:
     """Convert the input dataframe to the format expected by XGBoost.
 
     Parameters
     ----------
     data : pd.DataFrame
         The input data.
+    dmat : bool, optional (default True)
+        Whether or not to return a ``xgb.DMatrix`` or ``pd.DataFrame``.
     
     Returns
     -------
-    xgb.DMatrix
+    xgb.DMatrix or pd.DataFrame
         The output object for XGBoost.
     """
     df = data.copy()
     df.loc[df[META["event"]] == 0, "stop"] = -df["stop"]
-    dmat = xgb.DMatrix(df[META["static"] + META["dynamic"]], df["stop"])
-
-    return dmat
+    if dmat:
+        return xgb.DMatrix(df[META["static"] + META["dynamic"]], df["stop"])
+    else:
+        return df
 
 def _generate_cumulative_hazard(
     model: xgb.Booster,

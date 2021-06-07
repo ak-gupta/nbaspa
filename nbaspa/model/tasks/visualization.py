@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from prefect import Task
 import seaborn as sns
+import shap
 
 from .meta import META
 
@@ -160,5 +161,28 @@ class PlotTuning(Task):
                     x=param, y="loss", hue="best", legend=False, data=df, ax=ax
                 )
         fig.tight_layout()
+
+        return fig
+
+class PlotShapSummary(Task):
+    """Plot the SHAP Values for a model."""
+
+    def run(self, shap_values: List):  # type: ignore
+        """Create a summary plot for the SHAP values.
+
+        Parameters
+        ----------
+        shap_values : List
+            The SHAP values.
+        
+        Returns
+        -------
+        Figure
+            The matplotlib Figure object.
+        """
+        shap.plots.beeswarm(
+            shap_values, show=False, log_scale=True
+        )
+        fig = plt.gcf()
 
         return fig
