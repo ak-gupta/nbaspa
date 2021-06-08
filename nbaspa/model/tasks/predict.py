@@ -55,7 +55,7 @@ class WinProbability(Task):
             The updated dataset.
         """
         # Get the cumulative hazard -- copying from ``lifelines.fitters.SemiParametericPHFitter``
-        vals = model.predict_partial_hazard(data)
+        vals = model.predict_partial_hazard(data[META["static"] + META["dynamic"]])
         c0 = interpolate_at_times(
             model.baseline_cumulative_hazard_, data["stop"].values
         )

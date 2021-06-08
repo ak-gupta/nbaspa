@@ -30,7 +30,9 @@ from .tasks import (
     MeanAUROCLift,
     PlotMetric,
     PlotShapSummary,
-    XGBoostShap
+    XGBoostShap,
+    CalibrateClassifier,
+    PlotCalibration
 )
 
 
@@ -147,6 +149,23 @@ def gen_lifelines_pipeline() -> Flow:
             dir=".", location="{output_dir}/models/{today}/lifelines/model.pkl"
         ),
     )
+    calc_sprob = WinProbability(name="Calculate survival probability")
+    cal = CalibrateClassifier(
+        name="Calibrate Lifelines model",
+        checkpoint=True,
+        result=LocalResult(
+            dir=".", location="{output_dir}/models/{today}/lifelines/calibrator.pkl"
+        )
+    )
+    pcal = PlotCalibration(
+        name="Plot calibration curve",
+        checkpoint=True,
+        result=LocalResult(
+            serializer=Plot(),
+            dir=".",
+            location="{output_dir}/models/{today}/lifelines/calibration-curve.png",
+        ),
+    )
 
     # Generate the flow
     with Flow(name="Train Cox model") as flow:
@@ -166,7 +185,10 @@ def gen_lifelines_pipeline() -> Flow:
         _ = retrieve_best(task_result=params, key="best")
         tuneplots(params["trials"])
         model_obj = model(params["best"])
-        _ = trained(model=model_obj, data=train)
+        trained_model = trained(model=model_obj, data=train)
+        sprob = calc_sprob(model=trained_model, data=train)
+        iso = cal(train_data=sprob)
+        _ = pcal(data=sprob, calibrator=iso)
 
     return flow
 
@@ -232,6 +254,23 @@ def gen_xgboost_pipeline() -> Flow:
             location="{output_dir}/models/{today}/xgboost/shap-summary.png"
         ),
     )
+    calc_sprob = WinProbability(name="Calculate survival probability")
+    cal = CalibrateClassifier(
+        name="Calibrate XGBoost model",
+        checkpoint=True,
+        result=LocalResult(
+            dir=".", location="{output_dir}/models/{today}/xgboost/calibrator.pkl"
+        )
+    )
+    pcal = PlotCalibration(
+        name="Plot calibration curve",
+        checkpoint=True,
+        result=LocalResult(
+            serializer=Plot(),
+            dir=".",
+            location="{output_dir}/models/{today}/xgboost/calibration-curve.png",
+        ),
+    )
 
     # Generate the flow
     with Flow(name="Train Cox model") as flow:
@@ -270,6 +309,10 @@ def gen_xgboost_pipeline() -> Flow:
         # SHAP
         shap_values = calcshap(model=model, train_data=train)
         _ = plotshap(shap_values=shap_values)
+        # Calibrate
+        sprob = calc_sprob(model=model, data=train)
+        iso = cal(train_data=sprob)
+        _ = pcal(data=sprob, calibrator=iso)
 
     return flow
 
