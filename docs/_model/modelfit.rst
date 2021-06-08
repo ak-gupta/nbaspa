@@ -31,6 +31,9 @@ models. The **build** dataset will be broken down for each model:
 |               |                |                             | | stopping [*]_                  |
 +---------------+----------------+-----------------------------+----------------------------------+
 
+The datasets will be stratified by season and by the target to ensure that the models are being
+built on representative data.
+
 .. [*] We will use `early stopping <https://xgboost.readthedocs.io/en/latest/python/python_intro.html#early-stopping>`_
        to determine the number of boosting rounds for the model.
 
@@ -129,6 +132,16 @@ After iteration, we used the following space:
 +-----------------------+-----------------------------+
 | ``min_child_weight``  | :math:`QUnif(450, 480, 1)`  |
 +-----------------------+-----------------------------+
+
+We also added a `monotonic constraint <https://xgboost.readthedocs.io/en/latest/tutorials/monotonic.html>`_
+to ensure that the model output is monotonic in scoring margin.
+
+-----------
+Calibration
+-----------
+
+We will use `isotonic regression <https://scikit-learn.org/stable/modules/generated/sklearn.isotonic.IsotonicRegression.html#sklearn.isotonic.IsotonicRegression>`_
+to calibrate the output probabilities from each model to ensure that we have interpretable outputs.
 
 ----------------
 Model evaluation
