@@ -2,7 +2,7 @@
 
 from typing import List
 
-from .calibration import CalibrateClassifier
+from .calibration import CalibrateClassifier, CalibrateProbability
 from .data import SurvivalData, SegmentData, CollapseData
 from .io import load_df, LoadData, LoadModel
 from .lifelines import (
@@ -23,6 +23,7 @@ from .xgboost import FitXGBoost, XGBoostShap
 
 __all__: List[str] = [
     "CalibrateClassifier",
+    "CalibrateProbability",
     "SurvivalData",
     "SegmentData",
     "CollapseData",

@@ -32,6 +32,7 @@ from .tasks import (
     PlotShapSummary,
     XGBoostShap,
     CalibrateClassifier,
+    CalibrateProbability,
     PlotCalibration
 )
 
@@ -336,13 +337,17 @@ def gen_evaluate_pipeline(step: int = 10, **kwargs) -> Flow:
     # Initialize the tasks
     modelobjs: Dict = {}
     calc_sprob: Dict = {}
+    calib_sprob: Dict = {}
     sprob_auc: Dict = {}
     calc_lift: Dict = {}
     average_lift: Dict = {}
     for key in kwargs:
-        modelobjs[key] = LoadModel(name=f"Load model {key}")
+        modelobjs[key] = LoadModel(name=f"Load model {key}", nout=2)
         calc_sprob[key] = WinProbability(
             name=f"Calculate survival probability for model {key}"
+        )
+        calib_sprob[key] = CalibrateProbability(
+            name=f"Calibrate survival probability for model {key}"
         )
         sprob_auc[key] = AUROC(name=f"Calculate Cox PH AUROC for model {key}")
         calc_lift[key] = AUROCLift(name=f"Calculate AUROC lift for model {key}")
@@ -383,12 +388,16 @@ def gen_evaluate_pipeline(step: int = 10, **kwargs) -> Flow:
         # Get the predicted probabilities at each time step
         wprob = nba_wprob.map(model=unmapped("nba"), data=test)
         sprob = {
-            key: calc_sprob[key].map(model=unmapped(models[key]), data=test)
+            key: calc_sprob[key].map(model=unmapped(models[key][0]), data=test)
+            for key in kwargs
+        }
+        sprob_cal = {
+            key: calib_sprob[key].map(data=sprob[key], calibrator=unmapped(models[key][1]))
             for key in kwargs
         }
         # Get the AUROC based on the model outputs
         metric_benchmark = wprob_auc.map(data=wprob, mode=unmapped("benchmark"))
-        metric = {key: sprob_auc[key].map(data=sprob[key]) for key in kwargs}
+        metric = {key: sprob_auc[key].map(data=sprob_cal[key]) for key in kwargs}
         # Get the AUROC lift
         lift = {
             key: calc_lift[key](benchmark=metric_benchmark, test=metric[key])

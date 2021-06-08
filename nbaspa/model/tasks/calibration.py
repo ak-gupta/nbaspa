@@ -28,3 +28,30 @@ class CalibrateClassifier(Task):
         iso.fit(train_data[META["survival"]], train_data[META["event"]])
 
         return iso
+
+
+class CalibrateProbability(Task):
+    """Calibrate the output probabilities from a model."""
+
+    def run(  # type: ignore
+        self,
+        data: pd.DataFrame,
+        calibrator: IsotonicRegression
+    ) -> pd.DataFrame:
+        """Calibrate the output probabilities from a model.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            The data with the raw output probabilities.
+        calibrator : IsotonicRegression
+            The fitted calibrator.
+        
+        Returns
+        -------
+        pd.DataFrame
+            The original data with modified probabilities.
+        """
+        data[META["survival"]] = calibrator.predict(data[META["survival"]])
+
+        return data

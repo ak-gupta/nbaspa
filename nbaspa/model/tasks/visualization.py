@@ -223,12 +223,12 @@ class PlotCalibration(Task):
         # Create the plot
         udf = pd.DataFrame(
             {
-                "x": uncal_x, "y": uncal_y, "model": "Uncalibrated"
+                "x": uncal_x, "y": uncal_y, "Model": "Uncalibrated"
             }
         )
         cdf = pd.DataFrame(
             {
-                "x": cal_x, "y": cal_y, "model": "Calibrated"
+                "x": cal_x, "y": cal_y, "Model": "Calibrated"
             }
         )
         plotting_data = pd.concat([udf, cdf])
@@ -237,7 +237,7 @@ class PlotCalibration(Task):
             sns.lineplot(
                 x="x",
                 y="y",
-                hue="model",
+                hue="Model",
                 data=plotting_data,
                 ax=ax
             ).set(
