@@ -92,7 +92,7 @@ class XGBoostShap(Task):
 
         Returns
         -------
-        shap.Explainer
+        List
             The SHAP values.
         """
         dtrain = _convert_data(data=train_data, dmat=False)
