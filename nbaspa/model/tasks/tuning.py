@@ -13,25 +13,25 @@ from sklearn.metrics import roc_auc_score
 import xgboost as xgb
 
 from .meta import META
-from .xgboost import _generate_cumulative_hazard
+from .xgboost import _convert_data, _generate_cumulative_hazard
 
 DEFAULT_LIFELINES_SPACE: Dict = {
-    "penalizer": hp.uniform("penalizer", 0, 0.3),
-    "l1_ratio": hp.uniform("l1_ratio", 0, 0.01),
+    "penalizer": hp.uniform("penalizer", 0.05, 0.15),
+    "l1_ratio": hp.uniform("l1_ratio", 0, 0.015),
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
-    "learning_rate": 0.01,
-    "subsample": hp.uniform("subsample", 0.75, 0.9),
+    "learning_rate": hp.uniform("learning_rate", 0, 0.01),
+    "subsample": hp.uniform("subsample", 0.4, 1),
     "max_delta_step": 1,
-    "max_depth": hp.quniform("max_depth", 5, 15, 1),
-    "gamma": hp.uniform("gamma", 0.6, 0.9),
-    "reg_alpha": hp.uniform("reg_alpha", 0, 0.1),
-    "reg_lambda": hp.uniform("reg_lambda", 0.1, 0.3),
-    "colsample_bytree": hp.uniform("colsample_bytree", 0.3, 0.7),
-    "colsample_bylevel": hp.uniform("colsample_bylevel", 0.4, 0.6),
-    "colsample_bynode": hp.uniform("colsample_bynode", 0.7, 1),
-    "min_child_weight": hp.quniform("min_child_weight", 450, 480, 1),
+    "max_depth": 4,
+    "gamma": hp.uniform("gamma", 0.5, 1),
+    "reg_alpha": hp.uniform("reg_alpha", 0.6, 1),
+    "reg_lambda": hp.uniform("reg_lambda", 0.25, 0.75),
+    "colsample_bytree": hp.uniform("colsample_bytree", 0.5, 1),
+    "colsample_bylevel": hp.uniform("colsample_bylevel", 0.8, 1),
+    "colsample_bynode": hp.uniform("colsample_bynode", 0, 0.5),
+    "min_child_weight": hp.quniform("min_child_weight", 510, 530, 1),
     "monotone_constraints": str(
         tuple(int(col == "SCOREMARGIN") for col in META["static"] + META["dynamic"])
     ),
@@ -181,17 +181,12 @@ class XGBoostTuning(Task):
         """
         # Convert training, tuning, and stopping data to the XGBoost format
         self.logger.info("Converting training data to ``xgb.DMatrix``")
-        train = train_data.copy()
-        train.loc[train[META["event"]] == 0, "stop"] = -train["stop"]
-        dtrain = xgb.DMatrix(train[META["static"] + META["dynamic"]], train["stop"])
-
+        dtrain = _convert_data(data=train_data)
         evals = [(dtrain, "train")]
 
         if stopping_data is not None:
             self.logger.info("Converting stopping data to ``xgb.DMatrix``")
-            stop = stopping_data.copy()
-            stop.loc[stop[META["event"]] == 0, "stop"] = -stop["stop"]
-            dstop = xgb.DMatrix(stop[META["static"] + META["dynamic"]], stop["stop"])
+            dstop = _convert_data(data=stopping_data)
             evals.append((dstop, "stopping"))
 
         # Create an internal function for fitting, trainin, evaluating
@@ -233,7 +228,8 @@ class XGBoostTuning(Task):
                 c0 = interpolate_at_times(cumulative_hazard_, dataset["stop"].values)
                 metric.append(
                     roc_auc_score(
-                        y_true=tuning[META["event"]].values, y_score=1 - np.exp(-(c0 * predt))
+                        y_true=tuning[META["event"]].values,
+                        y_score=1 - np.exp(-(c0 * predt)),
                     )
                 )
 

@@ -18,6 +18,26 @@ else:
     CURRENT_SEASON_YEAR = str(TODAY.year - 1)
 
 SEASONS: Dict = {
+    "2005-06": {
+        "START": datetime.datetime(year=2005, month=11, day=1),
+        "END": datetime.datetime(year=2006, month=4, day=19),
+    },
+    "2006-07": {
+        "START": datetime.datetime(year=2006, month=10, day=31),
+        "END": datetime.datetime(year=2007, month=4, day=18),
+    },
+    "2007-08": {
+        "START": datetime.datetime(year=2007, month=10, day=30),
+        "END": datetime.datetime(year=2008, month=4, day=16),
+    },
+    "2008-09": {
+        "START": datetime.datetime(year=2008, month=10, day=28),
+        "END": datetime.datetime(year=2009, month=4, day=16),
+    },
+    "2009-10": {
+        "START": datetime.datetime(year=2009, month=10, day=27),
+        "END": datetime.datetime(year=2010, month=4, day=14),
+    },
     "2010-11": {
         "START": datetime.datetime(year=2010, month=10, day=26),
         "END": datetime.datetime(year=2011, month=4, day=13),

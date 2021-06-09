@@ -2,6 +2,7 @@
 
 from typing import List
 
+from .calibration import CalibrateClassifier, CalibrateProbability
 from .data import SurvivalData, SegmentData, CollapseData
 from .io import load_df, LoadData, LoadModel
 from .lifelines import (
@@ -11,10 +12,18 @@ from .lifelines import (
 from .metrics import AUROC, AUROCLift, MeanAUROCLift
 from .predict import WinProbability
 from .tuning import LifelinesTuning, XGBoostTuning
-from .visualization import PlotMetric, PlotProbability, PlotTuning
-from .xgboost import FitXGBoost
+from .visualization import (
+    PlotMetric,
+    PlotProbability,
+    PlotTuning,
+    PlotShapSummary,
+    PlotCalibration,
+)
+from .xgboost import FitXGBoost, XGBoostShap
 
 __all__: List[str] = [
+    "CalibrateClassifier",
+    "CalibrateProbability",
     "SurvivalData",
     "SegmentData",
     "CollapseData",
@@ -32,5 +41,8 @@ __all__: List[str] = [
     "LifelinesTuning",
     "XGBoostTuning",
     "PlotTuning",
+    "PlotShapSummary",
+    "PlotCalibration",
     "FitXGBoost",
+    "XGBoostShap",
 ]

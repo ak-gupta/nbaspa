@@ -6,6 +6,7 @@ from lifelines.utils import add_covariate_to_timeline, to_long_format
 import numpy as np
 import pandas as pd
 from prefect import Task
+from sklearn.model_selection import StratifiedShuffleSplit
 
 from .meta import META
 
@@ -66,22 +67,22 @@ class SegmentData(Task):
     def run(  # type: ignore
         self,
         data: pd.DataFrame,
-        splits: List[float] = [0.85],
+        splits: List[float] = [0.8, 0.2],
         keys: List[str] = ["train", "test"],
         seed: int = 42,
     ) -> Dict[str, pd.DataFrame]:
         """Split the longform data for model training.
 
-        Splits the data by ``GAME_ID`` value.
+        Splits the data by ``GAME_ID`` value using stratified sampling to ensure
+        each dataset adequately represents the entire input data.
 
         Parameters
         ----------
         data : pd.DataFrame
             The initial dataframe.
-        splits : list, optional (default [0.85])
+        splits : list, optional (default [0.8, 0.2])
             The percentage of games that should be included in each output
-            dataset. The length of this array should be one less than the
-            number of keys
+            dataset.
         keys : list, optional (default ["train", "test"])
             The dictionary keys for the output.
         seed : int, optional (default 42)
@@ -96,22 +97,36 @@ class SegmentData(Task):
         np.random.seed(seed)
 
         # Get an array of the unique GAME_ID values
-        games = np.unique(data[META["id"]])
-        np.random.shuffle(games)
-        # Split
-        splits = np.split(
-            games,
-            [
-                int(len(games) * np.sum(splits[: (index + 1)]))
-                for index in range(len(splits))
-            ],
+        games = data[[META["id"], META["event"]]].copy()
+        games[META["event"]] = games[META["event"]].astype(int)
+        games = games.groupby(META["id"]).tail(n=1)
+        games["indicator"] = games[META["id"]].str[2:5] + games[META["event"]].astype(
+            str
         )
+        # Split
+        if isinstance(splits, tuple):
+            splits = list(splits)
+        split_arrays = []
+        while len(splits) > 1:
+            # Create the splitter
+            splitter = StratifiedShuffleSplit(
+                n_splits=1, test_size=np.sum(splits[1:]) / np.sum(splits)
+            )
+            self.logger.info(f"Retrieving {splits[0]} proportion from the data")
+            # Split the data
+            train_games, test_games = next(splitter.split(games, games["indicator"]))
+            split_arrays.append(games.iloc[train_games][META["id"]].to_numpy())
+            # Remove the first set for the next iteration
+            games = games.iloc[test_games].reset_index(drop=True)
+            splits.pop(0)
+        split_arrays.append(games[META["id"]].to_numpy())
+
         output: Dict = {}
         for index, value in enumerate(keys):
-            output[value] = data[data[META["id"]].isin(splits[index])].copy()
+            output[value] = data[data[META["id"]].isin(split_arrays[index])].copy()
             self.logger.info(
-                f"Dataset ``{value}`` has {len(splits[index])} games with {len(output[value])} "
-                "rows"
+                f"Dataset ``{value}`` has {len(split_arrays[index])} games with "
+                f"{len(output[value])} rows"
             )
 
         return output
@@ -151,10 +166,6 @@ class CollapseData(Task):
             self.logger.info(f"Collapsing the data to time {timestep}")
             shortform = data[data["start"] <= timestep].copy()
             shortform = shortform.groupby(META["id"]).tail(n=1).copy()
-            if timestep == 0:
-                self.logger.info("Removing time-varying effects")
-                for col in META["dynamic"]:
-                    shortform[col] = 0
             # Add the final win predictor
             shortform.set_index(META["id"], inplace=True)
             shortform["WIN"] = data.groupby(META["id"])["WIN"].sum()

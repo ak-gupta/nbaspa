@@ -15,7 +15,7 @@ def survivaldata(data):
     pre = SurvivalData()
     df = pre.run(data)
     seg = SegmentData()
-    segdata = seg.run(data=df, splits=[0.6, 0.2], keys=["train", "tune", "stop"], seed=42)
+    segdata = seg.run(data=df, splits=[0.6, 0.2, 0.2], keys=["train", "tune", "stop"], seed=42)
 
     return segdata["train"], segdata["tune"], segdata["stop"]
 

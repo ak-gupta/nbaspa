@@ -14,9 +14,11 @@ autograd==1.3
     # via
     #   autograd-gamma
     #   lifelines
-certifi==2020.12.5
+backcall==0.2.0
+    # via ipython
+certifi==2021.5.30
     # via requests
-chardet==3.0.4
+chardet==4.0.0
     # via requests
 click==7.1.2
     # via
@@ -25,27 +27,33 @@ click==7.1.2
     #   prefect
 cloudpickle==1.6.0
     # via
+    #   dask
     #   distributed
     #   hyperopt
     #   prefect
+    #   shap
 croniter==0.3.37
     # via prefect
 cycler==0.10.0
     # via matplotlib
-dask==2021.2.0
+dask==2021.6.0
     # via
     #   distributed
     #   prefect
 decorator==4.4.2
-    # via networkx
-distributed==2021.2.0
+    # via
+    #   ipython
+    #   networkx
+distributed==2021.6.0
     # via prefect
-docker==4.4.2
+docker==5.0.0
     # via prefect
 formulaic==0.2.3
     # via lifelines
 fsspec==0.8.5
-    # via nbaspa (setup.py)
+    # via
+    #   dask
+    #   nbaspa (setup.py)
 future==0.18.2
     # via
     #   autograd
@@ -56,10 +64,16 @@ hyperopt==0.2.5
     # via nbaspa (setup.py)
 idna==2.10
     # via requests
-importlib-resources==5.1.0
+importlib-resources==5.1.4
     # via prefect
-interface-meta==1.2.2
+interface-meta==1.2.3
     # via formulaic
+ipython-genutils==0.2.0
+    # via traitlets
+ipython==7.24.1
+    # via shap
+jedi==0.18.0
+    # via ipython
 joblib==1.0.1
     # via scikit-learn
 kiwisolver==1.3.1
@@ -68,17 +82,24 @@ lifelines==0.25.9
     # via nbaspa (setup.py)
 lightgbm==3.1.1
     # via nbaspa (setup.py)
+llvmlite==0.36.0
+    # via numba
+locket==0.2.1
+    # via partd
 marshmallow-oneofschema==2.1.0
     # via prefect
-marshmallow==3.10.0
+marshmallow==3.12.1
     # via
     #   marshmallow-oneofschema
     #   prefect
+matplotlib-inline==0.1.2
+    # via ipython
 matplotlib==3.3.4
     # via
     #   lifelines
     #   nbaspa (setup.py)
     #   seaborn
+    #   shap
 msgpack==1.0.2
     # via
     #   distributed
@@ -87,9 +108,11 @@ mypy-extensions==0.4.3
     # via prefect
 natsort==7.1.1
     # via croniter
-networkx==2.5
+networkx==2.5.1
     # via hyperopt
-numpy==1.20.1
+numba==0.53.1
+    # via shap
+numpy==1.20.3
     # via
     #   autograd
     #   formulaic
@@ -97,10 +120,12 @@ numpy==1.20.1
     #   lifelines
     #   lightgbm
     #   matplotlib
+    #   numba
     #   pandas
     #   scikit-learn
     #   scipy
     #   seaborn
+    #   shap
     #   xgboost
 pandas==1.2.1
     # via
@@ -108,14 +133,29 @@ pandas==1.2.1
     #   lifelines
     #   nbaspa (setup.py)
     #   seaborn
+    #   shap
+parso==0.8.2
+    # via jedi
+partd==1.2.0
+    # via dask
 pendulum==2.1.2
     # via prefect
-pillow==8.1.0
+pexpect==4.8.0
+    # via ipython
+pickleshare==0.7.5
+    # via ipython
+pillow==8.2.0
     # via matplotlib
 prefect==0.14.5
     # via nbaspa (setup.py)
+prompt-toolkit==3.0.18
+    # via ipython
 psutil==5.8.0
     # via distributed
+ptyprocess==0.7.0
+    # via pexpect
+pygments==2.9.0
+    # via ipython
 pyparsing==2.4.7
     # via matplotlib
 python-box==5.3.0
@@ -127,7 +167,7 @@ python-dateutil==2.8.1
     #   pandas
     #   pendulum
     #   prefect
-python-slugify==4.0.1
+python-slugify==5.0.2
     # via prefect
 pytz==2021.1
     # via
@@ -135,7 +175,7 @@ pytz==2021.1
     #   prefect
 pytzdata==2020.1
     # via pendulum
-pyyaml==5.3.1
+pyyaml==5.4.1
     # via
     #   dask
     #   distributed
@@ -151,7 +191,8 @@ scikit-learn==0.24.1
     # via
     #   lightgbm
     #   nbaspa (setup.py)
-scipy==1.6.0
+    #   shap
+scipy==1.6.3
     # via
     #   autograd-gamma
     #   formulaic
@@ -160,19 +201,22 @@ scipy==1.6.0
     #   lightgbm
     #   scikit-learn
     #   seaborn
+    #   shap
     #   xgboost
 seaborn==0.11.1
     # via nbaspa (setup.py)
-six==1.15.0
+shap[plots]==0.39.0
+    # via nbaspa (setup.py)
+six==1.16.0
     # via
     #   cycler
-    #   docker
     #   hyperopt
     #   python-dateutil
-    #   websocket-client
-sortedcontainers==2.3.0
+slicer==0.0.7
+    # via shap
+sortedcontainers==2.4.0
     # via distributed
-tabulate==0.8.7
+tabulate==0.8.9
     # via prefect
 tblib==1.7.0
     # via distributed
@@ -183,16 +227,27 @@ threadpoolctl==2.1.0
 toml==0.10.2
     # via prefect
 toolz==0.11.1
-    # via distributed
+    # via
+    #   dask
+    #   distributed
+    #   partd
 tornado==6.1
     # via distributed
-tqdm==4.56.2
-    # via hyperopt
-urllib3==1.26.3
+tqdm==4.61.0
+    # via
+    #   hyperopt
+    #   shap
+traitlets==5.0.5
+    # via
+    #   ipython
+    #   matplotlib-inline
+urllib3==1.26.5
     # via
     #   prefect
     #   requests
-websocket-client==0.57.0
+wcwidth==0.2.5
+    # via prompt-toolkit
+websocket-client==1.0.1
     # via docker
 wheel==0.36.2
     # via lightgbm
@@ -202,6 +257,8 @@ xgboost==1.3.3
     # via nbaspa (setup.py)
 zict==2.0.0
     # via distributed
+zipp==3.4.1
+    # via importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

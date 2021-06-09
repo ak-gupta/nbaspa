@@ -67,12 +67,16 @@ class LoadModel(Task):
 
         Returns
         -------
-        Dict
-            A dictionary with the matching key in ``**kwargs``. The value is
-            the model object.
+        xgb.Booster or CoxTimeVaryingFitter
+            The trained model object.
+        IsotonicRegression
+            The fitted calibrator
         """
         self.logger.info(f"Reading model object from {filepath}")
         with open(Path(filepath), "rb") as infile:
             model = cloudpickle.load(infile)
+        self.logger.info("Reading model calibrator")
+        with open(Path(filepath).parent / "calibrator.pkl", "rb") as infile:
+            calibrator = cloudpickle.load(infile)
 
-        return model
+        return model, calibrator
