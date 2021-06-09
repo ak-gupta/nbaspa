@@ -110,27 +110,27 @@ After iteration, we used the following space:
 | Hyperparameter        | Search space                |
 |                       |                             |
 +=======================+=============================+
-| ``learning_rate``     | 0.01                        |
+| ``learning_rate``     | :math:`Unif(0, 0.01)`       |
 +-----------------------+-----------------------------+
-| ``subsample``         | :math:`Unif(0.75, 0.9)`     |
+| ``subsample``         | :math:`Unif(0.4, 1)`        |
 +-----------------------+-----------------------------+
 | ``max_delta_step``    | 1                           |
 +-----------------------+-----------------------------+
-| ``max_depth``         | :math:`QUnif(5, 15, 1)`     |
+| ``max_depth``         | 4                           |
 +-----------------------+-----------------------------+
-| ``gamma``             | :math:`Unif(0.6, 0.9)`      |
+| ``gamma``             | :math:`Unif(0.5, 1)`        |
 +-----------------------+-----------------------------+
-| ``reg_alpha``         | :math:`Unif(0, 0.1)`        |
+| ``reg_alpha``         | :math:`Unif(0.6, 1)`        |
 +-----------------------+-----------------------------+
-| ``reg_lambda``        | :math:`Unif(0.1, 0.3)`      |
+| ``reg_lambda``        | :math:`Unif(0.25, 0.75)`    |
 +-----------------------+-----------------------------+
-| ``colsample_bytree``  | :math:`Unif(0.3, 0.7)`      |
+| ``colsample_bytree``  | :math:`Unif(0.5, 1)`        |
 +-----------------------+-----------------------------+
-| ``colsample_bylevel`` | :math:`Unif(0.4, 0.6)`      |
+| ``colsample_bylevel`` | :math:`Unif(0.8, 1)`        |
 +-----------------------+-----------------------------+
-| ``colsample_bynode``  | :math:`Unif(0.7, 1)`        |
+| ``colsample_bynode``  | :math:`Unif(0, 0.5)`        |
 +-----------------------+-----------------------------+
-| ``min_child_weight``  | :math:`QUnif(450, 480, 1)`  |
+| ``min_child_weight``  | :math:`QUnif(510, 530, 1)`  |
 +-----------------------+-----------------------------+
 
 We also added a `monotonic constraint <https://xgboost.readthedocs.io/en/latest/tutorials/monotonic.html>`_
