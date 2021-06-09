@@ -65,7 +65,7 @@ def test_fit_xgboost_stopping(mock_train, mock_dmatrix, mock_boos, data):
     ranged = SurvivalData()
     df = ranged.run(data)
     segs = SegmentData()
-    segdata = segs.run(data=df, splits=[0.8], keys=["train", "stop"])
+    segdata = segs.run(data=df, splits=[0.8, 0.2], keys=["train", "stop"])
     train = segdata["train"].copy()
     train.loc[train["WIN"] == 0, "stop"] = -train["stop"]
     stop = segdata["stop"].copy()

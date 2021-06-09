@@ -50,8 +50,10 @@ def test_data_pipeline(gamelocation):
     assert len(np.unique(tune["GAME_ID"].values)) == 40
     assert len(np.unique(holdout["GAME_ID"].values)) == 40
 
-def test_lifelines_pipelines(gamelocation):
+@patch("nbaspa.model.tasks.tuning.roc_auc_score")
+def test_lifelines_pipelines(mock_auc, gamelocation):
     """Test fitting a lifelines model."""
+    mock_auc.return_value = 0.5
     # Create and run the flow
     train = pd.read_csv(
         Path(gamelocation, "models", "train.csv"),
@@ -116,12 +118,10 @@ def test_xgboost_pipeline(mock_auc, gamelocation):
     assert Path(gamelocation, "models", TODAY.strftime("%Y-%m-%d"), "xgboost", "tuning.pkl").is_file()
     assert Path(gamelocation, "models", TODAY.strftime("%Y-%m-%d"), "xgboost", "hyperparameter-tuning.png").is_file()
 
-@patch("nbaspa.model.tasks.WinProbability.run")
 @patch("nbaspa.model.tasks.AUROC.run")
-def test_evaluate_pipeline(mock_auc, mock_wp, gamelocation):
+def test_evaluate_pipeline(mock_auc, gamelocation):
     """Test evaluate pipeline."""
     mock_auc.return_value = 0.5
-    mock_wp.return_value = 0.5
     flow = gen_evaluate_pipeline(
         step=288,
         xgboost=Path(gamelocation, "models", TODAY.strftime("%Y-%m-%d"), "xgboost", "model.pkl"),

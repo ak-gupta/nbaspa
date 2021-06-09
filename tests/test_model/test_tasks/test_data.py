@@ -92,7 +92,7 @@ def test_collapse_data_lr(data):
     tsk = CollapseData()
     output = tsk.run(data=df)
 
-    assert len(output) == 150
+    assert len(output) == 200
     assert output.equals(
         df.groupby("GAME_ID").tail(n=1)
     )
