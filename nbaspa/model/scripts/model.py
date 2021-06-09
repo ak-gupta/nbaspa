@@ -96,9 +96,14 @@ def train(data_dir, output_dir, max_evals, seed, model):
     help="Alias and location for model pickle files",
 )
 @click.option(
-    "--step", type=int, default=10, help="Number of seconds between each measurement of AUROC"
+    "--step",
+    type=int,
+    default=10,
+    help="Number of seconds between each measurement of AUROC",
 )
 def evaluate(data_dir, output_dir, model, step):
     """Evaluate the models using AUROC over time."""
-    flow = gen_evaluate_pipeline(**{name: location for name, location in model}, step=step)
+    flow = gen_evaluate_pipeline(
+        **{name: location for name, location in model}, step=step
+    )
     run_pipeline(flow, data_dir=data_dir, output_dir=output_dir)

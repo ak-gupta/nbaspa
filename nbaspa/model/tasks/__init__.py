@@ -17,7 +17,7 @@ from .visualization import (
     PlotProbability,
     PlotTuning,
     PlotShapSummary,
-    PlotCalibration
+    PlotCalibration,
 )
 from .xgboost import FitXGBoost, XGBoostShap
 
@@ -44,5 +44,5 @@ __all__: List[str] = [
     "PlotShapSummary",
     "PlotCalibration",
     "FitXGBoost",
-    "XGBoostShap"
+    "XGBoostShap",
 ]

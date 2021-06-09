@@ -33,7 +33,7 @@ from .tasks import (
     XGBoostShap,
     CalibrateClassifier,
     CalibrateProbability,
-    PlotCalibration
+    PlotCalibration,
 )
 
 
@@ -93,7 +93,9 @@ def gen_data_pipeline() -> Flow:
         basedata = load(data_dir=data_dir)
         # Format the data
         alldata = format_data(basedata)
-        data = segdata(alldata, splits=splits, keys=["train", "tune", "holdout"], seed=seed)
+        data = segdata(
+            alldata, splits=splits, keys=["train", "tune", "holdout"], seed=seed
+        )
         _ = retrieve_train(task_result=data, key="train")
         _ = retrieve_tune(task_result=data, key="tune")
         _ = retrieve_hold(task_result=data, key="holdout")
@@ -156,7 +158,7 @@ def gen_lifelines_pipeline() -> Flow:
         checkpoint=True,
         result=LocalResult(
             dir=".", location="{output_dir}/models/{today}/lifelines/calibrator.pkl"
-        )
+        ),
     )
     pcal = PlotCalibration(
         name="Plot calibration curve",
@@ -252,7 +254,7 @@ def gen_xgboost_pipeline() -> Flow:
         result=LocalResult(
             serializer=Plot(),
             dir=".",
-            location="{output_dir}/models/{today}/xgboost/shap-summary.png"
+            location="{output_dir}/models/{today}/xgboost/shap-summary.png",
         ),
     )
     calc_sprob = WinProbability(name="Calculate survival probability")
@@ -261,7 +263,7 @@ def gen_xgboost_pipeline() -> Flow:
         checkpoint=True,
         result=LocalResult(
             dir=".", location="{output_dir}/models/{today}/xgboost/calibrator.pkl"
-        )
+        ),
     )
     pcal = PlotCalibration(
         name="Plot calibration curve",
@@ -392,7 +394,9 @@ def gen_evaluate_pipeline(step: int = 10, **kwargs) -> Flow:
             for key in kwargs
         }
         sprob_cal = {
-            key: calib_sprob[key].map(data=sprob[key], calibrator=unmapped(models[key][1]))
+            key: calib_sprob[key].map(
+                data=sprob[key], calibrator=unmapped(models[key][1])
+            )
             for key in kwargs
         }
         # Get the AUROC based on the model outputs

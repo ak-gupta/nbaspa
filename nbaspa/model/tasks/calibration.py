@@ -1,6 +1,5 @@
 """Tasks for model calibration."""
 
-import numpy as np
 import pandas as pd
 from prefect import Task
 from sklearn.isotonic import IsotonicRegression
@@ -18,7 +17,7 @@ class CalibrateClassifier(Task):
         ----------
         train_data : pd.DataFrame
             The training data with the additional ``SURV_PROB`` column.
-        
+
         Returns
         -------
         IsotonicRegression
@@ -34,9 +33,7 @@ class CalibrateProbability(Task):
     """Calibrate the output probabilities from a model."""
 
     def run(  # type: ignore
-        self,
-        data: pd.DataFrame,
-        calibrator: IsotonicRegression
+        self, data: pd.DataFrame, calibrator: IsotonicRegression
     ) -> pd.DataFrame:
         """Calibrate the output probabilities from a model.
 
@@ -46,7 +43,7 @@ class CalibrateProbability(Task):
             The data with the raw output probabilities.
         calibrator : IsotonicRegression
             The fitted calibrator.
-        
+
         Returns
         -------
         pd.DataFrame

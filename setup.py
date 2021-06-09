@@ -28,7 +28,14 @@ REQUIREMENTS = [
 EXTRAS_REQUIRE = {
     "tests": ["pytest", "pytest-cov"],
     "docs": ["sphinx", "furo"],
-    "qa": ["black", "flake8", "mypy", "pip-tools"],
+    "qa": [
+        "black",
+        "flake8",
+        "mypy",
+        "pip-tools",
+        "types-requests",
+        "types-click"
+    ],
 }
 EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["tests"] + EXTRAS_REQUIRE["docs"] + EXTRAS_REQUIRE["qa"]
 

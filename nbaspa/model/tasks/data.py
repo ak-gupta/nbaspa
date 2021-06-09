@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 from prefect import Task
 from sklearn.model_selection import StratifiedShuffleSplit
-from tabulate import tabulate
 
 from .meta import META
 
@@ -101,7 +100,9 @@ class SegmentData(Task):
         games = data[[META["id"], META["event"]]].copy()
         games[META["event"]] = games[META["event"]].astype(int)
         games = games.groupby(META["id"]).tail(n=1)
-        games["indicator"] = games[META["id"]].str[2:5] + games[META["event"]].astype(str)
+        games["indicator"] = games[META["id"]].str[2:5] + games[META["event"]].astype(
+            str
+        )
         # Split
         if isinstance(splits, tuple):
             splits = list(splits)
@@ -109,8 +110,7 @@ class SegmentData(Task):
         while len(splits) > 1:
             # Create the splitter
             splitter = StratifiedShuffleSplit(
-                n_splits=1,
-                test_size=np.sum(splits[1:]) / np.sum(splits)
+                n_splits=1, test_size=np.sum(splits[1:]) / np.sum(splits)
             )
             self.logger.info(f"Retrieving {splits[0]} proportion from the data")
             # Split the data

@@ -228,7 +228,8 @@ class XGBoostTuning(Task):
                 c0 = interpolate_at_times(cumulative_hazard_, dataset["stop"].values)
                 metric.append(
                     roc_auc_score(
-                        y_true=tuning[META["event"]].values, y_score=1 - np.exp(-(c0 * predt))
+                        y_true=tuning[META["event"]].values,
+                        y_score=1 - np.exp(-(c0 * predt)),
                     )
                 )
 
