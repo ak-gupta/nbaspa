@@ -9,6 +9,9 @@ import numpy as np
 import pandas as pd
 from prefect import Task
 import seaborn as sns
+import shap
+from sklearn.calibration import calibration_curve
+from sklearn.isotonic import IsotonicRegression
 
 from .meta import META
 
@@ -59,7 +62,7 @@ class PlotMetric(Task):
         times: List[int],
         metric: str,
         percentage: Optional[bool] = False,
-        **kwargs: List[float]
+        **kwargs: List[float],
     ):
         """Use ``seaborn`` to plot a metric over time.
 
@@ -160,5 +163,72 @@ class PlotTuning(Task):
                     x=param, y="loss", hue="best", legend=False, data=df, ax=ax
                 )
         fig.tight_layout()
+
+        return fig
+
+
+class PlotShapSummary(Task):
+    """Plot the SHAP Values for a model."""
+
+    def run(self, shap_values: List):  # type: ignore
+        """Create a summary plot for the SHAP values.
+
+        Parameters
+        ----------
+        shap_values : List
+            The SHAP values.
+
+        Returns
+        -------
+        Figure
+            The matplotlib Figure object.
+        """
+        shap.plots.beeswarm(shap_values, show=False, log_scale=True)
+        fig = plt.gcf()
+
+        return fig
+
+
+class PlotCalibration(Task):
+    """Create a calibration plot."""
+
+    def run(  # type: ignore
+        self,
+        data: pd.DataFrame,
+        calibrator: IsotonicRegression,
+    ):
+        """Create a calibration curve.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            The data with the additional ``SURV_PROB`` column.
+        calibrator : IsotonicRegression
+            The fitted calibrator object.
+
+        Returns
+        -------
+        Figure
+            The matplotlib Figure object.
+        """
+        # Get the calibration curve for the raw model
+        uncal_x, uncal_y = calibration_curve(
+            data[META["event"]], data[META["survival"]], n_bins=10
+        )
+        # Calibrated data
+        cal_x, cal_y = calibration_curve(
+            data[META["event"]], calibrator.predict(data[META["survival"]]), n_bins=10
+        )
+        # Create the plot
+        udf = pd.DataFrame({"x": uncal_x, "y": uncal_y, "Model": "Uncalibrated"})
+        cdf = pd.DataFrame({"x": cal_x, "y": cal_y, "Model": "Calibrated"})
+        plotting_data = pd.concat([udf, cdf])
+        with sns.axes_style("darkgrid"):
+            fig, ax = plt.subplots(figsize=(12, 8))
+            sns.lineplot(x="x", y="y", hue="Model", data=plotting_data, ax=ax).set(
+                title="Calibration Curve",
+                xlabel="Predicted Probability",
+                ylabel="True Probability",
+            )
 
         return fig

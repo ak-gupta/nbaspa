@@ -192,7 +192,7 @@ To create the **build** and **holdout** CSV files,
 
     flow = gen_data_pipeline()
     output = run_pipeline(
-        flow=flow, data_dir="nba-data", output_dir="nba-data", splits=(0.8, 0.2), seed=42
+        flow=flow, data_dir="nba-data", output_dir="nba-data", splits=(0.6, 0.2, 0.2), seed=42
     )
 
 This flow will save ``build.csv`` and ``holdout.csv`` to ``nba-data/models``.
@@ -209,7 +209,7 @@ To train a ``lifelines`` model,
 
     flow = gen_lifelines_pipeline()
     output = run_pipeline(
-        flow=flow, data_dir="nba-data", output_dir="nba-data", splits=(0.75, 0.25), max_evals=100, seed=42
+        flow=flow, data_dir="nba-data", output_dir="nba-data", max_evals=5000, seed=42
     )
 
 If you ran the flow on 2021-02-21, the ``lifelines`` model artifacts will be saved to the
@@ -221,7 +221,7 @@ If you ran the flow on 2021-02-21, the ``lifelines`` model artifacts will be sav
 
     flow = gen_xgboost_pipeline()
     output = run_pipeline(
-        flow=flow, data_dir="nba-data", output_dir="nba-data", splits=(0.5, 0.25, 0.25), max_evals==100, seed=42
+        flow=flow, data_dir="nba-data", output_dir="nba-data", max_evals=5000, seed=42
     )
 
 If you ran the flow on 2021-02-21, the ``xgboost`` model artifacts will be saved to the
@@ -278,17 +278,13 @@ This CLI call will train a ``lifelines`` model with
 * a maximum of 100 ``hyperopt`` evaluations.
 
 You can modify these parameters with ``--splits`` and ``--max-evals``, respectively.
-To train an ``xgboost`` model, you have to supply ``--splits``:
+To train an ``xgboost`` model,
 
 .. code-block:: console
 
-    $ nbaspa-model train \
-        --data-dir nba-data \
-        --output-dir nba-data \
-        --model xgboost \
-        --splits 0.5 \
-        --splits 0.25 \
-        --splits 0.25
+    $ nbaspa-model train --data-dir nba-data --output-dir nba-data --model xgboost
+
+For the ``xgboost`` model, our tuning dataset will double as the early stopping data.
 
 After you call the ``train`` endpoint you will see a new subfolder within ``nba-data/models``
 corresponding to the system date. The ``lifelines`` artifacts will be saved to a ``lifelines``

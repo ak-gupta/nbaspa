@@ -67,31 +67,22 @@ def test_lifelines_data():
         real.sort_index(axis=1, ascending=True)
     )
 
-def test_segment_data():
+def test_segment_data(data):
     """Test creating dataset splits."""
-    gamelist = []
-    for i in range(10):
-        gamelist += [f"00218DUMMY{i}"] * 10
-    df = pd.DataFrame({"GAME_ID": gamelist})
     tsk = SegmentData()
-    output = tsk.run(data=df, splits=[0.6], keys=["train", "test"])
+    output = tsk.run(data=data, splits=[0.6, 0.4], keys=["train", "test"])
 
     assert len(output) == 2
-    assert len(output["train"]) == 60
-    assert len(output["test"]) == 40
-    assert len(np.unique(output["train"]["GAME_ID"])) == 6
-    assert len(np.unique(output["test"]["GAME_ID"])) == 4
+    assert len(np.unique(output["train"]["GAME_ID"])) == 120
+    assert len(np.unique(output["test"]["GAME_ID"])) == 80
 
     tsk = SegmentData()
-    output = tsk.run(data=df, splits=[0.6, 0.2, 0.2], keys=["train", "tune", "stop"])
+    output = tsk.run(data=data, splits=[0.6, 0.2, 0.2], keys=["train", "tune", "stop"])
 
     assert len(output) == 3
-    assert len(output["train"]) == 60
-    assert len(output["tune"]) == 20
-    assert len(output["stop"]) == 20
-    assert len(np.unique(output["train"]["GAME_ID"])) == 6
-    assert len(np.unique(output["tune"]["GAME_ID"])) == 2
-    assert len(np.unique(output["stop"]["GAME_ID"])) == 2
+    assert len(np.unique(output["train"]["GAME_ID"])) == 120
+    assert len(np.unique(output["tune"]["GAME_ID"])) == 40
+    assert len(np.unique(output["stop"]["GAME_ID"])) == 40
 
 def test_collapse_data_lr(data):
     """Test collapsing the data."""
@@ -101,19 +92,7 @@ def test_collapse_data_lr(data):
     tsk = CollapseData()
     output = tsk.run(data=df)
 
-    assert len(output) == 150
+    assert len(output) == 200
     assert output.equals(
         df.groupby("GAME_ID").tail(n=1)
     )
-
-def test_collapse_data_zero(data):
-    """Test collapsing the data to the first row."""
-    pre = SurvivalData()
-    df = pre.run(data)
-    # Collapse
-    tsk = CollapseData()
-    output = tsk.run(data=df, timestep=0)
-
-    assert all(output["HOME_LINEUP_PLUS_MINUS"] == 0.0)
-    assert all(output["VISITOR_LINEUP_PLUS_MINUS"] == 0.0)
-    assert all(output["SCOREMARGIN"] == 0.0)

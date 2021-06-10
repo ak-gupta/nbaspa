@@ -29,6 +29,11 @@ from .tasks import (
     AUROCLift,
     MeanAUROCLift,
     PlotMetric,
+    PlotShapSummary,
+    XGBoostShap,
+    CalibrateClassifier,
+    CalibrateProbability,
+    PlotCalibration,
 )
 
 
@@ -51,12 +56,21 @@ def gen_data_pipeline() -> Flow:
     load = LoadData(name="Load clean model data")
     format_data = SurvivalData(name="Convert input data to ranged form")
     segdata = SegmentData(name="Split data")
-    retrieve_build = GetItem(
-        name="Get build data",
+    retrieve_train = GetItem(
+        name="Get training data",
         checkpoint=True,
         result=LocalResult(
             dir=".",
-            location="{output_dir}/models/build.csv",
+            location="{output_dir}/models/train.csv",
+            serializer=PandasSerializer(file_type="csv", serialize_kwargs={"sep": "|"}),
+        ),
+    )
+    retrieve_tune = GetItem(
+        name="Get tuning data",
+        checkpoint=True,
+        result=LocalResult(
+            dir=".",
+            location="{output_dir}/models/tune.csv",
             serializer=PandasSerializer(file_type="csv", serialize_kwargs={"sep": "|"}),
         ),
     )
@@ -73,14 +87,17 @@ def gen_data_pipeline() -> Flow:
     with Flow(name="Split data into build and holdout") as flow:
         # Set up parameters
         data_dir = Parameter("data_dir", "nba-data")
-        splits = Parameter("splits", [0.8, 0.2])
+        splits = Parameter("splits", [0.6, 0.2, 0.2])
         seed = Parameter("seed", 42)
         # Load the data
         basedata = load(data_dir=data_dir)
         # Format the data
         alldata = format_data(basedata)
-        data = segdata(alldata, splits=splits, keys=["build", "holdout"], seed=seed)
-        _ = retrieve_build(task_result=data, key="build")
+        data = segdata(
+            alldata, splits=splits, keys=["train", "tune", "holdout"], seed=seed
+        )
+        _ = retrieve_train(task_result=data, key="train")
+        _ = retrieve_tune(task_result=data, key="tune")
         _ = retrieve_hold(task_result=data, key="holdout")
 
     return flow
@@ -101,7 +118,6 @@ def gen_lifelines_pipeline() -> Flow:
     # Create a time range for AUROC calculation -- start to the end of the fourth quarter
     times = np.arange(2890, step=10)
     # Initialize tasks
-    segdata = SegmentData(name="Split data")
     tune_data = CollapseData(name="Create tuning data")
     tuning = LifelinesTuning(
         name="Run lifelines hyperparameter tuning",
@@ -136,28 +152,46 @@ def gen_lifelines_pipeline() -> Flow:
             dir=".", location="{output_dir}/models/{today}/lifelines/model.pkl"
         ),
     )
+    calc_sprob = WinProbability(name="Calculate survival probability")
+    cal = CalibrateClassifier(
+        name="Calibrate Lifelines model",
+        checkpoint=True,
+        result=LocalResult(
+            dir=".", location="{output_dir}/models/{today}/lifelines/calibrator.pkl"
+        ),
+    )
+    pcal = PlotCalibration(
+        name="Plot calibration curve",
+        checkpoint=True,
+        result=LocalResult(
+            serializer=Plot(),
+            dir=".",
+            location="{output_dir}/models/{today}/lifelines/calibration-curve.png",
+        ),
+    )
 
     # Generate the flow
     with Flow(name="Train Cox model") as flow:
         # Define some parameters
         data_dir = Parameter("data_dir", "nba-data")
-        splits = Parameter("splits", [0.75, 0.25])
         max_evals = Parameter("max_evals", 100)
         seed = Parameter("seed", 42)
         # Load the data
-        build = load_df(data_dir=data_dir, dataset="build.csv")
-        # Segment the data
-        data = segdata(build, splits=splits, keys=["train", "tune"], seed=seed)
+        train = load_df(data_dir=data_dir, dataset="train.csv")
+        rawtune = load_df(data_dir=data_dir, dataset="tune.csv")
         # Collapse the data to the final row for Concordance calculations
-        tune = tune_data.map(data=unmapped(data["train"]), timestep=times)
+        tune = tune_data.map(data=unmapped(rawtune), timestep=times)
         # Run hyperparameter tuning
         params = tuning(
-            train_data=data["train"], tune_data=tune, max_evals=max_evals, seed=seed
+            train_data=train, tune_data=tune, max_evals=max_evals, seed=seed
         )
         _ = retrieve_best(task_result=params, key="best")
         tuneplots(params["trials"])
         model_obj = model(params["best"])
-        _ = trained(model=model_obj, data=data["train"])
+        trained_model = trained(model=model_obj, data=train)
+        sprob = calc_sprob(model=trained_model, data=train)
+        iso = cal(train_data=sprob)
+        _ = pcal(data=sprob, calibrator=iso)
 
     return flow
 
@@ -177,7 +211,6 @@ def gen_xgboost_pipeline() -> Flow:
     # Create a time range for AUROC calculation -- start to the end of the fourth quarter
     times = np.arange(2890, step=10)
     # Initialize tasks
-    segdata = SegmentData(name="Split data")
     train_data = CollapseData(name="Create training data")
     tune_data = CollapseData(name="Create tuning data")
     stop_data = CollapseData(name="Create stopping data")
@@ -214,28 +247,53 @@ def gen_xgboost_pipeline() -> Flow:
             dir=".", location="{output_dir}/models/{today}/xgboost/model.pkl"
         ),
     )
+    calcshap = XGBoostShap(name="Calculate SHAP Values")
+    plotshap = PlotShapSummary(
+        name="Plot SHAP values",
+        checkpoint=True,
+        result=LocalResult(
+            serializer=Plot(),
+            dir=".",
+            location="{output_dir}/models/{today}/xgboost/shap-summary.png",
+        ),
+    )
+    calc_sprob = WinProbability(name="Calculate survival probability")
+    cal = CalibrateClassifier(
+        name="Calibrate XGBoost model",
+        checkpoint=True,
+        result=LocalResult(
+            dir=".", location="{output_dir}/models/{today}/xgboost/calibrator.pkl"
+        ),
+    )
+    pcal = PlotCalibration(
+        name="Plot calibration curve",
+        checkpoint=True,
+        result=LocalResult(
+            serializer=Plot(),
+            dir=".",
+            location="{output_dir}/models/{today}/xgboost/calibration-curve.png",
+        ),
+    )
 
     # Generate the flow
     with Flow(name="Train Cox model") as flow:
         # Define some parameters
         data_dir = Parameter("data_dir", "nba-data")
-        splits = Parameter("splits", [0.5, 0.25, 0.25])
         max_evals = Parameter("max_evals", 100)
         seed = Parameter("seed", 42)
         # Load the data
-        build = load_df(data_dir=data_dir, dataset="build.csv")
-        # Segment data into train, stop, tune
-        data = segdata(build, splits=splits, keys=["train", "stop", "tune"], seed=seed)
+        rawtrain = load_df(data_dir=data_dir, dataset="train.csv")
+        rawtune = load_df(data_dir=data_dir, dataset="tune.csv")
         # Collapse data to the final row
-        train = train_data(data["train"])
-        tune = tune_data.map(data=unmapped(data["tune"]), timestep=times)
-        stop = stop_data(data["stop"])
+        train = train_data(rawtrain)
+        tune = tune_data.map(data=unmapped(rawtune), timestep=times)
+        stop = stop_data(rawtune)
         # Run hyperparameter tuning
         params = tuning(
             train_data=train,
             tune_data=tune,
             stopping_data=stop,
-            early_stopping_rounds=5,
+            early_stopping_rounds=25,
             num_boost_round=10000,
             max_evals=max_evals,
             seed=seed,
@@ -243,14 +301,21 @@ def gen_xgboost_pipeline() -> Flow:
         _ = retrieve_best(task_result=params, key="best")
         tuneplots(params["trials"])
         # Fit the model
-        _ = trained(
+        model = trained(
             params=params["best"],
             train_data=train,
             stopping_data=stop,
-            early_stopping_rounds=5,
+            early_stopping_rounds=25,
             num_boost_round=10000,
             verbose_eval=False,
         )
+        # SHAP
+        shap_values = calcshap(model=model, train_data=train)
+        _ = plotshap(shap_values=shap_values)
+        # Calibrate
+        sprob = calc_sprob(model=model, data=train)
+        iso = cal(train_data=sprob)
+        _ = pcal(data=sprob, calibrator=iso)
 
     return flow
 
@@ -274,13 +339,17 @@ def gen_evaluate_pipeline(step: int = 10, **kwargs) -> Flow:
     # Initialize the tasks
     modelobjs: Dict = {}
     calc_sprob: Dict = {}
+    calib_sprob: Dict = {}
     sprob_auc: Dict = {}
     calc_lift: Dict = {}
     average_lift: Dict = {}
     for key in kwargs:
-        modelobjs[key] = LoadModel(name=f"Load model {key}")
+        modelobjs[key] = LoadModel(name=f"Load model {key}", nout=2)
         calc_sprob[key] = WinProbability(
             name=f"Calculate survival probability for model {key}"
+        )
+        calib_sprob[key] = CalibrateProbability(
+            name=f"Calibrate survival probability for model {key}"
         )
         sprob_auc[key] = AUROC(name=f"Calculate Cox PH AUROC for model {key}")
         calc_lift[key] = AUROCLift(name=f"Calculate AUROC lift for model {key}")
@@ -321,12 +390,18 @@ def gen_evaluate_pipeline(step: int = 10, **kwargs) -> Flow:
         # Get the predicted probabilities at each time step
         wprob = nba_wprob.map(model=unmapped("nba"), data=test)
         sprob = {
-            key: calc_sprob[key].map(model=unmapped(models[key]), data=test)
+            key: calc_sprob[key].map(model=unmapped(models[key][0]), data=test)
+            for key in kwargs
+        }
+        sprob_cal = {
+            key: calib_sprob[key].map(
+                data=sprob[key], calibrator=unmapped(models[key][1])
+            )
             for key in kwargs
         }
         # Get the AUROC based on the model outputs
         metric_benchmark = wprob_auc.map(data=wprob, mode=unmapped("benchmark"))
-        metric = {key: sprob_auc[key].map(data=sprob[key]) for key in kwargs}
+        metric = {key: sprob_auc[key].map(data=sprob_cal[key]) for key in kwargs}
         # Get the AUROC lift
         lift = {
             key: calc_lift[key](benchmark=metric_benchmark, test=metric[key])

@@ -25,12 +25,14 @@ models. The **build** dataset will be broken down for each model:
 |               +----------------+-----------------------------+----------------------------------+
 |               | Tune           | 25% (20%)                   | Hyperparameter tuning data.      |
 +---------------+----------------+-----------------------------+----------------------------------+
-| ``xgboost``   | Train          | 50% (40%)                   | Model training data.             |
+| ``xgboost``   | Train          | 75% (60%)                   | Model training data.             |
 |               +----------------+-----------------------------+----------------------------------+
-|               | Stopping       | 25% (20%)                   | Data for early stopping [*]_     |
-|               +----------------+-----------------------------+----------------------------------+
-|               | Tune           | 25% (20%)                   | Hyperparameter tuning data.      |
+|               | Stopping/Tune  | 25% (20%)                   | | Data for tuning and early      |
+|               |                |                             | | stopping [*]_                  |
 +---------------+----------------+-----------------------------+----------------------------------+
+
+The datasets will be stratified by season and by the target to ensure that the models are being
+built on representative data.
 
 .. [*] We will use `early stopping <https://xgboost.readthedocs.io/en/latest/python/python_intro.html#early-stopping>`_
        to determine the number of boosting rounds for the model.
@@ -108,28 +110,38 @@ After iteration, we used the following space:
 | Hyperparameter        | Search space                |
 |                       |                             |
 +=======================+=============================+
-| ``learning_rate``     | 0.01                        |
+| ``learning_rate``     | :math:`Unif(0, 0.01)`       |
 +-----------------------+-----------------------------+
-| ``subsample``         | :math:`Unif(0.75, 0.9)`     |
+| ``subsample``         | :math:`Unif(0.4, 1)`        |
 +-----------------------+-----------------------------+
 | ``max_delta_step``    | 1                           |
 +-----------------------+-----------------------------+
-| ``max_depth``         | :math:`QUnif(5, 15, 1)`     |
+| ``max_depth``         | 4                           |
 +-----------------------+-----------------------------+
-| ``gamma``             | :math:`Unif(0.6, 0.9)`      |
+| ``gamma``             | :math:`Unif(0.5, 1)`        |
 +-----------------------+-----------------------------+
-| ``reg_alpha``         | :math:`Unif(0, 0.1)`        |
+| ``reg_alpha``         | :math:`Unif(0.6, 1)`        |
 +-----------------------+-----------------------------+
-| ``reg_lambda``        | :math:`Unif(0.1, 0.3)`      |
+| ``reg_lambda``        | :math:`Unif(0.25, 0.75)`    |
 +-----------------------+-----------------------------+
-| ``colsample_bytree``  | :math:`Unif(0.3, 0.7)`      |
+| ``colsample_bytree``  | :math:`Unif(0.5, 1)`        |
 +-----------------------+-----------------------------+
-| ``colsample_bylevel`` | :math:`Unif(0.4, 0.6)`      |
+| ``colsample_bylevel`` | :math:`Unif(0.8, 1)`        |
 +-----------------------+-----------------------------+
-| ``colsample_bynode``  | :math:`Unif(0.7, 1)`        |
+| ``colsample_bynode``  | :math:`Unif(0, 0.5)`        |
 +-----------------------+-----------------------------+
-| ``min_child_weight``  | :math:`QUnif(450, 480, 1)`  |
+| ``min_child_weight``  | :math:`QUnif(510, 530, 1)`  |
 +-----------------------+-----------------------------+
+
+We also added a `monotonic constraint <https://xgboost.readthedocs.io/en/latest/tutorials/monotonic.html>`_
+to ensure that the model output is monotonic in scoring margin.
+
+-----------
+Calibration
+-----------
+
+We will use `isotonic regression <https://scikit-learn.org/stable/modules/generated/sklearn.isotonic.IsotonicRegression.html#sklearn.isotonic.IsotonicRegression>`_
+to calibrate the output probabilities from each model to ensure that we have interpretable outputs.
 
 ----------------
 Model evaluation
