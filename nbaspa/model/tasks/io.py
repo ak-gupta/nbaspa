@@ -132,5 +132,7 @@ class SavePredictions(Task):
             with fs.open(fpath, "wb") as buf:
                 group.rename(columns={"stop": META["duration"]}, inplace=True)
                 group[
-                    [META["id"], META["survival"], META["duration"]]
+                    [META["id"], META["duration"], META["survival"]]
+                    + META["static"]
+                    + META["dynamic"]
                 ].to_csv(buf, sep="|", mode="wb")
