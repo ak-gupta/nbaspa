@@ -7,6 +7,7 @@ from ..pipeline import (
     gen_lifelines_pipeline,
     gen_xgboost_pipeline,
     gen_evaluate_pipeline,
+    gen_predict_pipeline,
     run_pipeline,
 )
 
@@ -107,3 +108,22 @@ def evaluate(data_dir, output_dir, model, step):
         **{name: location for name, location in model}, step=step
     )
     run_pipeline(flow, data_dir=data_dir, output_dir=output_dir)
+
+
+@model.command()
+@click.option("--data-dir", help="Path to the data directory.")
+@click.option("--output-dir", help="Path to the output directory.")
+@click.option("--model", help="Location for model pickle file")
+@click.option("--season", default=None, help="The season")
+@click.option("--game-id", default=None, help="The Game ID")
+def predict(data_dir, output_dir, model, season, game_id):
+    """Predict the survival probabilities for game(s)."""
+    flow = gen_predict_pipeline()
+    run_pipeline(
+        flow=flow,
+        data_dir=data_dir,
+        output_dir=output_dir,
+        model=model,
+        Season=season,
+        GameID=game_id
+    )

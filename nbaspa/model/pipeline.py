@@ -34,6 +34,7 @@ from .tasks import (
     CalibrateClassifier,
     CalibrateProbability,
     PlotCalibration,
+    SavePredictions,
 )
 
 
@@ -415,6 +416,48 @@ def gen_evaluate_pipeline(step: int = 10, **kwargs) -> Flow:
     return flow
 
 
+def gen_predict_pipeline() -> Flow:
+    """Generate the predictions for games.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    Flow
+        Generated pipeline.
+    """
+    # Initialize tasks
+    load = LoadData(name="Load clean data")
+    format_data = SurvivalData(name="Convert input data to ranged form")
+    modelobj = LoadModel(name="Load model", nout=2)
+    calc_sprob = WinProbability(name="Calculate survival probability")
+    calib_sprob = CalibrateProbability(name="Calibrate survival probability")
+    output = SavePredictions(name="Save output data")
+
+    # Generate the pipeline
+    with Flow(name="Predict survival probability") as flow:
+        # Define some parameters
+        data_dir = Parameter("data_dir", "nba-data")
+        output_dir = Parameter("output_dir", "nba-data")
+        filesystem = Parameter("filesystem", "file")
+        season = Parameter("Season", None)
+        gameid = Parameter("GameID", None)
+        modelpath = Parameter("model", None)
+        # Add the tasks
+        model, calibrator = modelobj(filepath=modelpath)
+        alldata = load(data_dir=data_dir, season=season, gameid=gameid)
+        data = format_data(alldata)
+        sprob = calc_sprob(model=model, data=data)
+        calibrated = calib_sprob(data=sprob, calibrator=calibrator)
+        _ = output(
+            data=calibrated, output_dir=output_dir, filesystem=filesystem
+        )
+
+    return flow
+
+
 def run_pipeline(
     flow: Flow, data_dir: str, output_dir: str, **kwargs
 ) -> Optional[State]:
@@ -437,6 +480,6 @@ def run_pipeline(
         The output of ``flow.run``.
     """
     with prefect.context(data_dir=data_dir, output_dir=output_dir):
-        output = flow.run(parameters={"data_dir": data_dir, **kwargs})
+        output = flow.run(parameters={"data_dir": data_dir, "output_dir": output_dir, **kwargs})
 
     return output

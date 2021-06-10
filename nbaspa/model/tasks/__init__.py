@@ -4,7 +4,7 @@ from typing import List
 
 from .calibration import CalibrateClassifier, CalibrateProbability
 from .data import SurvivalData, SegmentData, CollapseData
-from .io import load_df, LoadData, LoadModel
+from .io import load_df, LoadData, LoadModel, SavePredictions
 from .lifelines import (
     InitializeLifelines,
     FitLifelinesModel,
