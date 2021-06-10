@@ -125,5 +125,5 @@ def predict(data_dir, output_dir, model, season, game_id):
         output_dir=output_dir,
         model=model,
         Season=season,
-        GameID=game_id
+        GameID=game_id,
     )

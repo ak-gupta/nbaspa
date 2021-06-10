@@ -45,4 +45,5 @@ __all__: List[str] = [
     "PlotCalibration",
     "FitXGBoost",
     "XGBoostShap",
+    "SavePredictions",
 ]

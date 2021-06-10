@@ -451,9 +451,7 @@ def gen_predict_pipeline() -> Flow:
         data = format_data(alldata)
         sprob = calc_sprob(model=model, data=data)
         calibrated = calib_sprob(data=sprob, calibrator=calibrator)
-        _ = output(
-            data=calibrated, output_dir=output_dir, filesystem=filesystem
-        )
+        _ = output(data=calibrated, output_dir=output_dir, filesystem=filesystem)
 
     return flow
 
@@ -480,6 +478,8 @@ def run_pipeline(
         The output of ``flow.run``.
     """
     with prefect.context(data_dir=data_dir, output_dir=output_dir):
-        output = flow.run(parameters={"data_dir": data_dir, "output_dir": output_dir, **kwargs})
+        output = flow.run(
+            parameters={"data_dir": data_dir, "output_dir": output_dir, **kwargs}
+        )
 
     return output

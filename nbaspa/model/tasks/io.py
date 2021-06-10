@@ -10,6 +10,7 @@ from prefect import Task, task
 
 from .meta import META
 
+
 @task
 def load_df(data_dir: str, dataset: str = "build.csv") -> pd.DataFrame:
     """Load the pandas dataframe.
@@ -92,6 +93,7 @@ class LoadModel(Task):
             calibrator = cloudpickle.load(infile)
 
         return model, calibrator
+
 
 class SavePredictions(Task):
     """Save the game data."""
