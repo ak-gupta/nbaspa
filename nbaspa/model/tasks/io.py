@@ -1,11 +1,14 @@
 """I/O tasks for the model fitting/evaluation pipelines."""
 
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
 
 import cloudpickle
+import fsspec
 import pandas as pd
 from prefect import Task, task
+
+from .meta import META
 
 
 @task
@@ -32,23 +35,33 @@ def load_df(data_dir: str, dataset: str = "build.csv") -> pd.DataFrame:
 class LoadData(Task):
     """Load clean data to a DataFrame."""
 
-    def run(self, data_dir: str) -> pd.DataFrame:  # type: ignore
+    def run(  # type: ignore
+        self,
+        data_dir: str,
+        season: Optional[str] = None,
+        gameid: Optional[str] = None,
+    ) -> pd.DataFrame:  # type: ignore
         """Load clean data to a DataFrame.
 
         Parameters
         ----------
         data_dir : str
             The directory containing multiple seasons of data.
+        season : str, optional (default None)
+            The season for the data. If not provided, all seasons will be searched
+        gameid : str, optional (default None)
+            The game to read. If not provided, all games will be searched.
 
         Returns
         -------
         pd.DataFrame
             The output dataframe.
         """
+        fileglob = f"{season or '*'}/model-data/data_{gameid or '*'}.csv"
         self.logger.info(f"Reading clean data from {data_dir}")
         basedata = pd.concat(
             pd.read_csv(fpath, sep="|", dtype={"GAME_ID": str}, index_col=0)
-            for fpath in Path(data_dir).glob("*/model-data/data_*.csv")
+            for fpath in Path(data_dir).glob(fileglob)
         ).reset_index(drop=True)
 
         return basedata
@@ -80,3 +93,48 @@ class LoadModel(Task):
             calibrator = cloudpickle.load(infile)
 
         return model, calibrator
+
+
+class SavePredictions(Task):
+    """Save the game data."""
+
+    def run(  # type: ignore
+        self,
+        data: pd.DataFrame,
+        output_dir: str,
+        filesystem: Optional[str] = "file",
+    ):
+        """Save the game data.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            The clean data.
+        output_dir : str
+            The directory containing the data.
+        filesystem : str, optional (default "file")
+            The name of the ``fsspec`` filesystem to use.
+
+        Returns
+        -------
+        None
+        """
+        # Get the filesystem
+        fs = fsspec.filesystem(filesystem)
+        grouped = data.groupby(META["id"])
+        for name, group in grouped:
+            if not name.startswith("002"):
+                self.logger.warning(f"{name} is not a regular season game. Skipping...")
+                continue
+            season = name[2] + "0" + name[3:5] + "-" + str(int(name[3:5]) + 1)
+            fdir = Path(output_dir, season, "survival-prediction")
+            fs.mkdir(fdir)
+            fpath = fdir / f"data_{name}.csv"
+            self.logger.info(f"Writing data for game {name} to {str(fpath)}")
+            with fs.open(fpath, "wb") as buf:
+                group.rename(columns={"stop": META["duration"]}, inplace=True)
+                group[
+                    [META["id"], META["duration"], META["survival"]]
+                    + META["static"]
+                    + META["dynamic"]
+                ].to_csv(buf, sep="|", mode="wb")

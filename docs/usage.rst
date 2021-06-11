@@ -246,6 +246,53 @@ To evaluate a set of models,
 This flow will read in the ``model.pkl`` files, create the AUROC visualizations, and
 save the visualizations to ``nba-data/models/2021-02-21``.
 
+++++++++++++++++++++++
+Game-level predictions
+++++++++++++++++++++++
+
+To run game-level predictions for all of your data, run
+
+.. code-block:: python
+
+    from nbaspa.model.pipeline import gen_predict_pipeline, run_pipeline
+
+    flow = gen_predict_pipeline()
+    output = run_pipeline(
+        flow=flow,
+        data_dir="nba-data",
+        output_dir="nba-data",
+        filesystem="file",
+        model="nba-data/models/2021-02-21/lifelines/model.pkl",
+    )
+
+To restrict to a single season, supply the ``season`` parameter:
+
+.. code-block:: python
+    :emphasize-lines: 7
+
+    output = run_pipeline(
+        flow=flow,
+        data_dir="nba-data",
+        output_dir="nba-data",
+        filesystem="file",
+        model="nba-data/models/2021-02-21/lifelines/model.pkl",
+        Season="2018-19"
+    )
+
+Similarly, you can run the predictions for a single game:
+
+.. code-block:: python
+    :emphasize-lines: 7
+
+    output = run_pipeline(
+        flow=flow,
+        data_dir="nba-data",
+        output_dir="nba-data",
+        filesystem="file",
+        model="nba-data/models/2021-02-21/lifelines/model.pkl",
+        GameID="0021800001"
+    )
+
 ~~~~~~~~~~~~~~~~~~~~~~
 Command-line interface
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -306,6 +353,36 @@ To evaluate your models, use the ``evaluate`` endpoint. Suppose you trained your
 
 This endpoint will read in the model ``.pkl`` files, create the AUROC visualizations, and
 save them to the ``nba-data/models/2021-02-21`` folder.
+
+++++++++++++++++++++++
+Game-level predictions
+++++++++++++++++++++++
+
+To run game-level predictions, use the ``predict`` endpoint. Suppose you trained your model on 2021-02-21:
+
+.. code-block:: console
+
+    $ nbaspa-model predict \
+        --data-dir nba-data \
+        --output-dir nba-data \
+        --model nba-data/models/2021-02-21/lifelines/model.pkl \
+
+The above call will create game-level predictions for all cleaned game data available in ``nba-data``.
+
+.. important::
+
+    The predictions can be found in ``nba-data/<season>/survival-prediction/data_<GameID>.csv``.
+
+To restrict to a season or game, supply ``--season`` or ``--game-id``:
+
+.. code-block:: console
+
+    $ nbaspa-model predict \
+        --data-dir nba-data \
+        --output-dir nba-data \
+        --model nba-data/models/2021-02-21/lifelines/model.pkl \
+        --season 2018-19 \
+        --game-id 0021800001
 
 -----------------------
 Generate player ratings

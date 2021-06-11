@@ -19,8 +19,8 @@ Performance
 .. important::
 
     At this time the models have been trained on data from the 2005-06 through the 2019-20 seasons
-    (pre-bubble). The final build dataset had XX XXX games with X XXX XXX rows; the tuning/stopping
-    datasets had X XXX games with XXX XXX rows.
+    (pre-bubble). The final build dataset had 10 765 games with 1 188 655 rows; the tuning/stopping
+    datasets had 3 589 games with 396 863 rows; the holdout dataset had 3 589 games with 396 189 rows.
 
 Figure 1 shows the AUROC over game-time for each model.
 

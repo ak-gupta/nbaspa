@@ -13,6 +13,7 @@ from nbaspa.model.pipeline import (
     gen_lifelines_pipeline,
     gen_xgboost_pipeline,
     gen_evaluate_pipeline,
+    gen_predict_pipeline,
     run_pipeline
 )
 
@@ -133,3 +134,23 @@ def test_evaluate_pipeline(mock_auc, gamelocation):
     assert output.is_successful()
     assert Path(gamelocation, "models", TODAY.strftime("%Y-%m-%d"), "auroc.png").is_file()
     assert Path(gamelocation, "models", TODAY.strftime("%Y-%m-%d"), "auroc_lift.png").is_file()
+
+
+@patch("lifelines.CoxTimeVaryingFitter.predict_partial_hazard")
+def test_predict_pipeline(mock_pred, gamelocation):
+    """Test the prediction pipeline."""
+    mock_pred.return_value = pd.Series([0.5])
+    flow = gen_predict_pipeline()
+    output = run_pipeline(
+        flow=flow,
+        data_dir=gamelocation,
+        output_dir=gamelocation,
+        filesystem="file",
+        model=str(
+            Path(gamelocation, "models", TODAY.strftime("%Y-%m-%d"), "lifelines", "model.pkl")
+        )
+    )
+
+    assert output.is_successful()
+    assert Path(gamelocation, "2018-19", "survival-prediction").is_dir()
+    assert len(list(Path(gamelocation, "2018-19", "survival-prediction").glob("data_*.csv"))) == 200
