@@ -60,14 +60,14 @@ We will use the following hyperparameter search space for the ``lifelines`` mode
 
 To maximize the tuning search, we limited to the following space after some trials:
 
-+----------------+-----------------------+
-| Hyperparameter | Search space          |
-|                |                       |
-+================+=======================+
-| ``penalizer``  | :math:`Unif(0, 0.3)`  |
-+----------------+-----------------------+
-| ``l1_ratio``   | :math:`Unif(0, 0.01)` |
-+----------------+-----------------------+
++----------------+--------------------------+
+| Hyperparameter | Search space             |
+|                |                          |
++================+==========================+
+| ``penalizer``  | :math:`Unif(0.05, 0.15)` |
++----------------+--------------------------+
+| ``l1_ratio``   | :math:`Unif(0, 0.015)`   |
++----------------+--------------------------+
 
 ~~~~~~~
 XGBoost

@@ -119,6 +119,7 @@ def gen_lifelines_pipeline() -> Flow:
     # Create a time range for AUROC calculation -- start to the end of the fourth quarter
     times = np.arange(2890, step=10)
     # Initialize tasks
+    calib_data = CollapseData(name="Create calibration data")
     tune_data = CollapseData(name="Create tuning data")
     tuning = LifelinesTuning(
         name="Run lifelines hyperparameter tuning",
@@ -182,6 +183,7 @@ def gen_lifelines_pipeline() -> Flow:
         rawtune = load_df(data_dir=data_dir, dataset="tune.csv")
         # Collapse the data to the final row for Concordance calculations
         tune = tune_data.map(data=unmapped(rawtune), timestep=times)
+        calib_input = calib_data(data=train)
         # Run hyperparameter tuning
         params = tuning(
             train_data=train, tune_data=tune, max_evals=max_evals, seed=seed
@@ -190,7 +192,7 @@ def gen_lifelines_pipeline() -> Flow:
         tuneplots(params["trials"])
         model_obj = model(params["best"])
         trained_model = trained(model=model_obj, data=train)
-        sprob = calc_sprob(model=trained_model, data=train)
+        sprob = calc_sprob(model=trained_model, data=calib_input)
         iso = cal(train_data=sprob)
         _ = pcal(data=sprob, calibrator=iso)
 
