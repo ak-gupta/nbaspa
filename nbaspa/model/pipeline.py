@@ -279,6 +279,7 @@ def gen_xgboost_pipeline() -> Flow:
     # Generate the flow
     with Flow(name="Train Cox model") as flow:
         # Define some parameters
+        _ = Parameter("output_dir", "nba-data")
         data_dir = Parameter("data_dir", "nba-data")
         max_evals = Parameter("max_evals", 100)
         seed = Parameter("seed", 42)
@@ -381,6 +382,7 @@ def gen_evaluate_pipeline(step: int = 10, **kwargs) -> Flow:
     # Generate the pipeline
     with Flow(name="Evaluate models") as flow:
         # Define some parameters
+        _ = Parameter("output_dir", "nba-data")
         data_dir = Parameter("data_dir", "nba-data")
         # Load the models
         models = {key: modelobjs[key](filepath=value) for key, value in kwargs.items()}
@@ -477,9 +479,10 @@ def run_pipeline(
     State
         The output of ``flow.run``.
     """
+    allparams = {param.name for param in flow.parameters()}
+    params = {"data_dir": data_dir, "output_dir": output_dir, **kwargs}
+    params = {key: value for key, value in params.items() if key in allparams}
     with prefect.context(data_dir=data_dir, output_dir=output_dir):
-        output = flow.run(
-            parameters={"data_dir": data_dir, "output_dir": output_dir, **kwargs}
-        )
+        output = flow.run(parameters=params)
 
     return output
