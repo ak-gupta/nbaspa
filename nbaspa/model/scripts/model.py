@@ -45,7 +45,7 @@ def build(data_dir, output_dir, splits, seed):
 @click.option("--output-dir", help="Path to the output directory.")
 @click.option(
     "--max-evals",
-    default=1000,
+    default=2500,
     type=int,
     help="Number of hyperparameter tuning iterations",
 )

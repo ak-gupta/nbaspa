@@ -183,7 +183,7 @@ def gen_lifelines_pipeline() -> Flow:
         rawtune = load_df(data_dir=data_dir, dataset="tune.csv")
         # Collapse the data to the final row for Concordance calculations
         tune = tune_data.map(data=unmapped(rawtune), timestep=times)
-        calib_input = calib_data(data=train)
+        calib_input = calib_data.map(data=unmapped(train), timestep=times)
         # Run hyperparameter tuning
         params = tuning(
             train_data=train, tune_data=tune, max_evals=max_evals, seed=seed
@@ -192,7 +192,7 @@ def gen_lifelines_pipeline() -> Flow:
         tuneplots(params["trials"])
         model_obj = model(params["best"])
         trained_model = trained(model=model_obj, data=train)
-        sprob = calc_sprob(model=trained_model, data=calib_input)
+        sprob = calc_sprob.map(model=unmapped(trained_model), data=calib_input)
         iso = cal(train_data=sprob)
         _ = pcal(data=sprob, calibrator=iso)
 

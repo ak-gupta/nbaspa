@@ -1,6 +1,6 @@
 """Create simple visualizations."""
 
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from hyperopt import Trials
 import matplotlib.pyplot as plt
@@ -194,7 +194,7 @@ class PlotCalibration(Task):
 
     def run(  # type: ignore
         self,
-        data: pd.DataFrame,
+        data: Union[List[pd.DataFrame], pd.DataFrame],
         calibrator: IsotonicRegression,
     ):
         """Create a calibration curve.
@@ -211,6 +211,8 @@ class PlotCalibration(Task):
         Figure
             The matplotlib Figure object.
         """
+        if isinstance(data, list):
+            data = pd.concat(data, ignore_index=True)
         # Get the calibration curve for the raw model
         uncal_x, uncal_y = calibration_curve(
             data[META["event"]], data[META["survival"]], n_bins=10
