@@ -60,14 +60,14 @@ We will use the following hyperparameter search space for the ``lifelines`` mode
 
 To maximize the tuning search, we limited to the following space after some trials:
 
-+----------------+-----------------------+
-| Hyperparameter | Search space          |
-|                |                       |
-+================+=======================+
-| ``penalizer``  | :math:`Unif(0, 0.3)`  |
-+----------------+-----------------------+
-| ``l1_ratio``   | :math:`Unif(0, 0.01)` |
-+----------------+-----------------------+
++----------------+--------------------------+
+| Hyperparameter | Search space             |
+|                |                          |
++================+==========================+
+| ``penalizer``  | :math:`Unif(0.05, 0.15)` |
++----------------+--------------------------+
+| ``l1_ratio``   | :math:`Unif(0, 0.015)`   |
++----------------+--------------------------+
 
 ~~~~~~~
 XGBoost
@@ -126,7 +126,7 @@ After iteration, we used the following space:
 +-----------------------+-----------------------------+
 | ``colsample_bytree``  | :math:`Unif(0.5, 1)`        |
 +-----------------------+-----------------------------+
-| ``colsample_bylevel`` | :math:`Unif(0.8, 1)`        |
+| ``colsample_bylevel`` | 1                           |
 +-----------------------+-----------------------------+
 | ``colsample_bynode``  | :math:`Unif(0, 0.5)`        |
 +-----------------------+-----------------------------+
