@@ -119,6 +119,7 @@ def gen_lifelines_pipeline() -> Flow:
     # Create a time range for AUROC calculation -- start to the end of the fourth quarter
     times = np.arange(2890, step=10)
     # Initialize tasks
+    calib_data = CollapseData(name="Create calibration data")
     tune_data = CollapseData(name="Create tuning data")
     tuning = LifelinesTuning(
         name="Run lifelines hyperparameter tuning",
@@ -182,6 +183,7 @@ def gen_lifelines_pipeline() -> Flow:
         rawtune = load_df(data_dir=data_dir, dataset="tune.csv")
         # Collapse the data to the final row for Concordance calculations
         tune = tune_data.map(data=unmapped(rawtune), timestep=times)
+        calib_input = calib_data.map(data=unmapped(train), timestep=times)
         # Run hyperparameter tuning
         params = tuning(
             train_data=train, tune_data=tune, max_evals=max_evals, seed=seed
@@ -190,7 +192,7 @@ def gen_lifelines_pipeline() -> Flow:
         tuneplots(params["trials"])
         model_obj = model(params["best"])
         trained_model = trained(model=model_obj, data=train)
-        sprob = calc_sprob(model=trained_model, data=train)
+        sprob = calc_sprob.map(model=unmapped(trained_model), data=calib_input)
         iso = cal(train_data=sprob)
         _ = pcal(data=sprob, calibrator=iso)
 
@@ -212,6 +214,7 @@ def gen_xgboost_pipeline() -> Flow:
     # Create a time range for AUROC calculation -- start to the end of the fourth quarter
     times = np.arange(2890, step=10)
     # Initialize tasks
+    calib_data = CollapseData(name="Create calibration data")
     train_data = CollapseData(name="Create training data")
     tune_data = CollapseData(name="Create tuning data")
     stop_data = CollapseData(name="Create stopping data")
@@ -290,6 +293,7 @@ def gen_xgboost_pipeline() -> Flow:
         train = train_data(rawtrain)
         tune = tune_data.map(data=unmapped(rawtune), timestep=times)
         stop = stop_data(rawtune)
+        calib_input = calib_data.map(data=unmapped(rawtrain), timestep=times)
         # Run hyperparameter tuning
         params = tuning(
             train_data=train,
@@ -315,7 +319,7 @@ def gen_xgboost_pipeline() -> Flow:
         shap_values = calcshap(model=model, train_data=train)
         _ = plotshap(shap_values=shap_values)
         # Calibrate
-        sprob = calc_sprob(model=model, data=train)
+        sprob = calc_sprob.map(model=unmapped(model), data=calib_input)
         iso = cal(train_data=sprob)
         _ = pcal(data=sprob, calibrator=iso)
 
