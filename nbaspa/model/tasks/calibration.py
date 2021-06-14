@@ -12,9 +12,9 @@ from .meta import META
 class CalibrateClassifier(Task):
     """Calibrate the classifier with ``IsotonicRegression``."""
 
-    def run(
+    def run(  # type: ignore
         self, train_data: Union[List[pd.DataFrame], pd.DataFrame]
-    ) -> IsotonicRegression:  # type: ignore
+    ) -> IsotonicRegression:
         """Calibrate the classifier.
 
         Parameters
