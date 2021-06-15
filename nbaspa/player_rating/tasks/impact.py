@@ -675,9 +675,7 @@ class CompoundPlayerImpact(Task):
         if not pd.isnull(df.loc[idx, "HOMEDESCRIPTION"]):
             df.loc[idx, "PLAYER1_IMPACT"] += df.loc[idx, self.change_column]
         else:
-            df.loc[idx, "PLAYER1_IMPACT"] -= df.loc[
-                idx, self.change_column
-            ]
+            df.loc[idx, "PLAYER1_IMPACT"] -= df.loc[idx, self.change_column]
 
         # Give credit for the free throw
         if df.loc[event_indices[-1], "EVENTMSGTYPE"] == self.event_types.REBOUND:
