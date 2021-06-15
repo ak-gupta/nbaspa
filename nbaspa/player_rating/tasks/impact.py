@@ -675,8 +675,8 @@ class CompoundPlayerImpact(Task):
         if not pd.isnull(df.loc[idx, "HOMEDESCRIPTION"]):
             df.loc[idx, "PLAYER1_IMPACT"] += df.loc[idx, self.change_column]
         else:
-            df.loc[event_indices[0], "PLAYER1_IMPACT"] -= df.loc[
-                event_indices[0], self.change_column
+            df.loc[idx, "PLAYER1_IMPACT"] -= df.loc[
+                idx, self.change_column
             ]
 
         # Give credit for the free throw
@@ -722,7 +722,7 @@ class CompoundPlayerImpact(Task):
             idx = event_indices[-2]
         else:
             idx = event_indices[-1]
-        if pd.isnull(df.loc[event_indices[0], "HOMEDESCRIPTION"]):
+        if not pd.isnull(df.loc[event_indices[0], "HOMEDESCRIPTION"]):
             # Get the credit for the rebounder
             reb_factor = np.max(
                 [((shotval * 100) / df.loc[event_indices[0], "HOME_OFF_RATING"]) - 1, 0]
