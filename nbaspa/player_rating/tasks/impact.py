@@ -293,6 +293,8 @@ class SimplePlayerImpact(Task):
             & (df["TIME"].isin(self._single_event_times(df=df)))
         )
 
+        # Remove the missed field goal impact since the shot was blocked
+        df.loc[home + visitor, "PLAYER1_IMPACT"] = 0.0
         df.loc[home, "PLAYER3_IMPACT"] += df.loc[home, self.change_column]
         df.loc[visitor, "PLAYER3_IMPACT"] -= df.loc[visitor, self.change_column]
 
@@ -326,7 +328,7 @@ class SimplePlayerImpact(Task):
         )
 
         df.loc[home, "PLAYER1_IMPACT"] += df.loc[home, self.change_column]
-        df.loc[visitor, "PLAYER2_IMPACT"] -= df.loc[visitor, self.change_column]
+        df.loc[visitor, "PLAYER1_IMPACT"] -= df.loc[visitor, self.change_column]
 
         return df
 
