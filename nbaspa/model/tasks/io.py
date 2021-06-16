@@ -40,7 +40,7 @@ class LoadData(Task):
         data_dir: str,
         season: Optional[str] = None,
         gameid: Optional[str] = None,
-    ) -> pd.DataFrame:  # type: ignore
+    ) -> pd.DataFrame:
         """Load clean data to a DataFrame.
 
         Parameters

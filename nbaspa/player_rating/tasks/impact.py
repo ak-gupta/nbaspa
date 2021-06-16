@@ -79,6 +79,8 @@ class SimplePlayerImpact(Task):
         """
         if mode == "nba":
             self.change_column = "NBA_WIN_PROB_CHANGE"
+        elif mode == "survival":
+            self.change_column = "SURV_PROB_CHANGE"
         else:
             raise NotImplementedError
         # Initialize the column
@@ -410,6 +412,8 @@ class CompoundPlayerImpact(Task):
         """
         if mode == "nba":
             self.change_column = "NBA_WIN_PROB_CHANGE"
+        elif mode == "survival":
+            self.change_column = "SURV_PROB_CHANGE"
         else:
             raise NotImplementedError
         sizes, rowfilter = _num_events_at_time(pbp)
@@ -798,27 +802,26 @@ class AggregateImpact(Task):
         pd.DataFrame
             The output DataFrame
         """
-        impact = boxscore[["GAME_ID", "PLAYER_ID"]].copy()
-        impact.set_index("PLAYER_ID", inplace=True)
+        impact = boxscore[["GAME_ID", "TEAM_ID", "PLAYER_ID"]].copy()
         # Merge
         impact = pd.merge(
             impact,
-            pbp.groupby("PLAYER1_ID")["PLAYER1_IMPACT"].sum(),
-            left_index=True,
+            pbp.groupby(["GAME_ID", "PLAYER1_ID"])["PLAYER1_IMPACT"].sum(),
+            left_on=("GAME_ID", "PLAYER_ID"),
             right_index=True,
             how="left",
         )
         impact = pd.merge(
             impact,
-            pbp.groupby("PLAYER2_ID")["PLAYER2_IMPACT"].sum(),
-            left_index=True,
+            pbp.groupby(["GAME_ID", "PLAYER2_ID"])["PLAYER2_IMPACT"].sum(),
+            left_on=("GAME_ID", "PLAYER_ID"),
             right_index=True,
             how="left",
         )
         impact = pd.merge(
             impact,
-            pbp.groupby("PLAYER3_ID")["PLAYER3_IMPACT"].sum(),
-            left_index=True,
+            pbp.groupby(["GAME_ID", "PLAYER3_ID"])["PLAYER3_IMPACT"].sum(),
+            left_on=("GAME_ID", "PLAYER_ID"),
             right_index=True,
             how="left",
         )
@@ -828,7 +831,5 @@ class AggregateImpact(Task):
             + impact["PLAYER2_IMPACT"]
             + impact["PLAYER3_IMPACT"]
         )
-        # Reset the index
-        impact.reset_index(inplace=True)
 
-        return impact[["GAME_ID", "PLAYER_ID", "IMPACT"]].copy()
+        return impact[["GAME_ID", "TEAM_ID", "PLAYER_ID", "IMPACT"]].copy()

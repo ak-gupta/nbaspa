@@ -9,8 +9,12 @@ from .tasks import (
     AggregateImpact,
     BoxScoreLoader,
     CompoundPlayerImpact,
+    GetGamesList,
     LoadRatingData,
+    LoadSurvivalPredictions,
+    AddSurvivalProbability,
     SimplePlayerImpact,
+    SaveImpactData
 )
 
 
@@ -28,50 +32,65 @@ def gen_pipeline() -> Flow:
     """
     # Initialize the tasks
     # Loader tasks
+    games = GetGamesList(name="Get games list")
     pbp_loader = LoadRatingData(name="Load clean data")
     box_loader = BoxScoreLoader(name="Load boxscore data")
+    surv_loader = LoadSurvivalPredictions(name="Load survival predictions")
     # Calculation tasks
+    addsurv = AddSurvivalProbability(name="Join survival probability")
     addsimpleimpact = SimplePlayerImpact(name="Calculate simple player impact")
     compoundimpact = CompoundPlayerImpact(name="Calculate sequence player impact")
     combineimpact = AggregateImpact(name="Aggregate player impact")
+    # Persist
+    savesimple = SaveImpactData(name="Save play-by-play impact data", pbp=True)
+    saveagg = SaveImpactData(name="Save aggregated impact data", pbp=False)
 
     with Flow(name="Calculate player impact") as flow:
-        # Parameter
-        game_id = Parameter("GameID", "default")
+        # Parameters
+        data_dir = Parameter("data_dir", "nba-data")
         output_dir = Parameter("output_dir", "nba-data")
         filesystem = Parameter("filesystem", "file")
+        mode = Parameter("mode", "survival")
+        season = Parameter("Season", None)
+        gameid = Parameter("GameID", None)
         # Load data
-        pbp = pbp_loader(GameID=game_id, output_dir=output_dir, filesystem=filesystem)
-        box = box_loader(
-            GameID=game_id,
-            output_dir=output_dir,
-            filesystem=filesystem,
+        gamelist = games(
+            data_dir=data_dir,
+            Season=season,
+            GameID=gameid,
         )
-        calculatesimple = addsimpleimpact(pbp=pbp)
-        sequence = compoundimpact(pbp=calculatesimple)
-        combineimpact(pbp=sequence, boxscore=box)
+        pbp = pbp_loader(
+            data_dir=data_dir,
+            filelist=gamelist
+        )
+        survprob = surv_loader(data_dir=data_dir, filelist=gamelist)
+        box = box_loader(filelist=gamelist, output_dir=data_dir)
+        # Add the survival probability and calculate impact
+        pbpfinal = addsurv(pbp=pbp, survprob=survprob)
+        calculatesimple = addsimpleimpact(pbp=pbpfinal, mode=mode)
+        sequence = compoundimpact(pbp=calculatesimple, mode=mode)
+        agg = combineimpact(pbp=sequence, boxscore=box)
+        # Save data
+        _ = savesimple(data=sequence, output_dir=output_dir, filesystem=filesystem)
+        _ = saveagg(data=agg, output_dir=output_dir, filesystem=filesystem)
+
 
     return flow
 
 
-def run_pipeline(
-    flow: Flow,
-    output_dir: str,
-    GameID: str,
-    filesystem: Optional[str] = "file",
-) -> Optional[State]:
+def run_pipeline(flow: Flow, data_dir: str, output_dir: str, **kwargs) -> Optional[State]:
     """Run the pipeline.
 
     Parameters
     ----------
     flow : Flow
         The generated flow.
-    output_dir : str
+    data_dir : str
         The directory containing the data.
-    GameID : str
-        The game identifier.
-    filesystem : str, optional (default "file")
-        The name of the ``fsspec`` filesystem to use.
+    output_dir : str
+        The output location for the data.
+    **kwargs
+        Additional parameters
 
     Returns
     -------
@@ -80,9 +99,9 @@ def run_pipeline(
     """
     output = flow.run(
         parameters={
+            "data_dir": data_dir,
             "output_dir": output_dir,
-            "GameID": GameID,
-            "filesystem": filesystem,
+            **kwargs
         }
     )
 
