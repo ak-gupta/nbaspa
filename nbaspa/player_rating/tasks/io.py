@@ -8,7 +8,7 @@ import fsspec
 import pandas as pd
 from prefect import Task
 
-from ...data.factory import NBADataFactory
+from ...data.endpoints import BoxScoreTraditional
 
 
 class GetGamesList(Task):
@@ -50,7 +50,7 @@ class LoadRatingData(Task):
     """Load the clean NBA play-by-play data."""
 
     def run(  # type: ignore
-        self, data_dir: str, filelist: List[Dict]
+        self, data_dir: str, filelocation: Dict
     ) -> pd.DataFrame:
         """Load the clean NBA play-by-play data.
 
@@ -58,24 +58,21 @@ class LoadRatingData(Task):
         ----------
         data_dir : str
             The directory containing the data.
-        filelist : list
-            The list of files to read in.
+        filelocation : dict
+            The season and GameID of the game.
 
         Returns
         -------
         pd.DataFrame
             The clean play-by-play data.
         """
-        self.logger.info(f"Reading in {len(filelist)} files from {data_dir}")
-        basedata = pd.concat(
-            pd.read_csv(
-                Path(data_dir, game["Season"], "rating-data", f"data_{game['GameID']}.csv"),
-                sep="|",
-                dtype={"GAME_ID": str},
-                index_col=0
-            )
-            for game in filelist
-        ).reset_index(drop=True)
+        self.logger.info(f"Reading in game {filelocation['GameID']} from {data_dir}")
+        basedata = pd.read_csv(
+            Path(data_dir, filelocation["Season"], "rating-data", f"data_{filelocation['GameID']}.csv"),
+            sep="|",
+            dtype={"GAME_ID": str},
+            index_col=0
+        )
 
         return basedata
 
@@ -84,14 +81,14 @@ class BoxScoreLoader(Task):
     """Load the boxscore data."""
 
     def run(  # type: ignore
-        self, filelist: List[Dict], output_dir: str, filesystem: str = "file"
+        self, filelocation: Dict, output_dir: str, filesystem: str = "file"
     ) -> pd.DataFrame:
         """Load the boxscore data.
 
         Parameters
         ----------
-        filelist : list
-            The list of files to read in.
+        filelocation : dict
+            The season and GameID of the game.
         output_dir : str
             The directory containing the data.
         filesystem : str, optional (default "file")
@@ -102,31 +99,21 @@ class BoxScoreLoader(Task):
         pd.DataFrame
             The player-level boxscore data.
         """
-        calls = [
-            (
-                "BoxScoreTraditional",
-                {
-                    "GameID": game["GameID"],
-                    "output_dir": Path(output_dir, game["Season"])
-                }
-            )
-            for game in filelist
-        ]
-        factory = NBADataFactory(
-            calls=calls,
-            output_dir=output_dir,
-            filesystem=filesystem
+        loader = BoxScoreTraditional(
+            output_dir=Path(output_dir, filelocation["Season"]),
+            GameID=filelocation["GameID"],
+            filesystem=filesystem,
         )
-        factory.load()
+        loader.load()
 
-        return factory.get_data("PlayerStats")
+        return loader.get_data("PlayerStats")
 
 
 class LoadSurvivalPredictions(Task):
     """Load the survival probability predictions."""
 
     def run(  # type: ignore
-        self, data_dir: str, filelist: List[Dict]
+        self, data_dir: str, filelocation: Dict
     ) -> pd.DataFrame:
         """Load the survival prediction data.
 
@@ -134,24 +121,21 @@ class LoadSurvivalPredictions(Task):
         ----------
         data_dir : str
             The directory containing multiple seasons of data.
-        filelist : list
-            The list of files to read in.
+        filelocation : dict
+            The season and GameID of the game.
         
         Returns
         -------
         pd.DataFrame
             The output DataFrame.
         """
-        self.logger.info(f"Reading in {len(filelist)} files from {data_dir}")
-        basedata = pd.concat(
-            pd.read_csv(
-                Path(data_dir, game["Season"], "survival-prediction", f"data_{game['GameID']}.csv"),
-                sep="|",
-                dtype={"GAME_ID": str},
-                index_col=0
-            )
-            for game in filelist
-        ).reset_index(drop=True)
+        self.logger.info(f"Reading in {filelocation['GameID']} from {data_dir}")
+        basedata = pd.read_csv(
+            Path(data_dir, filelocation["Season"], "survival-prediction", f"data_{filelocation['GameID']}.csv"),
+            sep="|",
+            dtype={"GAME_ID": str},
+            index_col=0
+        )
 
         return basedata
 
@@ -177,6 +161,7 @@ class SaveImpactData(Task):
         self,
         data: pd.DataFrame,
         output_dir: str,
+        filelocation: Dict,
         filesystem: str = "file"
     ):
         """Save the impact data.
@@ -187,6 +172,8 @@ class SaveImpactData(Task):
             The impact data.
         output_dir : str
             The directory for the data.
+        filelocation : dict
+            The season and GameID of the game.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
         
@@ -196,12 +183,9 @@ class SaveImpactData(Task):
         """
         # Get the filesystem
         fs = fsspec.filesystem(filesystem)
-        grouped = data.groupby("GAME_ID")
-        for name, group in grouped:
-            season = name[2] + "0" + name[3:5] + "-" + str(int(name[3:5]) + 1)
-            fdir = Path(output_dir, season, self._subdir)
-            fs.mkdir(fdir)
-            fpath = fdir / f"data_{name}.csv"
-            self.logger.info(f"Writing data for game {name} to {str(fpath)}")
-            with fs.open(fpath, "wb") as buf:
-                group.to_csv(buf, sep="|", mode="wb")
+        fdir = Path(output_dir, filelocation["Season"], self._subdir)
+        fs.mkdir(fdir)
+        fpath = fdir / f"data_{filelocation['GameID']}.csv"
+        self.logger.info(f"Writing data for game {filelocation['GameID']} to {str(fpath)}")
+        with fs.open(fpath, "wb") as buf:
+            data.to_csv(buf, sep="|", mode="wb")

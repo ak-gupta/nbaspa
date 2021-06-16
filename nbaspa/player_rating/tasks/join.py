@@ -45,14 +45,9 @@ class AddSurvivalProbability(Task):
             right_index=True,
             how="left"
         )["WIN_PROB"]
-        # Create a variable representing the change in win probability
-        pbp.loc[~pd.isnull(pbp["SURV_PROB"]), "SURV_PROB_CHANGE"] = (
-            pbp.loc[~pd.isnull(pbp["SURV_PROB"])]
-            .groupby("GAME_ID")["SURV_PROB"]
-            .diff()
-        )
-        pbp.loc[pbp["TIME"] == 0, "SURV_PROB_CHANGE"] = 0.0
         pbp["SURV_PROB"] = pbp.groupby("GAME_ID")["SURV_PROB"].bfill()
+        # Create a variable representing the change in win probability
+        pbp["SURV_PROB_CHANGE"] = pbp.groupby("GAME_ID")["SURV_PROB"].diff()
         pbp["SURV_PROB_CHANGE"] = pbp.groupby("GAME_ID")[
             "SURV_PROB_CHANGE"
         ].bfill()
