@@ -31,25 +31,23 @@ class AddSurvivalProbability(Task):
             The updated dataset.
         """
         survprob["TIME"] = survprob["TIME"].astype(int)
-        survprob = survprob.set_index(["GAME_ID", "TIME"])
+        survprob = survprob.set_index("TIME")
         # Get the last row for each gametime step
         pbp["TIME"] = pbp["TIME"].astype(int)
         filtered = pbp.sort_values(
-            by=["GAME_ID", "TIME", "EVENTNUM"], ascending=True
-        ).duplicated(subset=["GAME_ID", "TIME"], keep="last")
+            by=["TIME", "EVENTNUM"], ascending=True
+        ).duplicated(subset=["TIME"], keep="last")
         # Add the survival probability for each time step
         pbp["SURV_PROB"] = np.nan
         pbp.loc[~filtered, "SURV_PROB"] = pbp[~filtered].merge(
             survprob,
-            left_on=("GAME_ID", "TIME"),
+            left_on="TIME",
             right_index=True,
             how="left"
         )["WIN_PROB"]
-        pbp["SURV_PROB"] = pbp.groupby("GAME_ID")["SURV_PROB"].bfill()
+        pbp["SURV_PROB"] = pbp["SURV_PROB"].ffill()
         # Create a variable representing the change in win probability
-        pbp["SURV_PROB_CHANGE"] = pbp.groupby("GAME_ID")["SURV_PROB"].diff()
-        pbp["SURV_PROB_CHANGE"] = pbp.groupby("GAME_ID")[
-            "SURV_PROB_CHANGE"
-        ].bfill()
+        pbp["SURV_PROB_CHANGE"] = pbp["SURV_PROB"].diff()
+        pbp["SURV_PROB_CHANGE"] = pbp["SURV_PROB_CHANGE"].bfill()
 
         return pbp

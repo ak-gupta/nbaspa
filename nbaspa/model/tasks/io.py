@@ -132,7 +132,7 @@ class SavePredictions(Task):
             fpath = fdir / f"data_{name}.csv"
             self.logger.info(f"Writing data for game {name} to {str(fpath)}")
             with fs.open(fpath, "wb") as buf:
-                group.rename(columns={"stop": META["duration"]}, inplace=True)
+                group.rename(columns={"start": META["duration"]}, inplace=True)
                 group[
                     [META["id"], META["duration"], META["survival"]]
                     + META["static"]
