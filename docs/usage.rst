@@ -371,7 +371,7 @@ The above call will create game-level predictions for all cleaned game data avai
 
 .. important::
 
-    The predictions can be found in ``nba-data/<season>/survival-prediction/data_<GameID>.csv``.
+    The predictions can be found in ``nba-data/<Season>/survival-prediction/data_<GameID>.csv``.
 
 To restrict to a season or game, supply ``--season`` or ``--game-id``:
 
@@ -388,4 +388,74 @@ To restrict to a season or game, supply ``--season`` or ``--game-id``:
 Generate player ratings
 -----------------------
 
-Documentation coming soon.
+~~~~~~
+Python
+~~~~~~
+
+To generate player ratings for all of your data, run
+
+.. code-block:: python
+
+    from nbaspa.player_ratings.pipeline import gen_pipeline, run_pipeline
+
+    flow = gen_pipeline()
+    output = run_pipeline(
+        flow=flow,
+        data_dir="nba-data",
+        output_dir="nba-data",
+        filesystem="file"
+    )
+
+To restrict to a given season, supply ``Season``
+
+.. code-block:: python
+    :emphasize-lines: 6
+
+    output = run_pipeline(
+        flow=flow,
+        data_dir="nba-data",
+        output_dir="nba-data",
+        filesystem="file",
+        Season="2018-19"
+    )
+
+and to restrict to a game, supply ``GameID``
+
+.. code-block:: python
+    :emphasize-lines: 6
+
+    output = run_pipeline(
+        flow=flow,
+        data_dir="nba-data",
+        output_dir="nba-data",
+        filesystem="file",
+        GameID="0021800001"
+    )
+
+.. important::
+
+    You can find the play-by-play impact data at ``<output_dir>/<Season>/pbp-impact/data_<GameID>.csv``.
+    The aggregated game-level data can be found at ``<output_dir>/<Season>/game-impact/data_<GameID>/csv``.
+
+~~~~~~~~~~~~~~~~~~~~~~
+Command-line interface
+~~~~~~~~~~~~~~~~~~~~~~
+
+To run game-level player ratings,
+
+.. code-block:: console
+
+    $ nbaspa-rate \
+        --data-dir nba-data \
+        --output-dir nba-data
+
+The above call will create ratings for all cleaned game data available in ``nba-data``. To restrict
+to a season or game, supply ``--season`` or ``--game-id``:
+
+.. code-block:: console
+
+    $ nbaspa-rate \
+        --data-dir nba-data \
+        --output-dir nba-data \
+        --season 2018-19 \
+        --game-id 0021800001

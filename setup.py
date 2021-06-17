@@ -68,6 +68,7 @@ setup(
             "nbaspa-download=nbaspa.data.scripts.download:download",
             "nbaspa-clean=nbaspa.data.scripts.clean:clean",
             "nbaspa-model=nbaspa.model.scripts.model:model",
+            "nbaspa-rate=nbaspa.player_rating.scripts.rate:rate"
         ],
     },
 )

@@ -41,18 +41,19 @@ class NBADataFactory:
 
     def __init__(
         self,
-        calls: List[Tuple[str, Dict[str, Dict]]],
+        calls: List[Tuple[str, Dict]],
         output_dir: Optional[str] = None,
         filesystem: Optional[str] = "file",
     ):
         """Init method."""
         # Parse the calls
-        self.calls = [
-            getattr(endpoints, obj)(
-                output_dir=output_dir, filesystem=filesystem, **params
-            )
-            for obj, params in calls
-        ]
+        self.calls = []
+        for obj, params in calls:
+            if "output_dir" not in params:
+                params["output_dir"] = output_dir
+            if "filesystem" not in params:
+                params["filesystem"] = filesystem
+            self.calls.append(getattr(endpoints, obj)(**params))
 
     def get(self) -> List[BaseRequest]:
         """Retrieve the data for each API call.
@@ -116,7 +117,7 @@ class NBADataFactory:
                 LOG.error(f"Unable to retrieve data for {str(callobj)}")
                 raise ValueError(f"Unable to retrieve data for {str(callobj)}")
 
-        return pd.concat(df_list).reset_index(drop=True)
+        return pd.concat(df_list, ignore_index=True)
 
     @sleep_and_retry
     @limits(calls=1, period=60)
