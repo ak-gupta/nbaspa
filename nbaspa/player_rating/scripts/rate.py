@@ -4,6 +4,7 @@ import click
 
 from ..pipeline import gen_pipeline, run_pipeline
 
+
 @click.command()
 @click.option("--data-dir", help="Path to the data directory.")
 @click.option("--output-dir", help="Path to the output directory")
@@ -13,7 +14,7 @@ from ..pipeline import gen_pipeline, run_pipeline
     "--mode",
     type=click.Choice(["nba", "survival"], case_sensitive=True),
     default="survival",
-    help="Whether to generate NBA win probability or survival"
+    help="Whether to generate NBA win probability or survival",
 )
 def rate(data_dir, output_dir, season, game_id, mode):
     """Create impact ratings."""
@@ -24,5 +25,5 @@ def rate(data_dir, output_dir, season, game_id, mode):
         output_dir=output_dir,
         Season=season,
         GameID=game_id,
-        mode=mode
+        mode=mode,
     )

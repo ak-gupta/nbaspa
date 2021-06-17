@@ -24,7 +24,7 @@ class AddSurvivalProbability(Task):
             The clean rating data.
         survprob : pd.DataFrame
             The survival prediction data.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -34,16 +34,13 @@ class AddSurvivalProbability(Task):
         survprob = survprob.set_index("TIME")
         # Get the last row for each gametime step
         pbp["TIME"] = pbp["TIME"].astype(int)
-        filtered = pbp.sort_values(
-            by=["TIME", "EVENTNUM"], ascending=True
-        ).duplicated(subset=["TIME"], keep="last")
+        filtered = pbp.sort_values(by=["TIME", "EVENTNUM"], ascending=True).duplicated(
+            subset=["TIME"], keep="last"
+        )
         # Add the survival probability for each time step
         pbp["SURV_PROB"] = np.nan
         pbp.loc[~filtered, "SURV_PROB"] = pbp[~filtered].merge(
-            survprob,
-            left_on="TIME",
-            right_index=True,
-            how="left"
+            survprob, left_on="TIME", right_index=True, how="left"
         )["WIN_PROB"]
         pbp["SURV_PROB"] = pbp["SURV_PROB"].ffill()
         # Create a variable representing the change in win probability

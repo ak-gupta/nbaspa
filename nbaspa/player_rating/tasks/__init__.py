@@ -8,7 +8,7 @@ from .io import (
     LoadRatingData,
     BoxScoreLoader,
     LoadSurvivalPredictions,
-    SaveImpactData
+    SaveImpactData,
 )
 from .join import AddSurvivalProbability
 
@@ -21,5 +21,5 @@ __all__: List[str] = [
     "BoxScoreLoader",
     "LoadSurvivalPredictions",
     "AddSurvivalProbability",
-    "SaveImpactData"
+    "SaveImpactData",
 ]

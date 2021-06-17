@@ -14,8 +14,11 @@ from ...data.endpoints import BoxScoreTraditional
 class GetGamesList(Task):
     """Get the list of games for the glob."""
 
-    def run(
-        self, data_dir: str, Season: Optional[str] = None, GameID: Optional[str] = None,
+    def run(  # type: ignore
+        self,
+        data_dir: str,
+        Season: Optional[str] = None,
+        GameID: Optional[str] = None,
     ) -> List[Dict]:
         """Get the list of games for the glob.
 
@@ -29,7 +32,7 @@ class GetGamesList(Task):
             The season for the data. If not provided, all seasons will be loaded.
         GameID : str, optional (default None)
             The game identifier. If not provided, all games will be loaded.
-        
+
         Returns
         -------
         List
@@ -39,19 +42,22 @@ class GetGamesList(Task):
         files = list(Path(data_dir).glob(fileglob))
         pattern = re.compile(r"^data_(?P<game>[0-9]*).csv")
 
-        return [
-            {
-                "Season": game.parts[1],
-                "GameID": pattern.match(game.parts[-1]).group("game")
-            } for game in files
-        ]
+        filelist = []
+        for game in files:
+            gameinfo = {"Season": game.parts[1]}
+            match = pattern.match(game.parts[-1])
+            if match is not None:
+                gameinfo["GameID"] = match.group("game")
+
+            filelist.append(gameinfo)
+
+        return filelist
+
 
 class LoadRatingData(Task):
     """Load the clean NBA play-by-play data."""
 
-    def run(  # type: ignore
-        self, data_dir: str, filelocation: Dict
-    ) -> pd.DataFrame:
+    def run(self, data_dir: str, filelocation: Dict) -> pd.DataFrame:  # type: ignore
         """Load the clean NBA play-by-play data.
 
         Parameters
@@ -68,10 +74,15 @@ class LoadRatingData(Task):
         """
         self.logger.info(f"Reading in game {filelocation['GameID']} from {data_dir}")
         basedata = pd.read_csv(
-            Path(data_dir, filelocation["Season"], "rating-data", f"data_{filelocation['GameID']}.csv"),
+            Path(
+                data_dir,
+                filelocation["Season"],
+                "rating-data",
+                f"data_{filelocation['GameID']}.csv",
+            ),
             sep="|",
             dtype={"GAME_ID": str},
-            index_col=0
+            index_col=0,
         )
 
         return basedata
@@ -100,7 +111,7 @@ class BoxScoreLoader(Task):
             The player-level boxscore data.
         """
         loader = BoxScoreTraditional(
-            output_dir=Path(output_dir, filelocation["Season"]),
+            output_dir=str(Path(output_dir, filelocation["Season"])),
             GameID=filelocation["GameID"],
             filesystem=filesystem,
         )
@@ -112,9 +123,7 @@ class BoxScoreLoader(Task):
 class LoadSurvivalPredictions(Task):
     """Load the survival probability predictions."""
 
-    def run(  # type: ignore
-        self, data_dir: str, filelocation: Dict
-    ) -> pd.DataFrame:
+    def run(self, data_dir: str, filelocation: Dict) -> pd.DataFrame:  # type: ignore
         """Load the survival prediction data.
 
         Parameters
@@ -123,7 +132,7 @@ class LoadSurvivalPredictions(Task):
             The directory containing multiple seasons of data.
         filelocation : dict
             The season and GameID of the game.
-        
+
         Returns
         -------
         pd.DataFrame
@@ -131,10 +140,15 @@ class LoadSurvivalPredictions(Task):
         """
         self.logger.info(f"Reading in {filelocation['GameID']} from {data_dir}")
         basedata = pd.read_csv(
-            Path(data_dir, filelocation["Season"], "survival-prediction", f"data_{filelocation['GameID']}.csv"),
+            Path(
+                data_dir,
+                filelocation["Season"],
+                "survival-prediction",
+                f"data_{filelocation['GameID']}.csv",
+            ),
             sep="|",
             dtype={"GAME_ID": str},
-            index_col=0
+            index_col=0,
         )
 
         return basedata
@@ -142,7 +156,7 @@ class LoadSurvivalPredictions(Task):
 
 class SaveImpactData(Task):
     """Save the impact data.
-    
+
     Parameters
     ----------
     pbp : bool
@@ -155,14 +169,13 @@ class SaveImpactData(Task):
         """Init method."""
         self._subdir = "pbp-impact" if pbp else "game-impact"
         super().__init__(**kwargs)
-    
 
     def run(  # type: ignore
         self,
         data: pd.DataFrame,
         output_dir: str,
         filelocation: Dict,
-        filesystem: str = "file"
+        filesystem: str = "file",
     ):
         """Save the impact data.
 
@@ -176,7 +189,7 @@ class SaveImpactData(Task):
             The season and GameID of the game.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
-        
+
         Returns
         -------
         None
@@ -186,6 +199,8 @@ class SaveImpactData(Task):
         fdir = Path(output_dir, filelocation["Season"], self._subdir)
         fs.mkdir(fdir)
         fpath = fdir / f"data_{filelocation['GameID']}.csv"
-        self.logger.info(f"Writing data for game {filelocation['GameID']} to {str(fpath)}")
+        self.logger.info(
+            f"Writing data for game {filelocation['GameID']} to {str(fpath)}"
+        )
         with fs.open(fpath, "wb") as buf:
             data.to_csv(buf, sep="|", mode="wb")

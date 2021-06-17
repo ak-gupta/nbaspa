@@ -14,7 +14,7 @@ from .tasks import (
     LoadSurvivalPredictions,
     AddSurvivalProbability,
     SimplePlayerImpact,
-    SaveImpactData
+    SaveImpactData,
 )
 
 
@@ -59,10 +59,7 @@ def gen_pipeline() -> Flow:
             Season=season,
             GameID=gameid,
         )
-        pbp = pbp_loader.map(
-            data_dir=unmapped(data_dir),
-            filelocation=gamelist
-        )
+        pbp = pbp_loader.map(data_dir=unmapped(data_dir), filelocation=gamelist)
         survprob = surv_loader.map(data_dir=unmapped(data_dir), filelocation=gamelist)
         box = box_loader.map(filelocation=gamelist, output_dir=unmapped(data_dir))
         # Add the survival probability and calculate impact
@@ -75,20 +72,21 @@ def gen_pipeline() -> Flow:
             data=sequence,
             output_dir=unmapped(output_dir),
             filesystem=unmapped(filesystem),
-            filelocation=gamelist
+            filelocation=gamelist,
         )
         _ = saveagg.map(
             data=agg,
             output_dir=unmapped(output_dir),
             filesystem=unmapped(filesystem),
-            filelocation=gamelist
+            filelocation=gamelist,
         )
-
 
     return flow
 
 
-def run_pipeline(flow: Flow, data_dir: str, output_dir: str, **kwargs) -> Optional[State]:
+def run_pipeline(
+    flow: Flow, data_dir: str, output_dir: str, **kwargs
+) -> Optional[State]:
     """Run the pipeline.
 
     Parameters
@@ -108,11 +106,7 @@ def run_pipeline(flow: Flow, data_dir: str, output_dir: str, **kwargs) -> Option
         The output of ``flow.run``.
     """
     output = flow.run(
-        parameters={
-            "data_dir": data_dir,
-            "output_dir": output_dir,
-            **kwargs
-        }
+        parameters={"data_dir": data_dir, "output_dir": output_dir, **kwargs}
     )
 
     return output

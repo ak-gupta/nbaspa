@@ -41,7 +41,7 @@ class NBADataFactory:
 
     def __init__(
         self,
-        calls: List[Tuple[str, Dict[str, Dict]]],
+        calls: List[Tuple[str, Dict]],
         output_dir: Optional[str] = None,
         filesystem: Optional[str] = "file",
     ):
