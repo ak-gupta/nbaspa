@@ -126,18 +126,16 @@ class BoxScoreLoader(Task):
 class ScoreboardLoader(Task):
     """Load the scoreboard data."""
 
-    def run(  # type: ignore
-        self, data_dir: str, filelist: List[Dict]
-    ):
+    def run(self, data_dir: str, filelist: List[Dict]):  # type: ignore
         """Load the scoreboard data.
-        
+
         Parameters
         ----------
         data_dir : str
             The directory containing multiple seasons of data.
         filelist : list
             The output from ``GetGamesList``
-        
+
         Returns
         -------
         pd.DataFrame
@@ -146,15 +144,17 @@ class ScoreboardLoader(Task):
         unq_seasons = set(game["Season"] for game in filelist)
         calls = []
         for season in unq_seasons:
-            for n in range(int((SEASONS[season]["END"] - SEASONS[season]["START"]).days) + 1):
+            for n in range(
+                int((SEASONS[season]["END"] - SEASONS[season]["START"]).days) + 1
+            ):
                 game_date = SEASONS[season]["START"] + datetime.timedelta(n)
                 calls.append(
                     (
                         "Scoreboard",
                         {
                             "GameDate": game_date.strftime("%m/%d/%Y"),
-                            "output_dir": str(Path(data_dir, season))
-                        }
+                            "output_dir": str(Path(data_dir, season)),
+                        },
                     )
                 )
         loader = NBADataFactory(calls=calls)
@@ -257,7 +257,7 @@ class SavePlayerTimeSeries(Task):
         data: List[pd.DataFrame],
         header: pd.DataFrame,
         output_dir: str,
-        filesystem: Optional[str] = "file"
+        filesystem: Optional[str] = "file",
     ):
         """Save player-level time-series data.
 
@@ -278,7 +278,11 @@ class SavePlayerTimeSeries(Task):
         """
         data = pd.concat(data, ignore_index=True)
         data["SEASON"] = (
-            data["GAME_ID"].str[2] + "0" + data["GAME_ID"].str[3:5] + "-" + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
+            data["GAME_ID"].str[2]
+            + "0"
+            + data["GAME_ID"].str[3:5]
+            + "-"
+            + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
         )
         # Add the game date
         data["GAME_DATE"] = pd.merge(
@@ -293,12 +297,11 @@ class SavePlayerTimeSeries(Task):
             with fs.open(fpath, "wb") as buf:
                 group.to_csv(buf, sep="|", mode="wb")
 
+
 class SaveTopPlayers(Task):
     """Save a summary of player performance over multiple games."""
 
-    def run(  # type: ignore
-        self, data: List[pd.DataFrame], output_dir: str
-    ):
+    def run(self, data: List[pd.DataFrame], output_dir: str):  # type: ignore
         """Save a summary of player performance.
 
         Parameters
@@ -312,13 +315,22 @@ class SaveTopPlayers(Task):
         """
         data = pd.concat(data, ignore_index=True)
         data["SEASON"] = (
-            data["GAME_ID"].str[2] + "0" + data["GAME_ID"].str[3:5] + "-" + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
+            data["GAME_ID"].str[2]
+            + "0"
+            + data["GAME_ID"].str[3:5]
+            + "-"
+            + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
         )
         for name, group in data.groupby("SEASON"):
             avg = group.groupby("PLAYER_ID")["IMPACT"].agg(["sum", "mean"])
-            avg.rename(columns={"sum": "TOTAL_IMPACT", "mean": "MEAN_IMPACT"}, inplace=True)
+            avg.rename(
+                columns={"sum": "TOTAL_IMPACT", "mean": "MEAN_IMPACT"}, inplace=True
+            )
             avg.reset_index(inplace=True)
-            self.logger.info(f"Saving {name} summary to {str(Path(output_dir, name, 'impact-summary.csv'))}")
+            self.logger.info(
+                f"Saving {name} summary to {str(Path(output_dir, name, 'impact-summary.csv'))}"
+            )
             avg.to_csv(
-                Path(output_dir, name, "impact-summary.csv"), sep="|",
+                Path(output_dir, name, "impact-summary.csv"),
+                sep="|",
             )

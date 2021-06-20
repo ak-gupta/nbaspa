@@ -18,7 +18,7 @@ from .tasks import (
     SimplePlayerImpact,
     SaveImpactData,
     SavePlayerTimeSeries,
-    SaveTopPlayers
+    SaveTopPlayers,
 )
 
 
@@ -119,7 +119,7 @@ def run_pipeline(
     """
     output = flow.run(
         parameters={"data_dir": data_dir, "output_dir": output_dir, **kwargs},
-        executor=LocalDaskExecutor(scheduler="processes")
+        executor=LocalDaskExecutor(scheduler="processes"),
     )
 
     return output

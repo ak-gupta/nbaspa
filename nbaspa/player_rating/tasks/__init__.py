@@ -11,7 +11,7 @@ from .io import (
     LoadSurvivalPredictions,
     SaveImpactData,
     SavePlayerTimeSeries,
-    SaveTopPlayers
+    SaveTopPlayers,
 )
 from .join import AddSurvivalProbability
 
