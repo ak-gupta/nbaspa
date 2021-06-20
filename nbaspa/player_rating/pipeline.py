@@ -12,10 +12,12 @@ from .tasks import (
     CompoundPlayerImpact,
     GetGamesList,
     LoadRatingData,
+    ScoreboardLoader,
     LoadSurvivalPredictions,
     AddSurvivalProbability,
     SimplePlayerImpact,
     SaveImpactData,
+    SavePlayerTimeSeries,
     SaveTopPlayers
 )
 
@@ -38,6 +40,7 @@ def gen_pipeline() -> Flow:
     pbp_loader = LoadRatingData(name="Load clean data")
     box_loader = BoxScoreLoader(name="Load boxscore data")
     surv_loader = LoadSurvivalPredictions(name="Load survival predictions")
+    score_loader = ScoreboardLoader(name="Load header data")
     # Calculation tasks
     addsurv = AddSurvivalProbability(name="Join survival probability")
     addsimpleimpact = SimplePlayerImpact(name="Calculate simple player impact")
@@ -46,6 +49,7 @@ def gen_pipeline() -> Flow:
     # Persist
     savesimple = SaveImpactData(name="Save play-by-play impact data", pbp=True)
     saveagg = SaveImpactData(name="Save aggregated impact data", pbp=False)
+    savetime = SavePlayerTimeSeries(name="Save player timeseries")
     savesummary = SaveTopPlayers(name="Save season summary")
 
     with Flow(name="Calculate player impact") as flow:
@@ -62,6 +66,7 @@ def gen_pipeline() -> Flow:
             Season=season,
             GameID=gameid,
         )
+        header = score_loader(data_dir=data_dir, filelist=gamelist)
         pbp = pbp_loader.map(data_dir=unmapped(data_dir), filelocation=gamelist)
         survprob = surv_loader.map(data_dir=unmapped(data_dir), filelocation=gamelist)
         box = box_loader.map(filelocation=gamelist, output_dir=unmapped(data_dir))
@@ -82,6 +87,9 @@ def gen_pipeline() -> Flow:
             output_dir=unmapped(output_dir),
             filesystem=unmapped(filesystem),
             filelocation=gamelist,
+        )
+        _ = savetime(
+            data=agg, header=header, output_dir=output_dir, filesystem=filesystem
         )
         _ = savesummary(data=agg, output_dir=output_dir)
 

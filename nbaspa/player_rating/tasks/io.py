@@ -1,5 +1,6 @@
 """Loaders."""
 
+import datetime
 from pathlib import Path
 import re
 from typing import Dict, List, Optional
@@ -9,6 +10,8 @@ import pandas as pd
 from prefect import Task
 
 from ...data.endpoints import BoxScoreTraditional
+from ...data.endpoints.parameters import SEASONS
+from ...data.factory import NBADataFactory
 
 
 class GetGamesList(Task):
@@ -120,6 +123,46 @@ class BoxScoreLoader(Task):
         return loader.get_data("PlayerStats")
 
 
+class ScoreboardLoader(Task):
+    """Load the scoreboard data."""
+
+    def run(  # type: ignore
+        self, data_dir: str, filelist: List[Dict]
+    ):
+        """Load the scoreboard data.
+        
+        Parameters
+        ----------
+        data_dir : str
+            The directory containing multiple seasons of data.
+        filelist : list
+            The output from ``GetGamesList``
+        
+        Returns
+        -------
+        pd.DataFrame
+            The ``GameHeader`` dataset from ``nbaspa.data.endpoints.Scoreboard``
+        """
+        unq_seasons = set(game["Season"] for game in filelist)
+        calls = []
+        for season in unq_seasons:
+            for n in range(int((SEASONS[season]["END"] - SEASONS[season]["START"]).days) + 1):
+                game_date = SEASONS[season]["START"] + datetime.timedelta(n)
+                calls.append(
+                    (
+                        "Scoreboard",
+                        {
+                            "GameDate": game_date.strftime("%m/%d/%Y"),
+                            "output_dir": str(Path(data_dir, season))
+                        }
+                    )
+                )
+        loader = NBADataFactory(calls=calls)
+        loader.load()
+
+        return loader.get_data("GameHeader")
+
+
 class LoadSurvivalPredictions(Task):
     """Load the survival probability predictions."""
 
@@ -205,6 +248,50 @@ class SaveImpactData(Task):
         with fs.open(fpath, "wb") as buf:
             data.to_csv(buf, sep="|", mode="wb")
 
+
+class SavePlayerTimeSeries(Task):
+    """Save player-level time-series data."""
+
+    def run(  # type: ignore
+        self,
+        data: List[pd.DataFrame],
+        header: pd.DataFrame,
+        output_dir: str,
+        filesystem: Optional[str] = "file"
+    ):
+        """Save player-level time-series data.
+
+        Parameters
+        ----------
+        data : list
+            The list of game-level impact.
+        header : pd.DataFrame
+            The header data.
+        output_dir : str
+            The directory for the output data.
+        filesystem : str, optional (default "file")
+            The name of the ``fsspec`` filesystem to use.
+
+        Returns
+        -------
+        None
+        """
+        data = pd.concat(data, ignore_index=True)
+        data["SEASON"] = (
+            data["GAME_ID"].str[2] + "0" + data["GAME_ID"].str[3:5] + "-" + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
+        )
+        # Add the game date
+        data["GAME_DATE"] = pd.merge(
+            data, header, left_on="GAME_ID", right_on="GAME_ID", how="left"
+        )["GAME_DATE_EST"]
+        # Loop through each player/season
+        fs = fsspec.filesystem(filesystem)
+        for name, group in data.groupby(["PLAYER_ID", "SEASON"]):
+            fdir = Path(output_dir, name[1], "impact-timeseries")
+            fs.mkdir(fdir)
+            fpath = fdir / f"data_{name[0]}.csv"
+            with fs.open(fpath, "wb") as buf:
+                group.to_csv(buf, sep="|", mode="wb")
 
 class SaveTopPlayers(Task):
     """Save a summary of player performance over multiple games."""
