@@ -204,3 +204,34 @@ class SaveImpactData(Task):
         )
         with fs.open(fpath, "wb") as buf:
             data.to_csv(buf, sep="|", mode="wb")
+
+
+class SaveTopPlayers(Task):
+    """Save a summary of player performance over multiple games."""
+
+    def run(  # type: ignore
+        self, data: List[pd.DataFrame], output_dir: str
+    ):
+        """Save a summary of player performance.
+
+        Parameters
+        ----------
+        data : list
+            A list of dataframes to save.
+        output_dir : str
+            The directory for the data.
+        filelist : list
+            A list of file locations.
+        """
+        data = pd.concat(data, ignore_index=True)
+        data["SEASON"] = (
+            data["GAME_ID"].str[2] + "0" + data["GAME_ID"].str[3:5] + "-" + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
+        )
+        for name, group in data.groupby("SEASON"):
+            avg = group.groupby("PLAYER_ID")["IMPACT"].agg(["sum", "mean"])
+            avg.rename(columns={"sum": "TOTAL_IMPACT", "mean": "MEAN_IMPACT"}, inplace=True)
+            avg.reset_index(inplace=True)
+            self.logger.info(f"Saving {name} summary to {str(Path(output_dir, name, 'impact-summary.csv'))}")
+            avg.to_csv(
+                Path(output_dir, name, "impact-summary.csv"), sep="|",
+            )

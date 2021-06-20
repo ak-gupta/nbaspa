@@ -4,6 +4,7 @@ from typing import Optional
 
 from prefect import Flow, Parameter, unmapped
 from prefect.engine.state import State
+from prefect.executors import LocalDaskExecutor
 
 from .tasks import (
     AggregateImpact,
@@ -15,6 +16,7 @@ from .tasks import (
     AddSurvivalProbability,
     SimplePlayerImpact,
     SaveImpactData,
+    SaveTopPlayers
 )
 
 
@@ -44,6 +46,7 @@ def gen_pipeline() -> Flow:
     # Persist
     savesimple = SaveImpactData(name="Save play-by-play impact data", pbp=True)
     saveagg = SaveImpactData(name="Save aggregated impact data", pbp=False)
+    savesummary = SaveTopPlayers(name="Save season summary")
 
     with Flow(name="Calculate player impact") as flow:
         # Parameters
@@ -80,6 +83,7 @@ def gen_pipeline() -> Flow:
             filesystem=unmapped(filesystem),
             filelocation=gamelist,
         )
+        _ = savesummary(data=agg, output_dir=output_dir)
 
     return flow
 
@@ -106,7 +110,8 @@ def run_pipeline(
         The output of ``flow.run``.
     """
     output = flow.run(
-        parameters={"data_dir": data_dir, "output_dir": output_dir, **kwargs}
+        parameters={"data_dir": data_dir, "output_dir": output_dir, **kwargs},
+        executor=LocalDaskExecutor(scheduler="processes")
     )
 
     return output
