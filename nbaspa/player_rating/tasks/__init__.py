@@ -6,9 +6,12 @@ from .impact import AggregateImpact, CompoundPlayerImpact, SimplePlayerImpact
 from .io import (
     GetGamesList,
     LoadRatingData,
+    ScoreboardLoader,
     BoxScoreLoader,
     LoadSurvivalPredictions,
     SaveImpactData,
+    SavePlayerTimeSeries,
+    SaveTopPlayers,
 )
 from .join import AddSurvivalProbability
 
@@ -18,8 +21,11 @@ __all__: List[str] = [
     "SimplePlayerImpact",
     "GetGamesList",
     "LoadRatingData",
+    "ScoreboardLoader",
     "BoxScoreLoader",
     "LoadSurvivalPredictions",
     "AddSurvivalProbability",
     "SaveImpactData",
+    "SavePlayerTimeSeries",
+    "SaveTopPlayers",
 ]

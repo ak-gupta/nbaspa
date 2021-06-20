@@ -436,6 +436,9 @@ and to restrict to a game, supply ``GameID``
 
     You can find the play-by-play impact data at ``<output_dir>/<Season>/pbp-impact/data_<GameID>.csv``.
     The aggregated game-level data can be found at ``<output_dir>/<Season>/game-impact/data_<GameID>/csv``.
+    This call will also save a season summary CSV with total and average impact for each player to
+    ``<output_dir>/<Season>/impact-summary.csv``, as well as player timeseries data to
+    ``<output_dir>/<Season>/impact-timeseries/data_<PlayerID>.csv``.
 
 ~~~~~~~~~~~~~~~~~~~~~~
 Command-line interface
