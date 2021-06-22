@@ -142,5 +142,6 @@ class TeamRoster(BaseRequest):
             The default parameter values.
         """
         return {
-            "Season": DefaultParameters.Season, "LeagueID": DefaultParameters.LeagueID
+            "Season": DefaultParameters.Season,
+            "LeagueID": DefaultParameters.LeagueID,
         }

@@ -12,7 +12,12 @@ from .boxscore import (
 )
 from .lineup import TeamLineups
 from .pbp import PlayByPlay
-from .player import AllPlayers, PlayerDashboardGeneral, PlayerDashboardShooting
+from .player import (
+    AllPlayers,
+    PlayerInfo,
+    PlayerDashboardGeneral,
+    PlayerDashboardShooting,
+)
 from .rotation import GameRotation
 from .scoreboard import Scoreboard
 from .shotchart import ShotChart
@@ -30,6 +35,7 @@ __all__: List[str] = [
     "TeamLineups",
     "PlayByPlay",
     "AllPlayers",
+    "PlayerInfo",
     "PlayerDashboardGeneral",
     "PlayerDashboardShooting",
     "GameRotation",

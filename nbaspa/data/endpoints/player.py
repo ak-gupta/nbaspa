@@ -11,6 +11,55 @@ from .base import BaseRequest
 from .parameters import DefaultParameters
 
 
+class PlayerInfo(BaseRequest):
+    """Get common player information.
+
+    Parameters
+    ----------
+    PlayerID : int
+        The player identifier
+    **params
+        Parameters for ``BaseRequest``.
+    """
+
+    endpoint: str = "commonplayerinfo"
+    filename: str = "data_{PlayerID}.json"
+
+    def __init__(
+        self,
+        PlayerID: int,
+        output_dir: Optional[str] = None,
+        filesystem: Optional[str] = "file",
+        **params,
+    ):
+        """Init method."""
+        super().__init__(
+            output_dir=output_dir, filesystem=filesystem, PlayerID=PlayerID, **params
+        )
+
+    @property
+    def defaults(self) -> Dict:
+        """Default parameters for the endpoint.
+
+        Returns
+        -------
+        Dict
+            The default parameter values.
+        """
+        return {"LeagueID": DefaultParameters.LeagueID}
+
+    @property
+    def datasets(self) -> List[str]:
+        """Datasets returned by the API.
+
+        Returns
+        -------
+        List
+            Datasets returned by the API.
+        """
+        return ["CommonPlayerInfo", "PlayerHeadlineStats", "AvailableSeasons"]
+
+
 class PlayerDashboardBase(BaseRequest):
     """Get the player shooting dashboard.
 
