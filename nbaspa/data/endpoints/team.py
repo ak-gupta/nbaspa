@@ -120,7 +120,7 @@ class TeamRoster(BaseRequest):
         super().__init__(
             output_dir=output_dir, filesystem=filesystem, TeamID=TeamID, **params
         )
-    
+
     @property
     def datasets(self) -> List[str]:
         """Datasets returned by the API.
