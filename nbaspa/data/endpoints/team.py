@@ -141,4 +141,6 @@ class TeamRoster(BaseRequest):
         Dict
             The default parameter values.
         """
-        return {"Season": DefaultParameters.Season}
+        return {
+            "Season": DefaultParameters.Season, "LeagueID": DefaultParameters.LeagueID
+        }

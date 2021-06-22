@@ -32,6 +32,7 @@ def test_gamelog(output_dir):
 def test_teamroster(output_dir):
     """Test loading team roster."""
     roster = TeamRoster(TeamID=1610612761, Season="2018-19", output_dir=output_dir)
+
     assert roster.fpath == output_dir / Path("commonteamroster", "data_1610612761.json")
     assert roster.exists()
 
