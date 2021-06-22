@@ -17,7 +17,7 @@ from .rotation import GameRotation
 from .scoreboard import Scoreboard
 from .shotchart import ShotChart
 from .synergy import SynergyPlayType
-from .team import TeamStats, TeamGameLog
+from .team import TeamStats, TeamGameLog, TeamRoster
 from .winprobability import WinProbability
 
 __all__: List[str] = [
@@ -38,5 +38,6 @@ __all__: List[str] = [
     "SynergyPlayType",
     "TeamStats",
     "TeamGameLog",
+    "TeamRoster",
     "WinProbability",
 ]

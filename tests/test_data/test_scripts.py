@@ -166,6 +166,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612737, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612737, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -175,6 +176,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612738, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612738, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -184,6 +186,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612739, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612739, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -193,6 +196,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612740, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612740, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -202,6 +206,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612741, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612741, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -211,6 +216,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612742, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612742, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -220,6 +226,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612743, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612743, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -229,6 +236,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612744, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612744, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -238,6 +246,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612745, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612745, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -247,6 +256,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612746, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612746, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -256,6 +266,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612747, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612747, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -265,6 +276,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612748, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612748, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -274,6 +286,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612749, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612749, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -283,6 +296,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612750, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612750, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -292,6 +306,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612751, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612751, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -301,6 +316,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612752, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612752, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -310,6 +326,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612753, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612753, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -319,6 +336,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612754, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612754, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -328,6 +346,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612755, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612755, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -337,6 +356,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612756, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612756, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -346,6 +366,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612757, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612757, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -355,6 +376,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612758, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612758, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -364,6 +386,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612759, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612759, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -373,6 +396,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612760, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612760, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -382,6 +406,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612761, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612761, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -391,6 +416,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612762, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612762, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -400,6 +426,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612763, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612763, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -409,6 +436,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612764, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612764, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -418,6 +446,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612765, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612765, "Season": "2018-19"}),
             (
                 "TeamLineups",
                 {
@@ -427,6 +456,7 @@ def test_teams_cli(mock_factory, data_dir):
                 }
             ),
             ("TeamGameLog", {"TeamID": 1610612766, "Season": "2018-19"}),
+            ("TeamRoster", {"TeamID": 1610612766, "Season": "2018-19"}),
         ],
         output_dir=Path(data_dir, "2018-19")
     )

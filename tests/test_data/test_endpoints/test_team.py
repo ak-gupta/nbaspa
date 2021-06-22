@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from nbaspa.data.endpoints import TeamGameLog, TeamStats
+from nbaspa.data.endpoints import TeamGameLog, TeamStats, TeamRoster
 
 def test_team_stats(output_dir):
     """Test loading team statistics."""
@@ -27,3 +27,15 @@ def test_gamelog(output_dir):
 
     for dataset in gamelog.datasets:
         assert gamelog.get_data(dataset).empty
+
+
+def test_teamroster(output_dir):
+    """Test loading team roster."""
+    roster = TeamRoster(TeamID=1610612761, Season="2018-19", output_dir=output_dir)
+    assert roster.fpath == output_dir / Path("commonteamroster", "data_1610612761.json")
+    assert roster.exists()
+
+    roster.get()
+
+    for dataset in roster.datasets:
+        assert roster.get_data(dataset).empty

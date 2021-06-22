@@ -80,6 +80,7 @@ def teams(output_dir, season):
                 {"TeamID": team, "Season": season, "MeasureType": "Advanced"},
             ),
             ("TeamGameLog", {"TeamID": team, "Season": season}),
+            ("TeamRoster", {"TeamID": team, "Season": season})
         ]
 
     factory = NBADataFactory(calls=calls, output_dir=Path(output_dir, season))
