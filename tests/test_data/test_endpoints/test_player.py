@@ -6,6 +6,7 @@ from nbaspa.data.endpoints.player import (
     PlayerDashboardGeneral,
     PlayerDashboardShooting,
     AllPlayers,
+    PlayerInfo,
 )
 
 def test_all_players(output_dir):
@@ -13,6 +14,17 @@ def test_all_players(output_dir):
     players = AllPlayers(Season="2018-19", output_dir=output_dir)
 
     assert players.fpath == output_dir / Path("commonallplayers", "data_2018-19.json")
+    assert players.exists()
+
+    players.get()
+
+    for dataset in players.datasets:
+        assert players.get_data(dataset).empty
+
+def test_player_info(output_dir):
+    players = PlayerInfo(PlayerID=1, output_dir=output_dir)
+
+    assert players.fpath == output_dir / Path("commonplayerinfo", "data_1.json")
     assert players.exists()
 
     players.get()

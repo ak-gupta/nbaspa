@@ -80,6 +80,7 @@ def teams(output_dir, season):
                 {"TeamID": team, "Season": season, "MeasureType": "Advanced"},
             ),
             ("TeamGameLog", {"TeamID": team, "Season": season}),
+            ("TeamRoster", {"TeamID": team, "Season": season}),
         ]
 
     factory = NBADataFactory(calls=calls, output_dir=Path(output_dir, season))
@@ -100,6 +101,10 @@ def players(output_dir, season):
     # Get the shooting
     calls: List[str] = []
     for _, row in players_df.iterrows():
+        if int(row["TO_YEAR"]) >= 2005:
+            calls.append(
+                ("PlayerInfo", {"PlayerID": row["PERSON_ID"], "output_dir": output_dir})
+            )
         if int(row["TO_YEAR"]) >= int(season[0:4]) and int(row["FROM_YEAR"]) <= int(
             season[0:4]
         ):

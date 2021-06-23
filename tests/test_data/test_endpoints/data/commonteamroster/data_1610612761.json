@@ -1,0 +1,47 @@
+{
+    "resource": "commonteamroster",
+    "parameters": {
+        "TeamID": 1610612761,
+        "Season": "2018-19",
+        "LeagueID": "00"
+    },
+    "resultSets": [
+        {
+            "name": "CommonTeamRoster",
+            "headers": [
+                "TeamID",
+                "SEASON",
+                "LeagueID",
+                "PLAYER",
+                "NICKNAME",
+                "PLAYER_SLUG",
+                "NUM",
+                "POSITION",
+                "HEIGHT",
+                "WEIGHT",
+                "BIRTH_DATE",
+                "AGE",
+                "EXP",
+                "SCHOOL",
+                "PLAYER_ID"
+            ],
+            "rowSet": []
+        },
+        {
+            "name": "Coaches",
+            "headers": [
+                "TEAM_ID",
+                "SEASON",
+                "COACH_ID",
+                "FIRST_NAME",
+                "LAST_NAME",
+                "COACH_NAME",
+                "IS_ASSISTANT",
+                "COACH_TYPE",
+                "SORT_SEQUENCE",
+                "SUB_SORT_SEQUENCE"
+            ],
+            "rowSet": []
+        }
+    ]
+}

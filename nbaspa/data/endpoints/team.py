@@ -3,7 +3,7 @@
 Create a class for reading team-level data from the API.
 """
 
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import pandas as pd
 
@@ -92,4 +92,56 @@ class TeamGameLog(BaseRequest):
             "LeagueID": DefaultParameters.LeagueID,
             "DateTo": DefaultParameters.DateTo,
             "DateFrom": DefaultParameters.DateFrom,
+        }
+
+
+class TeamRoster(BaseRequest):
+    """Get the team roster.
+
+    Parameters
+    ----------
+    TeamID : int
+        The team identifier.
+    **params
+        Parameters for ``BaseRequest``
+    """
+
+    endpoint: str = "commonteamroster"
+    filename: str = "data_{TeamID}.json"
+
+    def __init__(
+        self,
+        TeamID: int,
+        output_dir: Optional[str] = None,
+        filesystem: Optional[str] = "file",
+        **params
+    ):
+        """Init method."""
+        super().__init__(
+            output_dir=output_dir, filesystem=filesystem, TeamID=TeamID, **params
+        )
+
+    @property
+    def datasets(self) -> List[str]:
+        """Datasets returned by the API.
+
+        Returns
+        -------
+        List
+            Datasets returned by the API.
+        """
+        return ["CommonTeamRoster", "Coaches"]
+
+    @property
+    def defaults(self) -> Dict:
+        """Default parameters for the endpoint.
+
+        Returns
+        -------
+        Dict
+            The default parameter values.
+        """
+        return {
+            "Season": DefaultParameters.Season,
+            "LeagueID": DefaultParameters.LeagueID,
         }
