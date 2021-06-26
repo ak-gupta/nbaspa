@@ -139,6 +139,8 @@ class CollapseData(Task):
         self,
         data: pd.DataFrame,
         timestep: Optional[int] = None,
+        pregame: bool = False,
+        swap: bool = False,
     ) -> pd.DataFrame:
         """Collapse data for evaluation.
 
@@ -152,13 +154,31 @@ class CollapseData(Task):
         timestep : int, optional (default None)
             The time step to use to create unique rows. If ``None``, the final row
             for each game will be used.
+        pregame : bool, optional (default False)
+            Whether or not to create pregame predictions.
+        swap : bool, optional (default False)
+            Whether or not to create a "swap" analysis probability by setting time-dependent
+            variables to zero as well as the team net rating. Only applicable when ``pregame`` is also true.
 
         Returns
         -------
         pd.DataFrame
             The collapsed data.
         """
-        if timestep is None:
+        if pregame:
+            self.logger.info("Creating pregame data")
+            first_row = data.groupby(META["id"]).head(n=1).copy()
+            first_row["start"] = 0
+            first_row["stop"] = 0
+            if swap:
+                for col in META["dynamic"]:
+                    first_row[col] = 0.0
+                # Zero the team net rating
+                first_row["HOME_NET_RATING"] = 0.0
+                first_row["VISITOR_NET_RATING"] = 0.0
+            
+            return first_row
+        elif timestep is None:
             final_row = data.groupby(META["id"]).tail(n=1).copy()
 
             return final_row

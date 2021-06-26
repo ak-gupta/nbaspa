@@ -138,3 +138,48 @@ class SavePredictions(Task):
                     + META["static"]
                     + META["dynamic"]
                 ].to_csv(buf, sep="|", mode="wb")
+
+
+class SavePreGamePredictions(Task):
+    """Save pre-game predictions."""
+
+    def run(  # type: ignore
+        self,
+        pregame: pd.DataFrame,
+        swap: pd.DataFrame,
+        output_dir: str,
+        filesystem: Optional[str] = "file",
+    ):
+        """Save pre-game predictions.
+        
+        Parameters
+        ----------
+        pregame : pd.DataFrame
+            Standard pre-game prediction data.
+        swap : pd.DataFrame
+            Pre-game prediction data with no dynamic or team quality variables.
+        output_dir : str
+            The directory containing the data.
+        filesystem : str, optional (default "file")
+            The name of the ``fsspec`` filesystem to use.
+        
+        Returns
+        -------
+        None
+        """
+        fs = fsspec.filesystem(filesystem)
+        # The data should be identically indexed
+        pregame[META["swap"]] = swap[META["survival"]]
+        # Save the data
+        pregame["SEASON"] = (
+            pregame[META["id"]].str[2]
+            + "0"
+            + pregame[META["id"]].str[3:5]
+            + "-"
+            + (pregame[META["id"]].str[3:5].astype(int) + 1).astype(str)
+        )
+        for name, group in pregame.groupby("SEASON"):
+            fpath = Path(output_dir, name, "pregame-predictions.csv")
+            self.logger.info(f"Writing pre-game predictions to {str(fpath)}")
+            with fs.open(fpath, "wb") as buf:
+                group.to_csv(buf, sep="|", mode="wb")

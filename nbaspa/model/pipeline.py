@@ -35,6 +35,7 @@ from .tasks import (
     CalibrateProbability,
     PlotCalibration,
     SavePredictions,
+    SavePreGamePredictions,
 )
 
 
@@ -436,11 +437,14 @@ def gen_predict_pipeline() -> Flow:
     """
     # Initialize tasks
     load = LoadData(name="Load clean data")
+    pregame_data = CollapseData(name="Create pre-game prediction data")
+    swap_data = CollapseData(name="Create swap prediction data")
     format_data = SurvivalData(name="Convert input data to ranged form")
     modelobj = LoadModel(name="Load model", nout=2)
     calc_sprob = WinProbability(name="Calculate survival probability")
     calib_sprob = CalibrateProbability(name="Calibrate survival probability")
     output = SavePredictions(name="Save output data")
+    pregame_out = SavePreGamePredictions(name="Save pre-game and swap predictions")
 
     # Generate the pipeline
     with Flow(name="Predict survival probability") as flow:
@@ -451,13 +455,27 @@ def gen_predict_pipeline() -> Flow:
         season = Parameter("Season", None)
         gameid = Parameter("GameID", None)
         modelpath = Parameter("model", None)
-        # Add the tasks
+        # Load
         model, calibrator = modelobj(filepath=modelpath)
         alldata = load(data_dir=data_dir, season=season, gameid=gameid)
+        # Format
         data = format_data(alldata)
+        pregame = pregame_data(data=data, pregame=True, swap=False)
+        swap = swap_data(data=data, pregame=True, swap=True)
+        # Predict and calibrate
         sprob = calc_sprob(model=model, data=data)
         calibrated = calib_sprob(data=sprob, calibrator=calibrator)
+        pregame_sprob = calc_sprob(model=model, data=pregame)
+        swap_sprob = calc_sprob(model=model, data=swap)
+        pregame_calibrated = calib_sprob(data=pregame_sprob, calibrator=calibrator)
+        swap_calibrated = calib_sprob(data=swap_sprob, calibrator=calibrator)
         _ = output(data=calibrated, output_dir=output_dir, filesystem=filesystem)
+        _ = pregame_out(
+            pregame=pregame_calibrated,
+            swap=swap_calibrated,
+            output_dir=output_dir,
+            filesystem=filesystem
+        )
 
     return flow
 

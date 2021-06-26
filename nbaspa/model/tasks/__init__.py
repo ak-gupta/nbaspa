@@ -4,7 +4,7 @@ from typing import List
 
 from .calibration import CalibrateClassifier, CalibrateProbability
 from .data import SurvivalData, SegmentData, CollapseData
-from .io import load_df, LoadData, LoadModel, SavePredictions
+from .io import load_df, LoadData, LoadModel, SavePredictions, SavePreGamePredictions
 from .lifelines import (
     InitializeLifelines,
     FitLifelinesModel,
@@ -46,4 +46,5 @@ __all__: List[str] = [
     "FitXGBoost",
     "XGBoostShap",
     "SavePredictions",
+    "SavePreGamePredictions"
 ]
