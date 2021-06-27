@@ -170,6 +170,7 @@ class SavePreGamePredictions(Task):
         fs = fsspec.filesystem(filesystem)
         # The data should be identically indexed
         pregame[META["swap"]] = swap[META["survival"]]
+        pregame[META["swap_diff"]] = pregame[META["survival"]] - pregame[META["swap"]]
         # Save the data
         pregame["SEASON"] = (
             pregame[META["id"]].str[2]

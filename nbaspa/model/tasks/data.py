@@ -176,6 +176,8 @@ class CollapseData(Task):
                 # Zero the team net rating
                 first_row["HOME_NET_RATING"] = 0.0
                 first_row["VISITOR_NET_RATING"] = 0.0
+                first_row["HOME_W_PCT"] = 0.0
+                first_row["VISITOR_W_PCT"] = 0.0
             
             return first_row
         elif timestep is None:
