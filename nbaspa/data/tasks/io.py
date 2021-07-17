@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 import fsspec
+import numpy as np
 import pandas as pd
 from prefect import Task
 
@@ -117,8 +118,9 @@ class PlayByPlayLoader(Task):
             The output dataset.
         """
         calls: List[Tuple[str, Dict]] = []
-        for _, row in header.iterrows():
-            calls.append(("PlayByPlay", {"GameID": row["GAME_ID"]}))
+        games = np.unique(header["GAME_ID"])
+        for game in games:
+            calls.append(("PlayByPlay", {"GameID": game}))
 
         # Create the factory and load the data
         factory = NBADataFactory(
@@ -158,8 +160,9 @@ class WinProbabilityLoader(Task):
             The output dataset.
         """
         calls: List[Tuple[str, Dict]] = []
-        for _, row in header.iterrows():
-            calls.append(("WinProbability", {"GameID": row["GAME_ID"]}))
+        games = np.unique(header["GAME_ID"])
+        for game in games:
+            calls.append(("WinProbability", {"GameID": game}))
 
         # Create the factory and load the data
         factory = NBADataFactory(
@@ -244,12 +247,16 @@ class LineupLoader(Task):
         GameDate = datetime.strptime(GameDate, "%m/%d/%Y")
         if (GameDate - SEASONS[season]["START"]).days < 14:
             self.logger.info("Pulling previous season data")
-            season = "20" + str(int(season[2:4]) - 1) + "-" + season[2:4]
+            if int(season[2:4]) - 1 < 10:
+                season = "200" + str(int(season[2:4]) - 1) + "-" + season[2:4]
+            else:
+                season = "20" + str(int(season[2:4]) - 1) + "-" + season[2:4]
         GameDate = GameDate + timedelta(days=-1)
         calls: List[Tuple[str, Dict]] = []
-        for _, row in linescore.iterrows():
+        teams = np.unique(linescore["TEAM_ID"])
+        for team in teams:
             params = {
-                "TeamID": row["TEAM_ID"],
+                "TeamID": team,
                 "Season": season,
                 "MeasureType": "Advanced",
                 "DateFrom": SEASONS[season]["START"].strftime("%m/%d/%Y"),
@@ -290,8 +297,9 @@ class RotationLoader(Task):
             A dictionary with two keys: ``HomeTeam`` and ``AwayTeam``.
         """
         calls: List[Tuple[str, Dict]] = []
-        for _, row in header.iterrows():
-            calls.append(("GameRotation", {"GameID": row["GAME_ID"]}))
+        games = np.unique(header["GAME_ID"])
+        for game in games:
+            calls.append(("GameRotation", {"GameID": game}))
 
         # Create the factory and load the data
         factory = NBADataFactory(
@@ -334,8 +342,9 @@ class ShotChartLoader(Task):
             The shotcharts
         """
         calls: List[Tuple[str, Dict]] = []
-        for _, row in header.iterrows():
-            calls.append(("ShotChart", {"GameID": row["GAME_ID"], "Season": season}))
+        games = np.unique(header["GAME_ID"])
+        for game in games:
+            calls.append(("ShotChart", {"GameID": game, "Season": season}))
 
         # Create the factory and load the data
         factory = NBADataFactory(
@@ -372,8 +381,9 @@ class BoxScoreLoader(Task):
             The output dataset.
         """
         calls: List[Tuple[str, Dict]] = []
-        for _, row in header.iterrows():
-            calls.append(("BoxScoreTraditional", {"GameID": row["GAME_ID"]}))
+        games = np.unique(header["GAME_ID"])
+        for game in games:
+            calls.append(("BoxScoreTraditional", {"GameID": game}))
 
         # Create the factory and load the data
         factory = NBADataFactory(
@@ -412,7 +422,10 @@ class ShotZoneLoader(Task):
         GameDate = datetime.strptime(GameDate, "%m/%d/%Y")
         if (GameDate - SEASONS[season]["START"]).days < 14:
             self.logger.info("Pulling previous season data")
-            season = "20" + str(int(season[2:4]) - 1) + "-" + season[2:4]
+            if int(season[2:4]) - 1 < 10:
+                season = "200" + str(int(season[2:4]) - 1) + "-" + season[2:4]
+            else:
+                season = "20" + str(int(season[2:4]) - 1) + "-" + season[2:4]
         GameDate = GameDate + timedelta(days=-1)
         calls: List[Tuple[str, Dict]] = []
         for _, row in boxscore.iterrows():
