@@ -16,22 +16,22 @@ from .meta import META
 from .xgboost import _convert_data, _generate_cumulative_hazard
 
 DEFAULT_LIFELINES_SPACE: Dict = {
-    "penalizer": hp.uniform("penalizer", 0.05, 0.15),
-    "l1_ratio": hp.uniform("l1_ratio", 0, 0.015),
+    "penalizer": hp.uniform("penalizer", 0, 0.1),
+    "l1_ratio": hp.uniform("l1_ratio", 0, 0.02),
 }
 
 DEFAULT_XGBOOST_SPACE: Dict = {
-    "learning_rate": hp.uniform("learning_rate", 0, 0.01),
-    "subsample": hp.uniform("subsample", 0.4, 1),
+    "learning_rate": 0.0025,
+    "subsample": hp.uniform("subsample", 0.4, 0.7),
     "max_delta_step": 1,
-    "max_depth": 4,
+    "max_depth": hp.quniform("max_depth", 2, 8, 1),
     "gamma": hp.uniform("gamma", 0.5, 1),
-    "reg_alpha": hp.uniform("reg_alpha", 0.6, 1),
-    "reg_lambda": hp.uniform("reg_lambda", 0.25, 0.75),
-    "colsample_bytree": hp.uniform("colsample_bytree", 0.5, 1),
-    "colsample_bylevel": 1,
+    "reg_alpha": hp.uniform("reg_alpha", 0.5, 1),
+    "reg_lambda": hp.uniform("reg_lambda", 0, 0.5),
+    "colsample_bytree": 1,
+    "colsample_bylevel": hp.uniform("colsample_bylevel", 0, 0.5),
     "colsample_bynode": hp.uniform("colsample_bynode", 0, 0.5),
-    "min_child_weight": hp.quniform("min_child_weight", 510, 530, 1),
+    "min_child_weight": hp.quniform("min_child_weight", 475, 500, 1),
     "monotone_constraints": str(
         tuple(int(col == "SCOREMARGIN") for col in META["static"] + META["dynamic"])
     ),
