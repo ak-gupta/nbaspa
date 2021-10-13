@@ -130,10 +130,17 @@ def gen_pipeline() -> Flow:
                 filesystem=filesystem,
             )
             shotzonedashboard = shotzone_loader(
-                boxscore=boxscore, season=season, GameDate=gamedate
+                boxscore=boxscore,
+                season=season,
+                GameDate=gamedate,
+                output_dir=data_dir,
+                filesystem=filesystem
             )
             shooting = gshooting_loader(
-                boxscore=boxscore, season=season, GameDate=gamedate
+                boxscore=boxscore,
+                season=season,
+                output_dir=output_dir,
+                filesystem=filesystem
             )
             # Add variables for the player rating
             shotzone = shotdetail(pbp=rating, shotchart=shotchart)

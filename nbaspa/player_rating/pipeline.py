@@ -14,6 +14,7 @@ from .tasks import (
     LoadRatingData,
     ScoreboardLoader,
     LoadSurvivalPredictions,
+    LoadSwapProbabilities,
     AddSurvivalProbability,
     SimplePlayerImpact,
     SaveImpactData,
@@ -40,6 +41,7 @@ def gen_pipeline() -> Flow:
     pbp_loader = LoadRatingData(name="Load clean data")
     box_loader = BoxScoreLoader(name="Load boxscore data")
     surv_loader = LoadSurvivalPredictions(name="Load survival predictions")
+    swap_loader = LoadSwapProbabilities(name="Load swap probabilities")
     score_loader = ScoreboardLoader(name="Load header data")
     # Calculation tasks
     addsurv = AddSurvivalProbability(name="Join survival probability")
@@ -69,12 +71,13 @@ def gen_pipeline() -> Flow:
         header = score_loader(data_dir=data_dir, filelist=gamelist)
         pbp = pbp_loader.map(data_dir=unmapped(data_dir), filelocation=gamelist)
         survprob = surv_loader.map(data_dir=unmapped(data_dir), filelocation=gamelist)
+        swapprob = swap_loader(data_dir=data_dir, Season=season)
         box = box_loader.map(filelocation=gamelist, output_dir=unmapped(data_dir))
         # Add the survival probability and calculate impact
         pbpfinal = addsurv.map(pbp=pbp, survprob=survprob)
         calculatesimple = addsimpleimpact.map(pbp=pbpfinal, mode=unmapped(mode))
         sequence = compoundimpact.map(pbp=calculatesimple, mode=unmapped(mode))
-        agg = combineimpact.map(pbp=sequence, boxscore=box)
+        agg = combineimpact.map(pbp=sequence, boxscore=box, swap=unmapped(swapprob))
         # Save data
         _ = savesimple.map(
             data=sequence,

@@ -173,11 +173,13 @@ class CollapseData(Task):
             if swap:
                 for col in META["dynamic"]:
                     first_row[col] = 0.0
-                # Zero the team net rating
+                # Zero the team net rating and lineup quality
                 first_row["HOME_NET_RATING"] = 0.0
                 first_row["VISITOR_NET_RATING"] = 0.0
                 first_row["HOME_W_PCT"] = 0.0
                 first_row["VISITOR_W_PCT"] = 0.0
+                first_row["HOME_LINEUP_PLUS_MINUS"] = 0.0
+                first_row["VISITOR_LINEUP_PLUS_MINUS"] = 0.0
             
             return first_row
         elif timestep is None:

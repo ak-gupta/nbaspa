@@ -110,6 +110,10 @@ def players(output_dir, season):
         ):
             calls += [
                 (
+                    "PlayerGameLog",
+                    {"PlayerID": row["PERSON_ID"], "Season": season}
+                ),
+                (
                     "PlayerDashboardShooting",
                     {"PlayerID": row["PERSON_ID"], "Season": season},
                 ),

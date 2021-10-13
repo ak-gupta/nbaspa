@@ -60,6 +60,55 @@ class PlayerInfo(BaseRequest):
         return ["CommonPlayerInfo", "PlayerHeadlineStats", "AvailableSeasons"]
 
 
+class PlayerGameLog(BaseRequest):
+    """Get the player game logs.
+    
+    Parameters
+    ----------
+    PlayerID : int
+        The player identifier.
+    **params
+        Parameters for ``BaseRequest``
+    """
+
+    endpoint: str = "playergamelog"
+    filename: str = "data_{PlayerID}.json"
+
+    def __init__(
+        self,
+        PlayerID: int,
+        output_dir: Optional[str] = None,
+        filesystem: Optional[str] = "file",
+        **params,
+    ):
+        """Init method."""
+        super().__init__(
+            output_dir=output_dir, filesystem=filesystem, PlayerID=PlayerID, **params
+        )
+
+    def __str__(self) -> str:
+        """String representation will include the ``PlayerID``."""
+        return f"Player Dashboard: {self.params['PlayerID']} - {self.params['Season']}"
+
+    @property
+    def defaults(self) -> Dict:
+        """Default parameters for the endpoint.
+
+        Returns
+        -------
+        Dict
+            The default parameter values.
+        """
+        return {
+            "Season": DefaultParameters.Season,
+            "SeasonType": DefaultParameters.SeasonType,
+            "LeagueID": DefaultParameters.LeagueID,
+            "DateTo": DefaultParameters.DateTo,
+            "DateFrom": DefaultParameters.DateFrom,
+        }
+
+
+
 class PlayerDashboardBase(BaseRequest):
     """Get the player shooting dashboard.
 

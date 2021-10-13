@@ -100,12 +100,24 @@ def model(data_dir, output_dir, season, re_run):
 @click.option("--data-dir", help="Path to the directory containing the raw data.")
 @click.option("--output-dir", help="Path to the output directory.")
 @click.option("--season", type=str, help="The season to download")
-def rating(data_dir, output_dir, season):
+@click.option("--re-run", is_flag=True, help="Whether to re run a previous pipeline")
+def rating(data_dir, output_dir, season, re_run):
     """Clean the rating input data."""
     calls: List[Dict] = []
     flow = gen_pipeline()
-    for n in range(int((SEASONS[season]["END"] - SEASONS[season]["START"]).days) + 1):
-        game_date = SEASONS[season]["START"] + timedelta(n)
+    if re_run:
+        with open(
+            Path(output_dir, season, "rating-cleaning-report.json"), "r"
+        ) as infile:
+            alldates = json.load(infile)
+        daterange = [
+            datetime.strptime(row["GameDate"], "%m/%d/%Y")
+            for row in alldates if row["reason"] == "Unknown"
+        ]
+    else:
+        timelist = list(range(int((SEASONS[season]["END"] - SEASONS[season]["START"]).days) + 1))
+        daterange = [SEASONS[season]["START"] + timedelta(n) for n in timelist]
+    for game_date in daterange:
         calls.append(
             {
                 "flow": flow,
@@ -132,6 +144,14 @@ def rating(data_dir, output_dir, season):
                             "GameDate": call["GameDate"],
                             "mode": call["mode"],
                             "reason": "No games",
+                        }
+                    )
+                elif scoreboard["GameHeader"]["GAME_ID"].str.startswith("003").sum() >= 1:
+                    report.append(
+                        {
+                            "GameDate": call["GameDate"],
+                            "mode": call["mode"],
+                            "reason": "All-star game",
                         }
                     )
                 else:

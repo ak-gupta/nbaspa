@@ -402,6 +402,8 @@ class ShotZoneLoader(Task):
         season: str,
         GameDate: str,
         boxscore: pd.DataFrame,
+        output_dir: str,
+        filesystem: Optional[str] = "file",
     ) -> pd.DataFrame:
         """Load the shot zone data for each player in each game.
 
@@ -413,6 +415,10 @@ class ShotZoneLoader(Task):
             The game date.
         boxscore : pd.DataFrame
             The output from ``BoxScoreTraditional.get_data("PlayerStats")``.
+        output_dir : str
+            The directory containing the data.
+        filesystem : str, optional (default "file")
+            The name of the ``fsspec`` filesystem to use.
 
         Returns
         -------
@@ -427,37 +433,69 @@ class ShotZoneLoader(Task):
             else:
                 season = "20" + str(int(season[2:4]) - 1) + "-" + season[2:4]
         GameDate = GameDate + timedelta(days=-1)
+        # For each player, get the gamelog
         calls: List[Tuple[str, Dict]] = []
         for _, row in boxscore.iterrows():
-            if pd.isnull(row["MIN"]):
+            if pd.isnull(row["FGA"]) or row["FGA"] == 0:
                 continue
             calls.append(
                 (
-                    "PlayerDashboardShooting",
-                    {
-                        "PlayerID": row["PLAYER_ID"],
-                        "Season": season,
-                        "DateFrom": SEASONS[season]["START"].strftime("%m/%d/%Y"),
-                        "DateTo": GameDate.strftime("%m/%d/%Y")
-                    },
+                    "PlayerGameLog", {"PlayerID": row["PLAYER_ID"], "Season": season},
                 )
             )
 
         # Create the factory and load the data
-        factory = NBADataFactory(calls=calls)
-        factory.get()
+        logfactory = NBADataFactory(
+            calls=calls, output_dir=Path(Path(output_dir).parent, season), filesystem=filesystem
+        )
+        logfactory.load()
+        playerlogs = logfactory.get_data()
+        playerlogs["GAME_DATE"] = pd.to_datetime(playerlogs["GAME_DATE"])
+        games = np.unique(
+            playerlogs[
+                (playerlogs["GAME_DATE"] >= SEASONS[season]["START"])
+                & (playerlogs["GAME_DATE"] <= SEASONS[season]["END"])
+                & (playerlogs["GAME_DATE"] <= GameDate)
+            ]["Game_ID"].values
+        )
+        shotcalls: List[Tuple[str, Dict]] = [
+            ("ShotChart", {"GameID": game, "Season": season}) for game in games
+        ]
+        # Then get all of their shots from the season
+        shotfactory = NBADataFactory(
+            calls=shotcalls,
+            output_dir=Path(Path(output_dir).parent, season),
+            filesystem=filesystem
+        )
+        shotfactory.load()
+        playershots = shotfactory.get_data()
+        # Aggregate to get FG_PCT for each SHOT_ZONE_BASIC
+        agg = playershots.groupby(["PLAYER_ID", "SHOT_ZONE_BASIC"]).sum()[
+            ["SHOT_ATTEMPTED_FLAG", "SHOT_MADE_FLAG"]
+        ]
+        agg.reset_index(inplace=True)
+        agg.rename(
+            columns={
+                "SHOT_ATTEMPTED_FLAG": "FGA",
+                "SHOT_MADE_FLAG": "FGM",
+                "SHOT_ZONE_BASIC": "GROUP_VALUE"
+            },
+            inplace=True
+        )
+        agg["FG_PCT"] = agg["FGM"]/agg["FGA"]
 
-        return factory.get_data("ShotAreaPlayerDashboard")
+        return agg
 
 
 class GeneralShootingLoader(Task):
-    """Load the general shooting data for each player in each game."""
+    """Load previous season general shooting data for each player in each game."""
 
     def run(  # type: ignore
         self,
         season: str,
-        GameDate: str,
         boxscore: pd.DataFrame,
+        output_dir: str,
+        filesystem: Optional[str] = "file",
     ) -> pd.DataFrame:
         """Load the general shooting data for each player in each game.
 
@@ -465,40 +503,37 @@ class GeneralShootingLoader(Task):
         ----------
         season : str
             The season string.
-        GameDate : str
-            The game date.
         boxscore : pd.DataFrame
             The output from ``BoxScoreTraditional.get_data("PlayerStats")``.
+        output_dir : str
+            The directory containing the data.
+        filesystem : str, optional (default "file")
+            The name of the ``fsspec`` filesystem to use.
 
         Returns
         -------
         pd.DataFrame
             The output dataset.
         """
-        GameDate = datetime.strptime(GameDate, "%m/%d/%Y")
-        if (GameDate - SEASONS[season]["START"]).days < 14:
-            self.logger.info("Pulling previous season data")
+        if int(season[2:4]) - 1 < 10:
+            season = "200" + str(int(season[2:4]) - 1) + "-" + season[2:4]
+        else:
             season = "20" + str(int(season[2:4]) - 1) + "-" + season[2:4]
-        GameDate = GameDate + timedelta(days=-1)
         calls: List[Tuple[str, Dict]] = []
         for _, row in boxscore.iterrows():
-            if pd.isnull(row["MIN"]):
+            if pd.isnull(row["FGA"]) or row["FGA"] == 0:
                 continue
             calls.append(
                 (
-                    "PlayerDashboardGeneral",
-                    {
-                        "PlayerID": row["PLAYER_ID"],
-                        "Season": season,
-                        "DateFrom": SEASONS[season]["START"].strftime("%m/%d/%Y"),
-                        "DateTo": GameDate.strftime("%m/%d/%Y")
-                    },
+                    "PlayerDashboardGeneral", {"PlayerID": row["PLAYER_ID"], "Season": season},
                 )
             )
 
         # Create the factory and load the data
-        factory = NBADataFactory(calls=calls)
-        factory.get()
+        factory = NBADataFactory(
+            calls=calls, output_dir=Path(Path(output_dir).parent, season), filesystem=filesystem
+        )
+        factory.load()
 
         return factory.get_data("OverallPlayerDashboard")
 

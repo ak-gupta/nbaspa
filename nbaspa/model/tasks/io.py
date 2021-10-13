@@ -126,7 +126,10 @@ class SavePredictions(Task):
             if not name.startswith("002"):
                 self.logger.warning(f"{name} is not a regular season game. Skipping...")
                 continue
-            season = name[2] + "0" + name[3:5] + "-" + str(int(name[3:5]) + 1)
+            if int(name[3:5]) + 1 < 10:
+                season = name[2] + "0" + name[3:5] + "-0" + str(int(name[3:5]) + 1)
+            else:
+                season = name[2] + "0" + name[3:5] + "-" + str(int(name[3:5]) + 1)
             fdir = Path(output_dir, season, "survival-prediction")
             fs.mkdir(fdir)
             fpath = fdir / f"data_{name}.csv"
@@ -177,8 +180,13 @@ class SavePreGamePredictions(Task):
             + "0"
             + pregame[META["id"]].str[3:5]
             + "-"
-            + (pregame[META["id"]].str[3:5].astype(int) + 1).astype(str)
         )
+        pregame.loc[pregame[META["id"]].str[3:5].astype(int) + 1 < 10, "SEASON"] += (
+            "0" + (pregame[META["id"]].str[3:5].astype(int) + 1).astype(str)
+        )
+        pregame.loc[pregame[META["id"]].str[3:5].astype(int) + 1 >= 10, "SEASON"] += (
+            pregame[META["id"]].str[3:5].astype(int) + 1
+        ).astype(str)
         for name, group in pregame.groupby("SEASON"):
             fpath = Path(output_dir, name, "pregame-predictions.csv")
             self.logger.info(f"Writing pre-game predictions to {str(fpath)}")

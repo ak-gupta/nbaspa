@@ -197,6 +197,28 @@ class LoadSurvivalPredictions(Task):
         return basedata
 
 
+class LoadSwapProbabilities(Task):
+    """Load the swap probabilities."""
+
+    def run(self, data_dir: str, Season: str = None) -> pd.DataFrame:
+        """Load the swap probabilities.
+
+        Parameters
+        ----------
+        data_dir : str
+            The directory containing the data.
+        Season : str, optional (default None)
+            The season for the data. If not provided, all seasons will be loaded.
+        """
+        return pd.concat(
+            (
+                pd.read_csv(fpath, sep="|", index_col=0, dtype={"GAME_ID": str})
+                for fpath in Path(data_dir).glob(f"{Season or '*'}/pregame-predictions.csv")
+            ),
+            ignore_index=True
+        )
+
+
 class SaveImpactData(Task):
     """Save the impact data.
 
@@ -277,11 +299,22 @@ class SavePlayerTimeSeries(Task):
         None
         """
         data = pd.concat(data, ignore_index=True)
-        data["SEASON"] = (
+        data.loc[
+            data["GAME_ID"].str[3:5].astype(int) + 1 >= 10, "SEASON"
+        ] = (
             data["GAME_ID"].str[2]
             + "0"
             + data["GAME_ID"].str[3:5]
             + "-"
+            + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
+        )
+        data.loc[
+            data["GAME_ID"].str[3:5].astype(int) + 1 < 10, "SEASON"
+        ] = (
+            data["GAME_ID"].str[2]
+            + "0"
+            + data["GAME_ID"].str[3:5]
+            + "-0"
             + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
         )
         # Add the game date
@@ -314,18 +347,28 @@ class SaveTopPlayers(Task):
             A list of file locations.
         """
         data = pd.concat(data, ignore_index=True)
-        data["SEASON"] = (
+        data["SEASON"] = None
+        data.loc[
+            data["GAME_ID"].str[3:5].astype(int) + 1 >= 10, "SEASON"
+        ] = (
             data["GAME_ID"].str[2]
             + "0"
             + data["GAME_ID"].str[3:5]
             + "-"
             + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
         )
+        data.loc[
+            data["GAME_ID"].str[3:5].astype(int) + 1 < 10, "SEASON"
+        ] = (
+            data["GAME_ID"].str[2]
+            + "0"
+            + data["GAME_ID"].str[3:5]
+            + "-0"
+            + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
+        )
         for name, group in data.groupby("SEASON"):
-            avg = group.groupby("PLAYER_ID")["IMPACT"].agg(["sum", "mean"])
-            avg.rename(
-                columns={"sum": "TOTAL_IMPACT", "mean": "MEAN_IMPACT"}, inplace=True
-            )
+            avg = group.groupby("PLAYER_ID")[["IMPACT", "IMPACT+"]].agg(["sum", "mean"])
+            avg.columns = avg.columns.map("_".join).str.strip("_")
             avg.reset_index(inplace=True)
             self.logger.info(
                 f"Saving {name} summary to {str(Path(output_dir, name, 'impact-summary.csv'))}"

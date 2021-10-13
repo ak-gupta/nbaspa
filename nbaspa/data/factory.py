@@ -114,8 +114,7 @@ class NBADataFactory:
             try:
                 df_list.append(callobj.get_data(dataset_type=dataset_type))
             except KeyError:
-                LOG.error(f"Unable to retrieve data for {str(callobj)}")
-                raise ValueError(f"Unable to retrieve data for {str(callobj)}")
+                LOG.warning(f"Unable to retrieve data for {str(callobj)}")
 
         return pd.concat(df_list, ignore_index=True)
 

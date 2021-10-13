@@ -787,7 +787,7 @@ class CompoundPlayerImpact(Task):
 class AggregateImpact(Task):
     """Aggregate player impact for a game."""
 
-    def run(self, pbp: pd.DataFrame, boxscore: pd.DataFrame) -> pd.DataFrame:  # type: ignore
+    def run(self, pbp: pd.DataFrame, boxscore: pd.DataFrame, swap: pd.DataFrame) -> pd.DataFrame:  # type: ignore
         """Aggregate player impact for a game.
 
         Parameters
@@ -796,6 +796,8 @@ class AggregateImpact(Task):
             The output of ``PlayerImpact``.
         boxscore : pd.DataFrame
             The output of ``BoxScoreTraditional.get_data("PlayerStats")``.
+        swap : pd.DataFrame
+            The pre-game swap probabilities.
 
         Returns
         -------
@@ -831,5 +833,49 @@ class AggregateImpact(Task):
             + impact["PLAYER2_IMPACT"]
             + impact["PLAYER3_IMPACT"]
         )
+        # Add swap lift
+        impact["SWAP_DIFF"] = pd.merge(
+            impact, swap, left_on="GAME_ID", right_on="GAME_ID"
+        )["SWAP_DIFF"]
+        # Reverse the swap list for the visiting team
+        impact["HOME_TEAM_ID"] = pd.merge(
+            impact,
+            pbp.groupby("GAME_ID").head(n=1),
+            left_on="GAME_ID",
+            right_on="GAME_ID",
+            how="left"
+        )["HOME_TEAM_ID"]
+        impact["VISITOR_TEAM_ID"] = pd.merge(
+            impact,
+            pbp.groupby("GAME_ID").head(n=1),
+            left_on="GAME_ID",
+            right_on="GAME_ID",
+            how="left"
+        )["VISITOR_TEAM_ID"]
+        # remove penalty -- we only want to account for the lift in pre-game prediction
+        self.logger.info("Removing effect of low pre-game predictions")
+        impact.loc[
+            (impact["TEAM_ID"] == impact["HOME_TEAM_ID"]) & (impact["SWAP_DIFF"] < 0.0), "SWAP_DIFF"
+        ] = 0.0
+        impact.loc[
+            (impact["TEAM_ID"] == impact["VISITOR_TEAM_ID"]) & (impact["SWAP_DIFF"] > 0.0), "SWAP_DIFF"
+        ] = 0.0
+        impact.loc[
+            (impact["TEAM_ID"] == impact["VISITOR_TEAM_ID"]) & (impact["SWAP_DIFF"] < 0.0), "SWAP_DIFF"
+        ] = -impact["SWAP_DIFF"]
+        # Add a weighted lift
+        self.logger.info("Weighting the pre-game prediction lift by in-game impact")
+        weight = impact.groupby(["GAME_ID", "TEAM_ID"])["IMPACT"].sum().to_frame()
+        weight.rename(columns={"IMPACT": "AGG_IMPACT"}, inplace=True)
+        impact["AGG_IMPACT"] = pd.merge(
+            impact,
+            weight,
+            left_on=("GAME_ID", "TEAM_ID"),
+            right_index=True,
+            how="left"
+        )["AGG_IMPACT"]
+        impact["IMPACT+"] = (
+            impact["IMPACT"] + (impact["IMPACT"] / impact["AGG_IMPACT"]) * impact["SWAP_DIFF"]
+        )
 
-        return impact[["GAME_ID", "TEAM_ID", "PLAYER_ID", "IMPACT"]].copy()
+        return impact[["GAME_ID", "TEAM_ID", "PLAYER_ID", "IMPACT", "IMPACT+"]].copy()

@@ -15,6 +15,7 @@ from .pbp import PlayByPlay
 from .player import (
     AllPlayers,
     PlayerInfo,
+    PlayerGameLog,
     PlayerDashboardGeneral,
     PlayerDashboardShooting,
 )

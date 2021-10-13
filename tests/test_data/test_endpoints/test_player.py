@@ -7,6 +7,7 @@ from nbaspa.data.endpoints.player import (
     PlayerDashboardShooting,
     AllPlayers,
     PlayerInfo,
+    PlayerGameLog
 )
 
 def test_all_players(output_dir):
@@ -31,6 +32,17 @@ def test_player_info(output_dir):
 
     for dataset in players.datasets:
         assert players.get_data(dataset).empty
+
+def test_playergamelog(output_dir):
+    gamelog = PlayerGameLog(PlayerID=1, output_dir=output_dir)
+    
+    assert gamelog.fpath == output_dir / Path("playergamelog", "data_1.json")
+    assert gamelog.exists()
+
+    gamelog.get()
+
+    for dataset in gamelog.datasets:
+        assert gamelog.get_data(dataset).empty
 
 def test_load_general_dashboard(output_dir):
     """Test loading the general dashboard."""
