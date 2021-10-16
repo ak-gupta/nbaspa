@@ -805,44 +805,6 @@ class AggregateImpact(Task):
             The output DataFrame
         """
         impact = boxscore[["GAME_ID", "TEAM_ID", "PLAYER_ID"]].copy()
-        # Merge
-        for idx in range(1, 4):
-            tmp = pbp.groupby(["GAME_ID", f"PLAYER{idx}_ID"])[f"PLAYER{idx}_IMPACT"].agg(["sum", "count"])
-            tmp.rename(columns={"sum": f"PLAYER{idx}_IMPACT", "count": f"PLAYER{idx}_EVENTS"}, inplace=True)
-            impact = pd.merge(
-                impact, tmp, left_on=("GAME_ID", "PLAYER_ID"), right_index=True, how="left"
-            )
-            # Clutch events
-            clutch = pbp[
-                (pbp["SCOREMARGIN"].abs() <= 5) & (pbp["TIME"] >= 2460)
-            ].groupby(
-                ["GAME_ID", f"PLAYER{idx}_ID"]
-            )[f"PLAYER{idx}_IMPACT"].agg(["sum", "count"])
-            clutch.rename(columns={"sum": f"PLAYER{idx}_CLUTCH_IMPACT", "count": f"PLAYER{idx}_CLUTCH_EVENTS"}, inplace=True)
-            impact = pd.merge(
-                impact, clutch, left_on=("GAME_ID", "PLAYER_ID"), right_index=True, how="left"
-            )
-        impact.fillna(0, inplace=True)
-        impact["IMPACT"] = (
-            impact["PLAYER1_IMPACT"]
-            + impact["PLAYER2_IMPACT"]
-            + impact["PLAYER3_IMPACT"]
-        )
-        impact["EVENTS"] = (
-            impact["PLAYER1_EVENTS"]
-            + impact["PLAYER2_EVENTS"]
-            + impact["PLAYER3_EVENTS"]
-        )
-        impact["CLUTCH_IMPACT"] = (
-            impact["PLAYER1_CLUTCH_IMPACT"]
-            + impact["PLAYER2_CLUTCH_IMPACT"]
-            + impact["PLAYER3_CLUTCH_IMPACT"]
-        )
-        impact["CLUTCH_EVENTS"] = (
-            impact["PLAYER1_CLUTCH_EVENTS"]
-            + impact["PLAYER2_CLUTCH_EVENTS"]
-            + impact["PLAYER3_CLUTCH_EVENTS"]
-        )
         # Add swap lift
         impact["SWAP_DIFF"] = pd.merge(
             impact, swap, left_on="GAME_ID", right_on="GAME_ID"
@@ -862,7 +824,6 @@ class AggregateImpact(Task):
             right_on="GAME_ID",
             how="left"
         )["VISITOR_TEAM_ID"]
-        # remove penalty -- we only want to account for the lift in pre-game prediction
         self.logger.info("Removing effect of low pre-game predictions")
         impact.loc[
             (impact["TEAM_ID"] == impact["HOME_TEAM_ID"]) & (impact["SWAP_DIFF"] < 0.0), "SWAP_DIFF"
@@ -873,6 +834,25 @@ class AggregateImpact(Task):
         impact.loc[
             (impact["TEAM_ID"] == impact["VISITOR_TEAM_ID"]) & (impact["SWAP_DIFF"] < 0.0), "SWAP_DIFF"
         ] = -impact["SWAP_DIFF"]
+
+        # Merge
+        for idx in range(1, 4):
+            tmp = pbp.groupby(["GAME_ID", f"PLAYER{idx}_ID"])[f"PLAYER{idx}_IMPACT"].agg(["sum", "count"])
+            tmp.rename(columns={"sum": f"PLAYER{idx}_IMPACT", "count": f"PLAYER{idx}_EVENTS"}, inplace=True)
+            impact = pd.merge(
+                impact, tmp, left_on=("GAME_ID", "PLAYER_ID"), right_index=True, how="left"
+            )
+        impact.fillna(0, inplace=True)
+        impact["IMPACT"] = (
+            impact["PLAYER1_IMPACT"]
+            + impact["PLAYER2_IMPACT"]
+            + impact["PLAYER3_IMPACT"]
+        )
+        impact["EVENTS"] = (
+            impact["PLAYER1_EVENTS"]
+            + impact["PLAYER2_EVENTS"]
+            + impact["PLAYER3_EVENTS"]
+        )
         # Add a weighted lift
         self.logger.info("Weighting the pre-game prediction lift by number of events")
         weight = impact.groupby(["GAME_ID", "TEAM_ID"])["EVENTS"].sum().to_frame()
@@ -889,5 +869,5 @@ class AggregateImpact(Task):
         )
 
         return impact[
-            ["GAME_ID", "TEAM_ID", "PLAYER_ID", "EVENTS", "CLUTCH_EVENTS", "IMPACT", "CLUTCH_IMPACT", "IMPACT+"]
+            ["GAME_ID", "TEAM_ID", "PLAYER_ID", "EVENTS", "IMPACT", "IMPACT+"]
         ].copy()
