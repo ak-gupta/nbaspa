@@ -14,6 +14,7 @@ from ..pipeline import gen_pipeline, run_pipeline
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
+LOG = logging.getLogger(__name__)
 
 @click.group()
 def clean():
@@ -169,3 +170,35 @@ def rating(data_dir, output_dir, season, re_run):
             Path(output_dir, season, "rating-cleaning-report.json"), "w"
         ) as outfile:
             json.dump(report, outfile, indent=4)
+
+@clean.command()
+@click.option("--data-dir", help="Path to the directory containing the raw data.")
+@click.option("--output-dir", help="Path to the output directory.")
+@click.option("--season", type=str, help="The season to download")
+@click.option("--game-date", type=click.DateTime(formats=["%Y-%m-%d"]))
+def daily(data_dir, output_dir, season, game_date):
+    """Clean model and rating data for a given day."""
+    flow = gen_pipeline()
+    output = run_pipeline(
+        flow=flow,
+        data_dir=str(Path(data_dir, season)),
+        output_dir=str(Path(output_dir, season)),
+        save_data=True,
+        mode="model",
+        Season=season,
+        GameDate=game_date.strftime("%m/%d/%Y"),
+    )
+    if not output.is_successful():
+        LOG.error("Unable to clean the model data")
+    else:
+        output = run_pipeline(
+            flow=flow,
+            data_dir=str(Path(data_dir, season)),
+            output_dir=str(Path(output_dir, season)),
+            save_data=True,
+            mode="rating",
+            Season=season,
+            GameDate=game_date.strftime("%m/%d/%Y"),
+        )
+        if not output.is_successful():
+            LOG.error("Unable to clean the rating data")

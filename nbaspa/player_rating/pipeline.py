@@ -70,31 +70,32 @@ def gen_pipeline() -> Flow:
         )
         header = score_loader(data_dir=data_dir, filelist=gamelist)
         pbp = pbp_loader.map(data_dir=unmapped(data_dir), filelocation=gamelist)
-        survprob = surv_loader.map(data_dir=unmapped(data_dir), filelocation=gamelist)
-        swapprob = swap_loader(data_dir=data_dir, Season=season)
+        survprob = surv_loader.map(data_dir=unmapped(data_dir), mode=unmapped(mode), filelocation=gamelist)
         box = box_loader.map(filelocation=gamelist, output_dir=unmapped(data_dir))
         # Add the survival probability and calculate impact
         pbpfinal = addsurv.map(pbp=pbp, survprob=survprob)
         calculatesimple = addsimpleimpact.map(pbp=pbpfinal, mode=unmapped(mode))
         sequence = compoundimpact.map(pbp=calculatesimple, mode=unmapped(mode))
-        agg = combineimpact.map(pbp=sequence, boxscore=box, swap=unmapped(swapprob))
+        agg = combineimpact.map(pbp=sequence, boxscore=box)
         # Save data
         _ = savesimple.map(
             data=sequence,
             output_dir=unmapped(output_dir),
             filesystem=unmapped(filesystem),
             filelocation=gamelist,
+            mode=unmapped(mode),
         )
         _ = saveagg.map(
             data=agg,
             output_dir=unmapped(output_dir),
             filesystem=unmapped(filesystem),
             filelocation=gamelist,
+            mode=unmapped(mode)
         )
         _ = savetime(
-            data=agg, header=header, output_dir=output_dir, filesystem=filesystem
+            data=agg, header=header, output_dir=output_dir, filesystem=filesystem, mode=mode
         )
-        _ = savesummary(data=agg, output_dir=output_dir)
+        _ = savesummary(data=agg, output_dir=output_dir, mode=mode)
 
     return flow
 

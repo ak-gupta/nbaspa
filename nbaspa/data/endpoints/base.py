@@ -21,7 +21,9 @@ LOG = logging.getLogger(__name__)
 
 SESSION = requests.Session()
 RETRIES = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
-SESSION.mount("http://", HTTPAdapter(max_retries=RETRIES))
+ADAPTER = HTTPAdapter(max_retries=RETRIES)
+SESSION.mount("http://", ADAPTER)
+SESSION.mount("https://", ADAPTER)
 
 
 class BaseRequest:
@@ -77,19 +79,21 @@ class BaseRequest:
         self._response: Optional[requests.Response] = None
         self._raw_data: Dict = {}
 
-    def get(self):
+    def get(self, overwrite: bool = False):
         """Get the data from the API.
 
         Parameters
         ----------
-        None
+        overwrite : bool, optional (default False)
+            Whether or not to check for an existing file.
 
         Returns
         -------
         None
         """
         # Check to see if a file exists
-        self.load()
+        if not overwrite:
+            self.load()
         if not self._raw_data:
             self._get()
         if self.output_dir is not None and self._response is not None:

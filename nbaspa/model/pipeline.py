@@ -460,19 +460,23 @@ def gen_predict_pipeline() -> Flow:
         alldata = load(data_dir=data_dir, season=season, gameid=gameid)
         # Format
         data = format_data(alldata)
-        pregame = pregame_data(data=data, pregame=True, swap=False)
-        swap = swap_data(data=data, pregame=True, swap=True)
+        swap = format_data(data=alldata, swap=True)
+        pregame = pregame_data(data=data, pregame=True)
         # Predict and calibrate
+        # Play-by-play
         sprob = calc_sprob(model=model, data=data)
         calibrated = calib_sprob(data=sprob, calibrator=calibrator)
+        # Pre-game
         pregame_sprob = calc_sprob(model=model, data=pregame)
-        swap_sprob = calc_sprob(model=model, data=swap)
         pregame_calibrated = calib_sprob(data=pregame_sprob, calibrator=calibrator)
+        # Swap
+        swap_sprob = calc_sprob(model=model, data=swap)
         swap_calibrated = calib_sprob(data=swap_sprob, calibrator=calibrator)
-        _ = output(data=calibrated, output_dir=output_dir, filesystem=filesystem)
+        # Save
+        _ = output(data=calibrated, output_dir=output_dir, filesystem=filesystem, swap=False)
+        _ = output(data=swap_calibrated, output_dir=output_dir, filesystem=filesystem, swap=True)
         _ = pregame_out(
             pregame=pregame_calibrated,
-            swap=swap_calibrated,
             output_dir=output_dir,
             filesystem=filesystem
         )

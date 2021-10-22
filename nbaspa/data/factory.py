@@ -55,8 +55,13 @@ class NBADataFactory:
                 params["filesystem"] = filesystem
             self.calls.append(getattr(endpoints, obj)(**params))
 
-    def get(self) -> List[BaseRequest]:
+    def get(self, overwrite: bool = False) -> List[BaseRequest]:
         """Retrieve the data for each API call.
+
+        Parameters
+        ----------
+        overwrite : bool, optional (default False)
+            Whether or not to check for an existing file before loading.
 
         Returns
         -------
@@ -64,13 +69,16 @@ class NBADataFactory:
             The call objects with data.
         """
         # Don't download what we already have
-        LOG.info("Removing calls we already have data for...")
-        remaining = [
-            index for index, value in enumerate(self.calls) if not value.exists()
-        ]
+        if not overwrite:
+            LOG.info("Removing calls we already have data for...")
+            remaining = [
+                index for index, value in enumerate(self.calls) if not value.exists()
+            ]
+        else:
+            remaining = list(range(len(self.calls)))
         with alive_bar(len(remaining)) as bar:
             for index in remaining:
-                self._get(callobj=self.calls[index])
+                self._get(callobj=self.calls[index], overwrite=overwrite)
 
                 bar()
 
@@ -120,12 +128,14 @@ class NBADataFactory:
 
     @sleep_and_retry
     @limits(calls=1, period=60)
-    def _get(self, callobj: BaseRequest):
+    def _get(self, callobj: BaseRequest, overwrite: bool = False):
         """Run the ``get()`` method to retrieve data.
 
         Parameters
         ----------
         callobj : BaseRequest
             The endpoint object.
+        overwrite : bool, optional (default False)
+            Whether or not to check for an existing file before loading.
         """
-        callobj.get()
+        callobj.get(overwrite=overwrite)

@@ -103,6 +103,7 @@ class SavePredictions(Task):
         data: pd.DataFrame,
         output_dir: str,
         filesystem: Optional[str] = "file",
+        swap: bool = False,
     ):
         """Save the game data.
 
@@ -114,6 +115,8 @@ class SavePredictions(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
+        swap : bool, optional (default False)
+            Whether the input data is a swap probability (no exogenous variables).
 
         Returns
         -------
@@ -130,7 +133,10 @@ class SavePredictions(Task):
                 season = name[2] + "0" + name[3:5] + "-0" + str(int(name[3:5]) + 1)
             else:
                 season = name[2] + "0" + name[3:5] + "-" + str(int(name[3:5]) + 1)
-            fdir = Path(output_dir, season, "survival-prediction")
+            if swap:
+                fdir = Path(output_dir, season, "swap-prediction")
+            else:
+                fdir = Path(output_dir, season, "survival-prediction")
             fs.mkdir(fdir)
             fpath = fdir / f"data_{name}.csv"
             self.logger.info(f"Writing data for game {name} to {str(fpath)}")
@@ -149,7 +155,6 @@ class SavePreGamePredictions(Task):
     def run(  # type: ignore
         self,
         pregame: pd.DataFrame,
-        swap: pd.DataFrame,
         output_dir: str,
         filesystem: Optional[str] = "file",
     ):
@@ -159,8 +164,6 @@ class SavePreGamePredictions(Task):
         ----------
         pregame : pd.DataFrame
             Standard pre-game prediction data.
-        swap : pd.DataFrame
-            Pre-game prediction data with no dynamic or team quality variables.
         output_dir : str
             The directory containing the data.
         filesystem : str, optional (default "file")
@@ -171,9 +174,6 @@ class SavePreGamePredictions(Task):
         None
         """
         fs = fsspec.filesystem(filesystem)
-        # The data should be identically indexed
-        pregame[META["swap"]] = swap[META["survival"]]
-        pregame[META["swap_diff"]] = pregame[META["survival"]] - pregame[META["swap"]]
         # Save the data
         pregame["SEASON"] = (
             pregame[META["id"]].str[2]

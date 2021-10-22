@@ -27,7 +27,7 @@ REQUIREMENTS = [
 
 EXTRAS_REQUIRE = {
     "tests": ["pytest", "pytest-cov"],
-    "docs": ["sphinx", "furo"],
+    "docs": ["sphinx", "nbsphinx", "furo"],
     "qa": [
         "black",
         "flake8",

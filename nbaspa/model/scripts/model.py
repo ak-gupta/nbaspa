@@ -1,7 +1,10 @@
 """Train and evaluate models."""
 
+from pathlib import Path
+
 import click
 
+from ...data.endpoints import Scoreboard
 from ..pipeline import (
     gen_data_pipeline,
     gen_lifelines_pipeline,
@@ -127,3 +130,29 @@ def predict(data_dir, output_dir, model, season, game_id):
         Season=season,
         GameID=game_id,
     )
+
+@model.command()
+@click.option("--data-dir", help="Path to the data directory.")
+@click.option("--output-dir", help="Path to the output directory.")
+@click.option("--model", help="Location for model pickle file")
+@click.option("--season", default=None, help="The season")
+@click.option("--game-date", type=click.DateTime(formats=["%Y-%m-%d"]))
+def daily(data_dir, output_dir, model, season, game_date):
+    """Daily survival predictions."""
+    flow = gen_predict_pipeline()
+    score = Scoreboard(
+        output_dir=Path(output_dir, season),
+        GameDate=game_date.strftime("%m/%d/%Y")
+    )
+    score.get()
+    df = score.get_data("GameHeader")
+
+    for _, row in df.iterrows():
+        run_pipeline(
+            flow=flow,
+            data_dir=data_dir,
+            output_dir=output_dir,
+            model=model,
+            Season=season,
+            GameID=row["GAME_ID"],
+        )
