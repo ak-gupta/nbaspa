@@ -133,8 +133,8 @@ def players(output_dir, season):
 @click.option("--output-dir", help="Path to the output directory")
 @click.option("--season", type=str, help="The season to download")
 @click.option("--game-date", type=click.DateTime(formats=["%Y-%m-%d"]))
-@click.option("--re-run", is_flag=True, help="Whether to overwrite existing data")
-def daily(output_dir, season, game_date, re_run):
+@click.option("--resume", is_flag=True, help="Whether or not to overwrite existing data for this day")
+def daily(output_dir, season, game_date, resume):
     """Download daily data."""
     # Add the scoreboard
     score = Scoreboard(
@@ -158,7 +158,7 @@ def daily(output_dir, season, game_date, re_run):
     game_factory.get()
     # Refresh the team data
     teams = score.get_data("LineScore")["TEAM_ID"].values
-    teamcalls: List[str] = []
+    teamcalls: List[str] = [("TeamStats", {"Season": season})]
     LOG.info("Refreshing team data")
     for team in teams:
         if not str(team).startswith("16"):
@@ -173,7 +173,7 @@ def daily(output_dir, season, game_date, re_run):
             ("TeamRoster", {"TeamID": team, "Season": season}),
         ]
     team_factory = NBADataFactory(calls=teamcalls, output_dir=Path(output_dir, season))
-    team_factory.get(overwrite=not re_run)
+    team_factory.get(overwrite=not resume)
     # Refresh the player data
     boxloader = NBADataFactory(
         calls=[("BoxScoreTraditional", {"GameID": game}) for game in np.unique(df["GAME_ID"])],
@@ -193,9 +193,9 @@ def daily(output_dir, season, game_date, re_run):
     
     info_factory = NBADataFactory(
         calls=[("PlayerInfo", {"PlayerID": player, "Season": season}) for player in players],
-        output_dir=Path(output_dir, season)
+        output_dir=output_dir
     )
-    info_factory.get()
+    info_factory.get(overwrite=not resume)
 
     player_factory = NBADataFactory(calls=playercalls, output_dir=Path(output_dir, season))
-    player_factory.get(overwrite=not re_run)
+    player_factory.get(overwrite=not resume)

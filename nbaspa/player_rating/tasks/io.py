@@ -388,7 +388,8 @@ class SaveTopPlayers(Task):
             + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
         )
         for name, group in data.groupby("SEASON"):
-            avg = group.groupby("PLAYER_ID")[["IMPACT"]].agg(["sum", "mean"])
+            grp = group[group["IMPACT"] != 0.0].copy()
+            avg = grp.groupby("PLAYER_ID")[["IMPACT"]].agg(["sum", "mean"])
             avg.columns = avg.columns.map("_".join).str.strip("_")
             avg.reset_index(inplace=True)
             if mode == "survival":
