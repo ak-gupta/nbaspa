@@ -88,6 +88,24 @@ SEASONS: Dict = {
     }
 }
 
+class Season:
+    def __init__(self, year: int):
+        self.year = year
+    
+    def __add__(self, value: int):
+        newyear = self.year + value
+
+        return Season(year=newyear)
+    
+    def __sub__(self, value: int):
+        newyear = self.year - value
+
+        return Season(year=newyear)
+    
+    def __str__(self):
+        newyear = datetime.datetime(month=1, day=1, year=self.year + 1)
+
+        return f"{self.year}-{newyear.strftime('%y')}"
 
 @dataclass
 class DefaultParameters:

@@ -23,6 +23,7 @@
 
    _spa/definition
    notebooks/casestudy.ipynb
+   notebooks/interpretation.ipynb
 
 .. toctree::
    :maxdepth: 2
