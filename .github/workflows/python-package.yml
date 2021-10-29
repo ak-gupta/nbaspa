@@ -22,16 +22,14 @@ jobs:
               with:
                 python-version: 3.8
             - name: Install dependencies
-              run: |
-                python -m pip install -r requirements.txt .[dev]
+              run: python -m pip install -r requirements.txt .[dev]
             - name: Check static typing
-              run:
-                python -m mypy nbaspa
+              run: python -m mypy nbaspa
             - name: Run flake8
-              run:
-                python -m flake8 nbaspa
+              run: python -m flake8 nbaspa
             - name: Run unit testing
-              run:
+              run: |
                 export PREFECT__FLOWS__CHECKPOINTING=true
                 python -m pytest tests
-                codecov
+            - name: Run Codecov
+              run: codecov
