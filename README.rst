@@ -9,9 +9,8 @@ Survival analysis-powered player impact
         :target: https://nbaspa.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-.. image:: https://img.shields.io/travis/ak-gupta/nbaspa.svg?branch=master
-        :target: https://travis-ci.com/ak-gupta/nbaspa
-        :alt: Travis CI
+.. image:: https://github.com/ak-gupta/nbaspa/actions/workflows/python-package.yml/badge.svg
+        :alt: GitHub Actions
 
 .. image:: https://codecov.io/github/ak-gupta/nbaspa/coverage.svg?branch=master
         :target: https://codecov.io/github/ak-gupta/nbaspa?branch=master
