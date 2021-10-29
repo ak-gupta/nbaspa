@@ -438,7 +438,8 @@ and to restrict to a game, supply ``GameID``
         GameID="0021800001"
     )
 
-To remove contextual information like team quality and schedule, supply ``mode``:
+To remove contextual information like team quality and schedule, (see :doc:`here <notebooks/casestudy>`)
+supply ``mode``:
 
 .. code-block:: python
 
@@ -482,8 +483,7 @@ to a season or game, supply ``--season`` or ``--game-id``:
         --season 2018-19 \
         --game-id 0021800001
 
-To generate ratings that remove contextual information like team quality and schedule (SEE HERE FOR MORE INFORMATION), change the
-``mode`` parameter
+To generate ratings that remove contextual information like team quality and schedule , change the ``mode`` parameter
 
 .. code-block:: console
 

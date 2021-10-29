@@ -9,11 +9,24 @@ from click.testing import CliRunner
 from nbaspa.data.endpoints.parameters import SEASONS
 from nbaspa.data.scripts.clean import model, rating
 from nbaspa.data.scripts.download import scoreboard, games, teams, players
+from nbaspa.data.tasks import FactoryGetter
 
-def test_model_cli(data_dir, tmpdir):
+@patch("nbaspa.data.pipeline.LineupLoader.run")
+@patch.object(FactoryGetter, "run")
+def test_model_cli(mock_factory, mock_loader, lineup_stats, stats, data_dir, tmpdir):
     """Test running the model data cleaning pipeline."""
     location = tmpdir.mkdir("model-data")
     runner = CliRunner()
+    mock_loader.return_value = None
+    # Create a side-effect to get the appropriate dataset
+    def side(factory, dataset_type):
+        if dataset_type == "Overall":
+            return stats
+        elif dataset_type == "Lineups":
+            return lineup_stats
+    
+    mock_factory.side_effect = side
+
     with patch.dict(
         SEASONS,
         {
@@ -45,10 +58,17 @@ def test_model_cli(data_dir, tmpdir):
         "data_00218DUMMY2.csv"
     ).is_file()
 
-def test_rating_cli(data_dir, tmpdir):
+@patch("nbaspa.data.pipeline.LineupLoader.run")
+@patch("nbaspa.data.pipeline.ShotZoneLoader.run")
+@patch.object(FactoryGetter, "run")
+def test_rating_cli(mock_factory, mock_shotzone, mock_loader, shotzonedashboard, stats, data_dir, tmpdir):
     """Test running the rating data cleaning pipeline."""
     location = tmpdir.mkdir("rating-data")
     runner = CliRunner()
+    mock_loader.return_value = None
+    mock_shotzone.return_value = shotzonedashboard
+    # Create a side-effect to get the appropriate dataset    
+    mock_factory.return_value = stats
     with patch.dict(
         SEASONS,
         {
