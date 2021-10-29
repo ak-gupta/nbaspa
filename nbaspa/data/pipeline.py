@@ -49,7 +49,8 @@ def gen_pipeline() -> Flow:
     scoreboard_loader = GenericLoader(loader="Scoreboard", name="Load scoreboard data")
     pbp_loader = PlayByPlayLoader(name="Load play-by-play data")
     wprob_loader = WinProbabilityLoader(name="Load NBA win probability")
-    getter = FactoryGetter(name="Get dataset from the Factory")
+    ogetter = FactoryGetter(name="Get overall dataset from the Factory")
+    lgetter = FactoryGetter(name="Get lineup dataset from the Factory")
     log_loader = GameLogLoader(name="Load gamelog data")
     lineup_loader = LineupLoader(name="Load lineup data")
     rota_loader = RotationLoader(name="Load rotation data")
@@ -108,7 +109,7 @@ def gen_pipeline() -> Flow:
         lineupdata = lineup_loader(
             season=season, GameDate=gamedate, linescore=scoreboard["LineScore"]
         )
-        stats = getter(factory=lineupdata, dataset_type="Overall")
+        stats = ogetter(factory=lineupdata, dataset_type="Overall")
         boxscore = box_loader(
             header=scoreboard["GameHeader"],
             output_dir=data_dir,
@@ -139,7 +140,7 @@ def gen_pipeline() -> Flow:
             shooting = gshooting_loader(
                 boxscore=boxscore,
                 season=season,
-                output_dir=output_dir,
+                output_dir=data_dir,
                 filesystem=filesystem
             )
             # Add variables for the player rating
@@ -156,7 +157,7 @@ def gen_pipeline() -> Flow:
                 output_dir=data_dir,
                 filesystem=filesystem,
             )
-            lineup_stats = getter(factory=lineupdata, dataset_type="Lineups")
+            lineup_stats = lgetter(factory=lineupdata, dataset_type="Lineups")
             rotation = rota_loader(
                 header=scoreboard["GameHeader"],
                 output_dir=data_dir,
@@ -192,6 +193,7 @@ def run_pipeline(
     mode: Optional[str] = "model",
     Season: Optional[str] = None,
     GameDate: Optional[str] = None,
+    **kwargs
 ) -> Optional[State]:
     """Run the pipeline.
 
@@ -213,6 +215,8 @@ def run_pipeline(
         The ``Season`` value to use.
     GameDate : str, optional (default None)
         The ``GameDate`` value to use, in MM/DD/YYYY format.
+    kwargs
+        Keyword arguments for the ``run`` method.
 
     Returns
     -------
@@ -231,6 +235,6 @@ def run_pipeline(
     if GameDate is not None:
         params["GameDate"] = GameDate
 
-    output = flow.run(parameters=params)
+    output = flow.run(parameters=params, **kwargs)
 
     return output

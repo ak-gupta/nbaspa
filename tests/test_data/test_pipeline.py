@@ -4,6 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from prefect.engine.state import Success
 import pytest
 
 from nbaspa.data.pipeline import gen_pipeline, run_pipeline
@@ -97,9 +98,21 @@ def ratingdata():
 
     return real
 
-def test_model_cleaning_pipeline_nosave(data_dir, modeldata):
+def test_model_cleaning_pipeline_nosave(data_dir, lineup_stats, stats, modeldata):
     """Test model cleaning pipeline."""
     flow = gen_pipeline()
+    # Generate placeholder data for calls that require pulling from the NBA API
+    task_states = {
+        flow.get_tasks(name="Load lineup data")[0]: Success(message="Skipping", result=None),
+        flow.get_tasks(name="Get overall dataset from the Factory")[0]: Success(
+            message="Substituted result",
+            result=stats
+        ),
+        flow.get_tasks(name="Get lineup dataset from the Factory")[0]: Success(
+            message="Substituted result",
+            result=lineup_stats
+        )
+    }
     output = run_pipeline(
         flow=flow,
         data_dir=str(data_dir / "2018-19"),
@@ -107,17 +120,30 @@ def test_model_cleaning_pipeline_nosave(data_dir, modeldata):
         save_data=False,
         mode="model",
         Season="2018-19",
-        GameDate="12/25/2018"
+        GameDate="12/25/2018",
+        task_states=task_states
     )
     output_df = output.result[flow.get_tasks(name="Merge")[0]].result
     output_df["NBA_WIN_PROB_CHANGE"] = np.round(output_df["NBA_WIN_PROB_CHANGE"], 3)
 
     assert output_df.equals(modeldata)
 
-def test_model_cleaning_pipeline_save(data_dir, modeldata, tmpdir):
+def test_model_cleaning_pipeline_save(data_dir, lineup_stats, stats, modeldata, tmpdir):
     """Test persisting model save data."""
     location = tmpdir.mkdir("data")
     flow = gen_pipeline()
+    # Generate placeholder data for calls that require pulling from the NBA API
+    task_states = {
+        flow.get_tasks(name="Load lineup data")[0]: Success(message="Skipping", result=None),
+        flow.get_tasks(name="Get overall dataset from the Factory")[0]: Success(
+            message="Substituted result",
+            result=stats
+        ),
+        flow.get_tasks(name="Get lineup dataset from the Factory")[0]: Success(
+            message="Substituted result",
+            result=lineup_stats
+        )
+    }
     run_pipeline(
         flow=flow,
         data_dir=str(data_dir / "2018-19"),
@@ -125,7 +151,8 @@ def test_model_cleaning_pipeline_save(data_dir, modeldata, tmpdir):
         save_data=True,
         mode="model",
         Season="2018-19",
-        GameDate="12/25/2018"
+        GameDate="12/25/2018",
+        task_states=task_states,
     )
     df = pd.read_csv(
         Path(str(location), "model-data", "data_00218DUMMY1.csv"),
@@ -141,9 +168,21 @@ def test_model_cleaning_pipeline_save(data_dir, modeldata, tmpdir):
 
     assert df.equals(modeldata)
 
-def test_rating_data_pipeline_nosave(data_dir, ratingdata):
+def test_rating_data_pipeline_nosave(data_dir, stats, shotzonedashboard, ratingdata):
     """Test creating clean rating data."""
     flow = gen_pipeline()
+    # Generate placeholder data for calls that require pulling from the NBA API
+    task_states = {
+        flow.get_tasks(name="Load lineup data")[0]: Success(message="Skipping", result=None),
+        flow.get_tasks(name="Get overall dataset from the Factory")[0]: Success(
+            message="Substituted result",
+            result=stats
+        ),
+        flow.get_tasks(name="Load player-level shot zone dashboards")[0]: Success(
+            message="Substituted result",
+            result=shotzonedashboard
+        )
+    }
     output = run_pipeline(
         flow=flow,
         data_dir=str(data_dir / "2018-19"),
@@ -151,26 +190,44 @@ def test_rating_data_pipeline_nosave(data_dir, ratingdata):
         save_data=False,
         mode="rating",
         Season="2018-19",
-        GameDate="12/25/2018"
+        GameDate="12/25/2018",
+        task_states=task_states
     )
+    assert output.is_successful()
+
     output_df = output.result[flow.get_tasks(name="Merge")[0]].result
     output_df["NBA_WIN_PROB_CHANGE"] = np.round(output_df["NBA_WIN_PROB_CHANGE"], 3)
 
     assert output_df.equals(ratingdata)
 
-def test_rating_data_pipeline_save(data_dir, ratingdata, tmpdir):
+def test_rating_data_pipeline_save(data_dir, stats, shotzonedashboard, ratingdata, tmpdir):
     """Test persisting rating data."""
-    location = tmpdir.mkdir("rating-data")
+    location = tmpdir.mkdir("save-data")
     flow = gen_pipeline()
-    run_pipeline(
+    # Generate placeholder data for calls that require pulling from the NBA API
+    task_states = {
+        flow.get_tasks(name="Load lineup data")[0]: Success(message="Skipping", result=None),
+        flow.get_tasks(name="Get overall dataset from the Factory")[0]: Success(
+            message="Substituted result",
+            result=stats
+        ),
+        flow.get_tasks(name="Load player-level shot zone dashboards")[0]: Success(
+            message="Substituted result",
+            result=shotzonedashboard
+        )
+    }
+    output = run_pipeline(
         flow=flow,
         data_dir=str(data_dir / "2018-19"),
         output_dir=str(location),
         save_data=True,
         mode="rating",
         Season="2018-19",
-        GameDate="12/25/2018"
+        GameDate="12/25/2018",
+        task_states=task_states
     )
+    assert output.is_successful()
+
     df = pd.read_csv(
         Path(str(location), "rating-data", "data_00218DUMMY1.csv"),
         sep="|",

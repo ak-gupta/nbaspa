@@ -11,7 +11,7 @@ from prefect import Task
 
 from ..factory import NBADataFactory
 import nbaspa.data.endpoints as endpoints
-from ..endpoints.parameters import ParameterValues, SEASONS
+from ..endpoints.parameters import ParameterValues, SEASONS, Season
 
 
 class GenericLoader(Task):
@@ -247,10 +247,8 @@ class LineupLoader(Task):
         GameDate = datetime.strptime(GameDate, "%m/%d/%Y")
         if (GameDate - SEASONS[season]["START"]).days < 14:
             self.logger.info("Pulling previous season data")
-            if int(season[2:4]) - 1 < 10:
-                season = "200" + str(int(season[2:4]) - 1) + "-" + season[2:4]
-            else:
-                season = "20" + str(int(season[2:4]) - 1) + "-" + season[2:4]
+            current = Season(year=int(season[0:4]))
+            season = str(current - 1)
         GameDate = GameDate + timedelta(days=-1)
         calls: List[Tuple[str, Dict]] = []
         teams = np.unique(linescore["TEAM_ID"])
@@ -428,10 +426,8 @@ class ShotZoneLoader(Task):
         GameDate = datetime.strptime(GameDate, "%m/%d/%Y")
         if (GameDate - SEASONS[season]["START"]).days < 14:
             self.logger.info("Pulling previous season data")
-            if int(season[2:4]) - 1 < 10:
-                season = "200" + str(int(season[2:4]) - 1) + "-" + season[2:4]
-            else:
-                season = "20" + str(int(season[2:4]) - 1) + "-" + season[2:4]
+            current = Season(year=int(season[0:4]))
+            season = str(current - 1)
         GameDate = GameDate + timedelta(days=-1)
         # For each player, get the gamelog
         calls: List[Tuple[str, Dict]] = []
@@ -515,10 +511,8 @@ class GeneralShootingLoader(Task):
         pd.DataFrame
             The output dataset.
         """
-        if int(season[2:4]) - 1 < 10:
-            season = "200" + str(int(season[2:4]) - 1) + "-" + season[2:4]
-        else:
-            season = "20" + str(int(season[2:4]) - 1) + "-" + season[2:4]
+        current = Season(year=int(season[0:4]))
+        season = str(current - 1)
         calls: List[Tuple[str, Dict]] = []
         for _, row in boxscore.iterrows():
             if pd.isnull(row["FGA"]) or row["FGA"] == 0:
