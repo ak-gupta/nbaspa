@@ -159,7 +159,7 @@ class SavePreGamePredictions(Task):
         filesystem: Optional[str] = "file",
     ):
         """Save pre-game predictions.
-        
+
         Parameters
         ----------
         pregame : pd.DataFrame
@@ -168,7 +168,7 @@ class SavePreGamePredictions(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
-        
+
         Returns
         -------
         None
@@ -176,14 +176,11 @@ class SavePreGamePredictions(Task):
         fs = fsspec.filesystem(filesystem)
         # Save the data
         pregame["SEASON"] = (
-            pregame[META["id"]].str[2]
-            + "0"
-            + pregame[META["id"]].str[3:5]
-            + "-"
+            pregame[META["id"]].str[2] + "0" + pregame[META["id"]].str[3:5] + "-"
         )
-        pregame.loc[pregame[META["id"]].str[3:5].astype(int) + 1 < 10, "SEASON"] += (
-            "0" + (pregame[META["id"]].str[3:5].astype(int) + 1).astype(str)
-        )
+        pregame.loc[
+            pregame[META["id"]].str[3:5].astype(int) + 1 < 10, "SEASON"
+        ] += "0" + (pregame[META["id"]].str[3:5].astype(int) + 1).astype(str)
         pregame.loc[pregame[META["id"]].str[3:5].astype(int) + 1 >= 10, "SEASON"] += (
             pregame[META["id"]].str[3:5].astype(int) + 1
         ).astype(str)

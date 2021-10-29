@@ -166,7 +166,9 @@ class ScoreboardLoader(Task):
 class LoadSurvivalPredictions(Task):
     """Load the survival probability predictions."""
 
-    def run(self, data_dir: str, filelocation: Dict, mode: str = "survival") -> pd.DataFrame:  # type: ignore
+    def run(  # type: ignore
+        self, data_dir: str, filelocation: Dict, mode: str = "survival"
+    ) -> pd.DataFrame:
         """Load the survival prediction data.
 
         Parameters
@@ -176,8 +178,8 @@ class LoadSurvivalPredictions(Task):
         filelocation : dict
             The season and GameID of the game.
         mode : str, optional (default "survival")
-            Whether to load the survival predictions or the "survival-plus" predictions, which excludes
-            exogenous variables.
+            Whether to load the survival predictions or the "survival-plus" predictions, which
+            excludes exogenous variables.
 
         Returns
         -------
@@ -207,7 +209,7 @@ class LoadSurvivalPredictions(Task):
 class LoadSwapProbabilities(Task):
     """Load the swap probabilities."""
 
-    def run(self, data_dir: str, Season: str = None) -> pd.DataFrame:
+    def run(self, data_dir: str, Season: str = None) -> pd.DataFrame:  # type: ignore
         """Load the swap probabilities.
 
         Parameters
@@ -220,9 +222,11 @@ class LoadSwapProbabilities(Task):
         return pd.concat(
             (
                 pd.read_csv(fpath, sep="|", index_col=0, dtype={"GAME_ID": str})
-                for fpath in Path(data_dir).glob(f"{Season or '*'}/pregame-predictions.csv")
+                for fpath in Path(data_dir).glob(
+                    f"{Season or '*'}/pregame-predictions.csv"
+                )
             ),
-            ignore_index=True
+            ignore_index=True,
         )
 
 
@@ -263,7 +267,8 @@ class SaveImpactData(Task):
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
         mode : str, optional (default "survival")
-            Whether or not the impact data represents the "survival-plus" (no exogenous variables) or raw ratings.
+            Whether or not the impact data represents the "survival-plus" (no exogenous variables)
+            or raw ratings.
 
         Returns
         -------
@@ -315,18 +320,14 @@ class SavePlayerTimeSeries(Task):
         None
         """
         data = pd.concat(data, ignore_index=True)
-        data.loc[
-            data["GAME_ID"].str[3:5].astype(int) + 1 >= 10, "SEASON"
-        ] = (
+        data.loc[data["GAME_ID"].str[3:5].astype(int) + 1 >= 10, "SEASON"] = (
             data["GAME_ID"].str[2]
             + "0"
             + data["GAME_ID"].str[3:5]
             + "-"
             + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
         )
-        data.loc[
-            data["GAME_ID"].str[3:5].astype(int) + 1 < 10, "SEASON"
-        ] = (
+        data.loc[data["GAME_ID"].str[3:5].astype(int) + 1 < 10, "SEASON"] = (
             data["GAME_ID"].str[2]
             + "0"
             + data["GAME_ID"].str[3:5]
@@ -353,7 +354,9 @@ class SavePlayerTimeSeries(Task):
 class SaveTopPlayers(Task):
     """Save a summary of player performance over multiple games."""
 
-    def run(self, data: List[pd.DataFrame], output_dir: str, mode: str = "survival"):  # type: ignore
+    def run(  # type: ignore
+        self, data: List[pd.DataFrame], output_dir: str, mode: str = "survival"
+    ):
         """Save a summary of player performance.
 
         Parameters
@@ -369,18 +372,14 @@ class SaveTopPlayers(Task):
         """
         data = pd.concat(data, ignore_index=True)
         data["SEASON"] = None
-        data.loc[
-            data["GAME_ID"].str[3:5].astype(int) + 1 >= 10, "SEASON"
-        ] = (
+        data.loc[data["GAME_ID"].str[3:5].astype(int) + 1 >= 10, "SEASON"] = (
             data["GAME_ID"].str[2]
             + "0"
             + data["GAME_ID"].str[3:5]
             + "-"
             + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
         )
-        data.loc[
-            data["GAME_ID"].str[3:5].astype(int) + 1 < 10, "SEASON"
-        ] = (
+        data.loc[data["GAME_ID"].str[3:5].astype(int) + 1 < 10, "SEASON"] = (
             data["GAME_ID"].str[2]
             + "0"
             + data["GAME_ID"].str[3:5]
@@ -396,7 +395,5 @@ class SaveTopPlayers(Task):
                 outfile = Path(output_dir, name, "impact-summary.csv")
             elif mode == "survival-plus":
                 outfile = Path(output_dir, name, "impact-plus-summary.csv")
-            self.logger.info(
-                f"Saving {name} summary to {str(outfile)}"
-            )
+            self.logger.info(f"Saving {name} summary to {str(outfile)}")
             avg.to_csv(outfile, sep="|")

@@ -131,6 +131,7 @@ def predict(data_dir, output_dir, model, season, game_id):
         GameID=game_id,
     )
 
+
 @model.command()
 @click.option("--data-dir", help="Path to the data directory.")
 @click.option("--output-dir", help="Path to the output directory.")
@@ -141,8 +142,7 @@ def daily(data_dir, output_dir, model, season, game_date):
     """Daily survival predictions."""
     flow = gen_predict_pipeline()
     score = Scoreboard(
-        output_dir=Path(output_dir, season),
-        GameDate=game_date.strftime("%m/%d/%Y")
+        output_dir=Path(output_dir, season), GameDate=game_date.strftime("%m/%d/%Y")
     )
     score.get()
     df = score.get_data("GameHeader")

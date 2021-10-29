@@ -4,7 +4,8 @@ This factory class will use rate-limiting to avoid spamming the API.
 """
 
 import logging
-from typing import Dict, List, Optional, Tuple
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
 
 from alive_progress import alive_bar
 import pandas as pd
@@ -42,7 +43,7 @@ class NBADataFactory:
     def __init__(
         self,
         calls: List[Tuple[str, Dict]],
-        output_dir: Optional[str] = None,
+        output_dir: Optional[Union[str, Path]] = None,
         filesystem: Optional[str] = "file",
     ):
         """Init method."""

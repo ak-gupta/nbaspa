@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 LOG = logging.getLogger(__name__)
 
+
 @click.group()
 def download():
     """CLI group."""
@@ -112,10 +113,7 @@ def players(output_dir, season):
             season[0:4]
         ):
             calls += [
-                (
-                    "PlayerGameLog",
-                    {"PlayerID": row["PERSON_ID"], "Season": season}
-                ),
+                ("PlayerGameLog", {"PlayerID": row["PERSON_ID"], "Season": season}),
                 (
                     "PlayerDashboardShooting",
                     {"PlayerID": row["PERSON_ID"], "Season": season},
@@ -129,6 +127,7 @@ def players(output_dir, season):
     factory = NBADataFactory(calls=calls, output_dir=Path(output_dir, season))
     factory.get()
 
+
 @download.command()
 @click.option("--output-dir", help="Path to the output directory.")
 @click.option("--season", type=str, help="The season to download")
@@ -140,23 +139,29 @@ def season(ctx, output_dir, season):
     ctx.forward(teams)
     ctx.forward(games)
 
+
 @download.command()
 @click.option("--output-dir", help="Path to the output directory")
 @click.option("--season", type=str, help="The season to download")
 @click.option("--game-date", type=click.DateTime(formats=["%Y-%m-%d"]))
-@click.option("--resume", is_flag=True, help="Whether or not to overwrite existing data for this day")
+@click.option(
+    "--resume",
+    is_flag=True,
+    help="Whether or not to overwrite existing data for this day",
+)
 def daily(output_dir, season, game_date, resume):
     """Download daily data."""
     # Add the scoreboard
     score = Scoreboard(
-        output_dir=Path(output_dir, season),
-        GameDate=game_date.strftime("%m/%d/%Y")
+        output_dir=Path(output_dir, season), GameDate=game_date.strftime("%m/%d/%Y")
     )
     score.get()
     # Add calls for the game data
     df = score.get_data("GameHeader")
     gamecalls: List[str] = []
-    LOG.info(f"Reading in the game data for all games on {game_date.strftime('%b %d, %Y')}")
+    LOG.info(
+        f"Reading in the game data for all games on {game_date.strftime('%b %d, %Y')}"
+    )
     for _, row in df.iterrows():
         gamecalls += [
             ("PlayByPlay", {"GameID": row["GAME_ID"]}),
@@ -187,8 +192,11 @@ def daily(output_dir, season, game_date, resume):
     team_factory.get(overwrite=not resume)
     # Refresh the player data
     boxloader = NBADataFactory(
-        calls=[("BoxScoreTraditional", {"GameID": game}) for game in np.unique(df["GAME_ID"])],
-        output_dir=Path(output_dir, season)
+        calls=[
+            ("BoxScoreTraditional", {"GameID": game})
+            for game in np.unique(df["GAME_ID"])
+        ],
+        output_dir=Path(output_dir, season),
     )
     boxloader.load()
     playerstats = boxloader.get_data("PlayerStats")
@@ -201,12 +209,16 @@ def daily(output_dir, season, game_date, resume):
             ("PlayerDashboardShooting", {"PlayerID": player, "Season": season}),
             ("PlayerDashboardGeneral", {"PlayerID": player, "Season": season}),
         ]
-    
+
     info_factory = NBADataFactory(
-        calls=[("PlayerInfo", {"PlayerID": player, "Season": season}) for player in players],
-        output_dir=output_dir
+        calls=[
+            ("PlayerInfo", {"PlayerID": player, "Season": season}) for player in players
+        ],
+        output_dir=output_dir,
     )
     info_factory.get(overwrite=not resume)
 
-    player_factory = NBADataFactory(calls=playercalls, output_dir=Path(output_dir, season))
+    player_factory = NBADataFactory(
+        calls=playercalls, output_dir=Path(output_dir, season)
+    )
     player_factory.get(overwrite=not resume)

@@ -177,7 +177,7 @@ class CollapseData(Task):
             first_row = data.groupby(META["id"]).head(n=1).copy()
             first_row["start"] = 0
             first_row["stop"] = 0
-            
+
             return first_row
         elif timestep is None:
             final_row = data.groupby(META["id"]).tail(n=1).copy()

@@ -62,7 +62,7 @@ class PlayerInfo(BaseRequest):
 
 class PlayerGameLog(BaseRequest):
     """Get the player game logs.
-    
+
     Parameters
     ----------
     PlayerID : int
@@ -106,7 +106,6 @@ class PlayerGameLog(BaseRequest):
             "DateTo": DefaultParameters.DateTo,
             "DateFrom": DefaultParameters.DateFrom,
         }
-
 
 
 class PlayerDashboardBase(BaseRequest):

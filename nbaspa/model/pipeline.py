@@ -438,7 +438,6 @@ def gen_predict_pipeline() -> Flow:
     # Initialize tasks
     load = LoadData(name="Load clean data")
     pregame_data = CollapseData(name="Create pre-game prediction data")
-    swap_data = CollapseData(name="Create swap prediction data")
     format_data = SurvivalData(name="Convert input data to ranged form")
     modelobj = LoadModel(name="Load model", nout=2)
     calc_sprob = WinProbability(name="Calculate survival probability")
@@ -473,12 +472,17 @@ def gen_predict_pipeline() -> Flow:
         swap_sprob = calc_sprob(model=model, data=swap)
         swap_calibrated = calib_sprob(data=swap_sprob, calibrator=calibrator)
         # Save
-        _ = output(data=calibrated, output_dir=output_dir, filesystem=filesystem, swap=False)
-        _ = output(data=swap_calibrated, output_dir=output_dir, filesystem=filesystem, swap=True)
-        _ = pregame_out(
-            pregame=pregame_calibrated,
+        _ = output(
+            data=calibrated, output_dir=output_dir, filesystem=filesystem, swap=False
+        )
+        _ = output(
+            data=swap_calibrated,
             output_dir=output_dir,
-            filesystem=filesystem
+            filesystem=filesystem,
+            swap=True,
+        )
+        _ = pregame_out(
+            pregame=pregame_calibrated, output_dir=output_dir, filesystem=filesystem
         )
 
     return flow

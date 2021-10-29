@@ -37,6 +37,7 @@ __all__: List[str] = [
     "PlayByPlay",
     "AllPlayers",
     "PlayerInfo",
+    "PlayerGameLog",
     "PlayerDashboardGeneral",
     "PlayerDashboardShooting",
     "GameRotation",

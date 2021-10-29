@@ -72,25 +72,24 @@ class FactoryGetter(Task):
     """Retrieve a dataset from ``NBADataFactory``."""
 
     def run(  # type: ignore
-        self,
-        factory: NBADataFactory,
-        dataset_type: str = "default"
+        self, factory: NBADataFactory, dataset_type: str = "default"
     ) -> pd.DataFrame:
         """Retrieve a dataset from ``NBADataFactory``.
-        
+
         Parameters
         ----------
         factory : NBADataFactory
             The loaded factory class.
         dataset_type : str, optional (default "default")
             The dataset type.
-        
+
         Returns
         -------
         pd.DataFrame
             The concatenated data.
         """
         return factory.get_data(dataset_type=dataset_type)
+
 
 class PlayByPlayLoader(Task):
     """Load the play-by-data for a given day."""
@@ -217,7 +216,7 @@ class GameLogLoader(Task):
 
 class LineupLoader(Task):
     """Get team lineup stats.
-    
+
     For lineup and overall team statistics we need to get rolling data over the season.
     """
 
@@ -258,7 +257,7 @@ class LineupLoader(Task):
                 "Season": season,
                 "MeasureType": "Advanced",
                 "DateFrom": SEASONS[season]["START"].strftime("%m/%d/%Y"),
-                "DateTo": GameDate.strftime("%m/%d/%Y")
+                "DateTo": GameDate.strftime("%m/%d/%Y"),
             }
 
             calls.append(("TeamLineups", params))
@@ -436,13 +435,16 @@ class ShotZoneLoader(Task):
                 continue
             calls.append(
                 (
-                    "PlayerGameLog", {"PlayerID": row["PLAYER_ID"], "Season": season},
+                    "PlayerGameLog",
+                    {"PlayerID": row["PLAYER_ID"], "Season": season},
                 )
             )
 
         # Create the factory and load the data
         logfactory = NBADataFactory(
-            calls=calls, output_dir=Path(Path(output_dir).parent, season), filesystem=filesystem
+            calls=calls,
+            output_dir=Path(Path(output_dir).parent, season),
+            filesystem=filesystem,
         )
         logfactory.load()
         playerlogs = logfactory.get_data()
@@ -461,7 +463,7 @@ class ShotZoneLoader(Task):
         shotfactory = NBADataFactory(
             calls=shotcalls,
             output_dir=Path(Path(output_dir).parent, season),
-            filesystem=filesystem
+            filesystem=filesystem,
         )
         shotfactory.load()
         playershots = shotfactory.get_data()
@@ -474,11 +476,11 @@ class ShotZoneLoader(Task):
             columns={
                 "SHOT_ATTEMPTED_FLAG": "FGA",
                 "SHOT_MADE_FLAG": "FGM",
-                "SHOT_ZONE_BASIC": "GROUP_VALUE"
+                "SHOT_ZONE_BASIC": "GROUP_VALUE",
             },
-            inplace=True
+            inplace=True,
         )
-        agg["FG_PCT"] = agg["FGM"]/agg["FGA"]
+        agg["FG_PCT"] = agg["FGM"] / agg["FGA"]
 
         return agg
 
@@ -519,13 +521,16 @@ class GeneralShootingLoader(Task):
                 continue
             calls.append(
                 (
-                    "PlayerDashboardGeneral", {"PlayerID": row["PLAYER_ID"], "Season": season},
+                    "PlayerDashboardGeneral",
+                    {"PlayerID": row["PLAYER_ID"], "Season": season},
                 )
             )
 
         # Create the factory and load the data
         factory = NBADataFactory(
-            calls=calls, output_dir=Path(Path(output_dir).parent, season), filesystem=filesystem
+            calls=calls,
+            output_dir=Path(Path(output_dir).parent, season),
+            filesystem=filesystem,
         )
         factory.load()
 

@@ -808,10 +808,19 @@ class AggregateImpact(Task):
 
         # Merge
         for idx in range(1, 4):
-            tmp = pbp.groupby(["GAME_ID", f"PLAYER{idx}_ID"])[f"PLAYER{idx}_IMPACT"].agg(["sum", "count"])
-            tmp.rename(columns={"sum": f"PLAYER{idx}_IMPACT", "count": f"PLAYER{idx}_EVENTS"}, inplace=True)
+            tmp = pbp.groupby(["GAME_ID", f"PLAYER{idx}_ID"])[
+                f"PLAYER{idx}_IMPACT"
+            ].agg(["sum", "count"])
+            tmp.rename(
+                columns={"sum": f"PLAYER{idx}_IMPACT", "count": f"PLAYER{idx}_EVENTS"},
+                inplace=True,
+            )
             impact = pd.merge(
-                impact, tmp, left_on=("GAME_ID", "PLAYER_ID"), right_index=True, how="left"
+                impact,
+                tmp,
+                left_on=("GAME_ID", "PLAYER_ID"),
+                right_index=True,
+                how="left",
             )
         impact.fillna(0, inplace=True)
         impact["IMPACT"] = (
@@ -825,6 +834,4 @@ class AggregateImpact(Task):
             + impact["PLAYER3_EVENTS"]
         )
 
-        return impact[
-            ["GAME_ID", "TEAM_ID", "PLAYER_ID", "EVENTS", "IMPACT"]
-        ].copy()
+        return impact[["GAME_ID", "TEAM_ID", "PLAYER_ID", "EVENTS", "IMPACT"]].copy()

@@ -14,7 +14,6 @@ from .tasks import (
     LoadRatingData,
     ScoreboardLoader,
     LoadSurvivalPredictions,
-    LoadSwapProbabilities,
     AddSurvivalProbability,
     SimplePlayerImpact,
     SaveImpactData,
@@ -41,7 +40,6 @@ def gen_pipeline() -> Flow:
     pbp_loader = LoadRatingData(name="Load clean data")
     box_loader = BoxScoreLoader(name="Load boxscore data")
     surv_loader = LoadSurvivalPredictions(name="Load survival predictions")
-    swap_loader = LoadSwapProbabilities(name="Load swap probabilities")
     score_loader = ScoreboardLoader(name="Load header data")
     # Calculation tasks
     addsurv = AddSurvivalProbability(name="Join survival probability")
@@ -70,7 +68,9 @@ def gen_pipeline() -> Flow:
         )
         header = score_loader(data_dir=data_dir, filelist=gamelist)
         pbp = pbp_loader.map(data_dir=unmapped(data_dir), filelocation=gamelist)
-        survprob = surv_loader.map(data_dir=unmapped(data_dir), mode=unmapped(mode), filelocation=gamelist)
+        survprob = surv_loader.map(
+            data_dir=unmapped(data_dir), mode=unmapped(mode), filelocation=gamelist
+        )
         box = box_loader.map(filelocation=gamelist, output_dir=unmapped(data_dir))
         # Add the survival probability and calculate impact
         pbpfinal = addsurv.map(pbp=pbp, survprob=survprob)
@@ -90,10 +90,14 @@ def gen_pipeline() -> Flow:
             output_dir=unmapped(output_dir),
             filesystem=unmapped(filesystem),
             filelocation=gamelist,
-            mode=unmapped(mode)
+            mode=unmapped(mode),
         )
         _ = savetime(
-            data=agg, header=header, output_dir=output_dir, filesystem=filesystem, mode=mode
+            data=agg,
+            header=header,
+            output_dir=output_dir,
+            filesystem=filesystem,
+            mode=mode,
         )
         _ = savesummary(data=agg, output_dir=output_dir, mode=mode)
 

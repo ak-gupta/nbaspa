@@ -46,5 +46,5 @@ __all__: List[str] = [
     "FitXGBoost",
     "XGBoostShap",
     "SavePredictions",
-    "SavePreGamePredictions"
+    "SavePreGamePredictions",
 ]

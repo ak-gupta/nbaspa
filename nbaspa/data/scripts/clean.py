@@ -16,6 +16,7 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 LOG = logging.getLogger(__name__)
 
+
 @click.group()
 def clean():
     """CLI group."""
@@ -38,10 +39,13 @@ def model(data_dir, output_dir, season, re_run):
             alldates = json.load(infile)
         daterange = [
             datetime.strptime(row["GameDate"], "%m/%d/%Y")
-            for row in alldates if row["reason"] == "Unknown"
+            for row in alldates
+            if row["reason"] == "Unknown"
         ]
     else:
-        timelist = list(range(int((SEASONS[season]["END"] - SEASONS[season]["START"]).days) + 1))
+        timelist = list(
+            range(int((SEASONS[season]["END"] - SEASONS[season]["START"]).days) + 1)
+        )
         daterange = [SEASONS[season]["START"] + timedelta(n) for n in timelist]
     for game_date in daterange:
         calls.append(
@@ -72,7 +76,9 @@ def model(data_dir, output_dir, season, re_run):
                             "reason": "No games",
                         }
                     )
-                elif scoreboard["GameHeader"]["GAME_ID"].str.startswith("003").sum() >= 1:
+                elif (
+                    scoreboard["GameHeader"]["GAME_ID"].str.startswith("003").sum() >= 1
+                ):
                     report.append(
                         {
                             "GameDate": call["GameDate"],
@@ -113,10 +119,13 @@ def rating(data_dir, output_dir, season, re_run):
             alldates = json.load(infile)
         daterange = [
             datetime.strptime(row["GameDate"], "%m/%d/%Y")
-            for row in alldates if row["reason"] == "Unknown"
+            for row in alldates
+            if row["reason"] == "Unknown"
         ]
     else:
-        timelist = list(range(int((SEASONS[season]["END"] - SEASONS[season]["START"]).days) + 1))
+        timelist = list(
+            range(int((SEASONS[season]["END"] - SEASONS[season]["START"]).days) + 1)
+        )
         daterange = [SEASONS[season]["START"] + timedelta(n) for n in timelist]
     for game_date in daterange:
         calls.append(
@@ -147,7 +156,9 @@ def rating(data_dir, output_dir, season, re_run):
                             "reason": "No games",
                         }
                     )
-                elif scoreboard["GameHeader"]["GAME_ID"].str.startswith("003").sum() >= 1:
+                elif (
+                    scoreboard["GameHeader"]["GAME_ID"].str.startswith("003").sum() >= 1
+                ):
                     report.append(
                         {
                             "GameDate": call["GameDate"],
@@ -170,6 +181,7 @@ def rating(data_dir, output_dir, season, re_run):
             Path(output_dir, season, "rating-cleaning-report.json"), "w"
         ) as outfile:
             json.dump(report, outfile, indent=4)
+
 
 @clean.command()
 @click.option("--data-dir", help="Path to the directory containing the raw data.")
