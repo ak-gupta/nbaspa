@@ -130,6 +130,17 @@ def players(output_dir, season):
     factory.get()
 
 @download.command()
+@click.option("--output-dir", help="Path to the output directory.")
+@click.option("--season", type=str, help="The season to download")
+@click.pass_context
+def season(ctx, output_dir, season):
+    """Download all data for a season."""
+    ctx.forward(scoreboard)
+    ctx.forward(players)
+    ctx.forward(teams)
+    ctx.forward(games)
+
+@download.command()
 @click.option("--output-dir", help="Path to the output directory")
 @click.option("--season", type=str, help="The season to download")
 @click.option("--game-date", type=click.DateTime(formats=["%Y-%m-%d"]))

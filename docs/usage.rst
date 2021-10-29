@@ -100,6 +100,12 @@ Finally, we can download the game data:
 
     $ nbaspa-download games --output-dir nba-data --season 2018-19
 
+If you want to bundle these calls into a single CLI command, use the ``season`` endpoint:
+
+.. code-block:: console
+
+    $ nbaspa-download season --output-dir nba-data --season 2018-19
+
 -------------
 Cleaning data
 -------------
