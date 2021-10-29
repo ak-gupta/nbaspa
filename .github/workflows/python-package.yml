@@ -30,6 +30,15 @@ jobs:
             - name: Run unit testing
               run: |
                 export PREFECT__FLOWS__CHECKPOINTING=true
-                python -m pytest tests
+                python -m pytest tests --cov=./ --cov-report=xml
             - name: Run Codecov
-              run: codecov
+              uses: codecov/codecov-action@v2
+              with:
+                name: codecov-umbrella
+                directory: ./coverage/reports/
+                env_vars: OS,PYTHON
+                fail_ci_if_error: true
+                files: ./coverage1.xml,./coverage2.xml
+                flags: unittests
+                path_to_write_report: ./coverage/codecov_report.txt
+                verbose: true

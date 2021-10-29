@@ -28,7 +28,6 @@ jobs:
           name: "Unit tests"
           script:
             - pytest
-            - codecov
 stages:
     - typing
     - tests
