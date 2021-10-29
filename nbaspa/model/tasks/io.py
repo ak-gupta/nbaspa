@@ -137,7 +137,7 @@ class SavePredictions(Task):
                 fdir = Path(output_dir, season, "swap-prediction")
             else:
                 fdir = Path(output_dir, season, "survival-prediction")
-            fs.mkdir(fdir)
+            fs.mkdirs(fdir, exist_ok=True)
             fpath = fdir / f"data_{name}.csv"
             self.logger.info(f"Writing data for game {name} to {str(fpath)}")
             with fs.open(fpath, "wb") as buf:

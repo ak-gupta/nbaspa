@@ -275,7 +275,7 @@ class SaveImpactData(Task):
         # Get the filesystem
         fs = fsspec.filesystem(filesystem)
         fdir = Path(output_dir, filelocation["Season"], self._subdir)
-        fs.mkdir(fdir)
+        fs.mkdirs(fdir, exist_ok=True)
         fpath = fdir / f"data_{filelocation['GameID']}.csv"
         self.logger.info(
             f"Writing data for game {filelocation['GameID']} to {str(fpath)}"
@@ -344,7 +344,7 @@ class SavePlayerTimeSeries(Task):
                 fdir = Path(output_dir, name[1], "impact-timeseries")
             else:
                 fdir = Path(output_dir, name[1], "impact-plus-timeseries")
-            fs.mkdir(fdir)
+            fs.mkdirs(fdir, exist_ok=True)
             fpath = fdir / f"data_{name[0]}.csv"
             with fs.open(fpath, "wb") as buf:
                 group.to_csv(buf, sep="|", mode="wb")

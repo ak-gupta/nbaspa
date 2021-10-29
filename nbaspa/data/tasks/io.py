@@ -577,7 +577,7 @@ class SaveData(Task):
             raise ValueError("Please supply a valid value for ``mode``")
         # Get the filesystem
         fs = fsspec.filesystem(filesystem)
-        fs.mkdir(Path(output_dir, subdir))
+        fs.mkdirs(Path(output_dir, subdir), exist_ok=True)
         grouped = data.groupby("GAME_ID")
         for name, group in grouped:
             if not name.startswith("002"):

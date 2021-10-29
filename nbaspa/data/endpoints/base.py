@@ -98,7 +98,7 @@ class BaseRequest:
             self._get()
         if self.output_dir is not None and self._response is not None:
             LOG.info(f"Writing data to {str(self.fpath)}...")
-            self.fs.mkdir(Path(self.output_dir, self.endpoint))
+            self.fs.mkdirs(Path(self.output_dir, self.endpoint), exist_ok=True)
             with self.fs.open(self.fpath, "w") as outfile:
                 json.dump(self._raw_data, outfile, indent=4)
 
