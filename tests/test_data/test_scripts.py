@@ -9,11 +9,24 @@ from click.testing import CliRunner
 from nbaspa.data.endpoints.parameters import SEASONS
 from nbaspa.data.scripts.clean import model, rating
 from nbaspa.data.scripts.download import scoreboard, games, teams, players
+from nbaspa.data.tasks import FactoryGetter
 
-def test_model_cli(data_dir, tmpdir):
+@patch("nbaspa.data.pipeline.LineupLoader.run")
+@patch.object(FactoryGetter, "run")
+def test_model_cli(mock_factory, mock_loader, lineup_stats, stats, data_dir, tmpdir):
     """Test running the model data cleaning pipeline."""
     location = tmpdir.mkdir("model-data")
     runner = CliRunner()
+    mock_loader.return_value = None
+    # Create a side-effect to get the appropriate dataset
+    def side(factory, dataset_type):
+        if dataset_type == "Overall":
+            return stats
+        elif dataset_type == "Lineups":
+            return lineup_stats
+    
+    mock_factory.side_effect = side
+
     with patch.dict(
         SEASONS,
         {
@@ -45,10 +58,17 @@ def test_model_cli(data_dir, tmpdir):
         "data_00218DUMMY2.csv"
     ).is_file()
 
-def test_rating_cli(data_dir, tmpdir):
+@patch("nbaspa.data.pipeline.LineupLoader.run")
+@patch("nbaspa.data.pipeline.ShotZoneLoader.run")
+@patch.object(FactoryGetter, "run")
+def test_rating_cli(mock_factory, mock_shotzone, mock_loader, shotzonedashboard, stats, data_dir, tmpdir):
     """Test running the rating data cleaning pipeline."""
     location = tmpdir.mkdir("rating-data")
     runner = CliRunner()
+    mock_loader.return_value = None
+    mock_shotzone.return_value = shotzonedashboard
+    # Create a side-effect to get the appropriate dataset    
+    mock_factory.return_value = stats
     with patch.dict(
         SEASONS,
         {
@@ -475,39 +495,51 @@ def test_players_cli(mock_factory, data_dir):
     mock_factory.assert_called_with(
         calls=[
             ("PlayerInfo", {"PlayerID": 1, "output_dir": str(data_dir)}),
+            ("PlayerGameLog", {"PlayerID": 1, "Season": "2018-19"}),
             ("PlayerDashboardShooting", {"PlayerID": 1, "Season": "2018-19"}),
             ("PlayerDashboardGeneral", {"PlayerID": 1, "Season": "2018-19"}),
             ("PlayerInfo", {"PlayerID": 2, "output_dir": str(data_dir)}),
+            ("PlayerGameLog", {"PlayerID": 2, "Season": "2018-19"}),
             ("PlayerDashboardShooting", {"PlayerID": 2, "Season": "2018-19"}),
             ("PlayerDashboardGeneral", {"PlayerID": 2, "Season": "2018-19"}),
             ("PlayerInfo", {"PlayerID": 3, "output_dir": str(data_dir)}),
+            ("PlayerGameLog", {"PlayerID": 3, "Season": "2018-19"}),
             ("PlayerDashboardShooting", {"PlayerID": 3, "Season": "2018-19"}),
             ("PlayerDashboardGeneral", {"PlayerID": 3, "Season": "2018-19"}),
             ("PlayerInfo", {"PlayerID": 4, "output_dir": str(data_dir)}),
+            ("PlayerGameLog", {"PlayerID": 4, "Season": "2018-19"}),
             ("PlayerDashboardShooting", {"PlayerID": 4, "Season": "2018-19"}),
             ("PlayerDashboardGeneral", {"PlayerID": 4, "Season": "2018-19"}),
             ("PlayerInfo", {"PlayerID": 5, "output_dir": str(data_dir)}),
+            ("PlayerGameLog", {"PlayerID": 5, "Season": "2018-19"}),
             ("PlayerDashboardShooting", {"PlayerID": 5, "Season": "2018-19"}),
             ("PlayerDashboardGeneral", {"PlayerID": 5, "Season": "2018-19"}),
             ("PlayerInfo", {"PlayerID": 6, "output_dir": str(data_dir)}),
+            ("PlayerGameLog", {"PlayerID": 6, "Season": "2018-19"}),
             ("PlayerDashboardShooting", {"PlayerID": 6, "Season": "2018-19"}),
             ("PlayerDashboardGeneral", {"PlayerID": 6, "Season": "2018-19"}),
             ("PlayerInfo", {"PlayerID": 7, "output_dir": str(data_dir)}),
+            ("PlayerGameLog", {"PlayerID": 7, "Season": "2018-19"}),
             ("PlayerDashboardShooting", {"PlayerID": 7, "Season": "2018-19"}),
             ("PlayerDashboardGeneral", {"PlayerID": 7, "Season": "2018-19"}),
             ("PlayerInfo", {"PlayerID": 8, "output_dir": str(data_dir)}),
+            ("PlayerGameLog", {"PlayerID": 8, "Season": "2018-19"}),
             ("PlayerDashboardShooting", {"PlayerID": 8, "Season": "2018-19"}),
             ("PlayerDashboardGeneral", {"PlayerID": 8, "Season": "2018-19"}),
             ("PlayerInfo", {"PlayerID": 9, "output_dir": str(data_dir)}),
+            ("PlayerGameLog", {"PlayerID": 9, "Season": "2018-19"}),
             ("PlayerDashboardShooting", {"PlayerID": 9, "Season": "2018-19"}),
             ("PlayerDashboardGeneral", {"PlayerID": 9, "Season": "2018-19"}),
             ("PlayerInfo", {"PlayerID": 10, "output_dir": str(data_dir)}),
+            ("PlayerGameLog", {"PlayerID": 10, "Season": "2018-19"}),
             ("PlayerDashboardShooting", {"PlayerID": 10, "Season": "2018-19"}),
             ("PlayerDashboardGeneral", {"PlayerID": 10, "Season": "2018-19"}),
             ("PlayerInfo", {"PlayerID": 11, "output_dir": str(data_dir)}),
+            ("PlayerGameLog", {"PlayerID": 11, "Season": "2018-19"}),
             ("PlayerDashboardShooting", {"PlayerID": 11, "Season": "2018-19"}),
             ("PlayerDashboardGeneral", {"PlayerID": 11, "Season": "2018-19"}),
             ("PlayerInfo", {"PlayerID": 12, "output_dir": str(data_dir)}),
+            ("PlayerGameLog", {"PlayerID": 12, "Season": "2018-19"}),
             ("PlayerDashboardShooting", {"PlayerID": 12, "Season": "2018-19"}),
             ("PlayerDashboardGeneral", {"PlayerID": 12, "Season": "2018-19"}),
         ],

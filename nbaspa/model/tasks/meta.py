@@ -21,5 +21,7 @@ META: Dict = {
     "event": "WIN",
     "id": "GAME_ID",
     "survival": "WIN_PROB",
+    "swap": "SWAP_PROB",
+    "swap_diff": "SWAP_DIFF",
     "benchmark": "NBA_WIN_PROB",
 }

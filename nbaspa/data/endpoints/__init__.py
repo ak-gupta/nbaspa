@@ -15,6 +15,7 @@ from .pbp import PlayByPlay
 from .player import (
     AllPlayers,
     PlayerInfo,
+    PlayerGameLog,
     PlayerDashboardGeneral,
     PlayerDashboardShooting,
 )
@@ -36,6 +37,7 @@ __all__: List[str] = [
     "PlayByPlay",
     "AllPlayers",
     "PlayerInfo",
+    "PlayerGameLog",
     "PlayerDashboardGeneral",
     "PlayerDashboardShooting",
     "GameRotation",

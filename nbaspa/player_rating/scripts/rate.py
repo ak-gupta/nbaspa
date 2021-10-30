@@ -12,7 +12,7 @@ from ..pipeline import gen_pipeline, run_pipeline
 @click.option("--game-id", default=None, help="The Game ID")
 @click.option(
     "--mode",
-    type=click.Choice(["nba", "survival"], case_sensitive=True),
+    type=click.Choice(["nba", "survival", "survival-plus"], case_sensitive=True),
     default="survival",
     help="Whether to generate NBA win probability or survival",
 )

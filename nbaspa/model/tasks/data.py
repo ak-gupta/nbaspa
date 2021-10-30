@@ -14,13 +14,15 @@ from .meta import META
 class SurvivalData(Task):
     """Create time-varying data in the ``lifelines`` format."""
 
-    def run(self, data: pd.DataFrame) -> pd.DataFrame:  # type: ignore
+    def run(self, data: pd.DataFrame, swap: bool = False) -> pd.DataFrame:  # type: ignore
         """Create time-varying data in the ``lifelines`` format.
 
         Parameters
         ----------
         data : pd.DataFrame
             The cleaned play-by-play data.
+        swap : bool, optional (default False)
+            Whether the input data includes exogenous variables or not
 
         Returns
         -------
@@ -57,6 +59,15 @@ class SurvivalData(Task):
         longform[META["benchmark"]] = longform.merge(
             data, left_on=("GAME_ID", "stop"), right_on=("GAME_ID", "TIME"), how="left"
         )[META["benchmark"]]
+
+        # If for swap purposes, remove exogenous variables
+        if swap:
+            for col in META["dynamic"]:
+                if col == "SCOREMARGIN":
+                    continue
+                longform[col] = 0.0
+            for col in META["static"]:
+                longform[col] = 0.0
 
         return longform
 
@@ -139,6 +150,7 @@ class CollapseData(Task):
         self,
         data: pd.DataFrame,
         timestep: Optional[int] = None,
+        pregame: bool = False,
     ) -> pd.DataFrame:
         """Collapse data for evaluation.
 
@@ -152,13 +164,22 @@ class CollapseData(Task):
         timestep : int, optional (default None)
             The time step to use to create unique rows. If ``None``, the final row
             for each game will be used.
+        pregame : bool, optional (default False)
+            Whether or not to create pregame predictions.
 
         Returns
         -------
         pd.DataFrame
             The collapsed data.
         """
-        if timestep is None:
+        if pregame:
+            self.logger.info("Creating pregame data")
+            first_row = data.groupby(META["id"]).head(n=1).copy()
+            first_row["start"] = 0
+            first_row["stop"] = 0
+
+            return first_row
+        elif timestep is None:
             final_row = data.groupby(META["id"]).tail(n=1).copy()
 
             return final_row

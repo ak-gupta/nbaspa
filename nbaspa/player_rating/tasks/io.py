@@ -166,7 +166,9 @@ class ScoreboardLoader(Task):
 class LoadSurvivalPredictions(Task):
     """Load the survival probability predictions."""
 
-    def run(self, data_dir: str, filelocation: Dict) -> pd.DataFrame:  # type: ignore
+    def run(  # type: ignore
+        self, data_dir: str, filelocation: Dict, mode: str = "survival"
+    ) -> pd.DataFrame:
         """Load the survival prediction data.
 
         Parameters
@@ -175,6 +177,9 @@ class LoadSurvivalPredictions(Task):
             The directory containing multiple seasons of data.
         filelocation : dict
             The season and GameID of the game.
+        mode : str, optional (default "survival")
+            Whether to load the survival predictions or the "survival-plus" predictions, which
+            excludes exogenous variables.
 
         Returns
         -------
@@ -182,19 +187,47 @@ class LoadSurvivalPredictions(Task):
             The output DataFrame.
         """
         self.logger.info(f"Reading in {filelocation['GameID']} from {data_dir}")
-        basedata = pd.read_csv(
-            Path(
+        if mode == "survival":
+            fileloc = Path(
                 data_dir,
                 filelocation["Season"],
                 "survival-prediction",
                 f"data_{filelocation['GameID']}.csv",
-            ),
-            sep="|",
-            dtype={"GAME_ID": str},
-            index_col=0,
-        )
+            )
+        elif mode == "survival-plus":
+            fileloc = Path(
+                data_dir,
+                filelocation["Season"],
+                "swap-prediction",
+                f"data_{filelocation['GameID']}.csv",
+            )
+        basedata = pd.read_csv(fileloc, sep="|", dtype={"GAME_ID": str}, index_col=0)
 
         return basedata
+
+
+class LoadSwapProbabilities(Task):
+    """Load the swap probabilities."""
+
+    def run(self, data_dir: str, Season: str = None) -> pd.DataFrame:  # type: ignore
+        """Load the swap probabilities.
+
+        Parameters
+        ----------
+        data_dir : str
+            The directory containing the data.
+        Season : str, optional (default None)
+            The season for the data. If not provided, all seasons will be loaded.
+        """
+        return pd.concat(
+            (
+                pd.read_csv(fpath, sep="|", index_col=0, dtype={"GAME_ID": str})
+                for fpath in Path(data_dir).glob(
+                    f"{Season or '*'}/pregame-predictions.csv"
+                )
+            ),
+            ignore_index=True,
+        )
 
 
 class SaveImpactData(Task):
@@ -219,6 +252,7 @@ class SaveImpactData(Task):
         output_dir: str,
         filelocation: Dict,
         filesystem: str = "file",
+        mode: str = "survival",
     ):
         """Save the impact data.
 
@@ -232,15 +266,21 @@ class SaveImpactData(Task):
             The season and GameID of the game.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
+        mode : str, optional (default "survival")
+            Whether or not the impact data represents the "survival-plus" (no exogenous variables)
+            or raw ratings.
 
         Returns
         -------
         None
         """
+        # Modify the sub-directory
+        if mode == "survival-plus":
+            self._subdir += "-plus"
         # Get the filesystem
         fs = fsspec.filesystem(filesystem)
         fdir = Path(output_dir, filelocation["Season"], self._subdir)
-        fs.mkdir(fdir)
+        fs.mkdirs(fdir, exist_ok=True)
         fpath = fdir / f"data_{filelocation['GameID']}.csv"
         self.logger.info(
             f"Writing data for game {filelocation['GameID']} to {str(fpath)}"
@@ -258,6 +298,7 @@ class SavePlayerTimeSeries(Task):
         header: pd.DataFrame,
         output_dir: str,
         filesystem: Optional[str] = "file",
+        mode: str = "survival",
     ):
         """Save player-level time-series data.
 
@@ -271,17 +312,26 @@ class SavePlayerTimeSeries(Task):
             The directory for the output data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
+        mode : str, optional (default "survival")
+            Indicates whether or not the data contains exogenous variables.
 
         Returns
         -------
         None
         """
         data = pd.concat(data, ignore_index=True)
-        data["SEASON"] = (
+        data.loc[data["GAME_ID"].str[3:5].astype(int) + 1 >= 10, "SEASON"] = (
             data["GAME_ID"].str[2]
             + "0"
             + data["GAME_ID"].str[3:5]
             + "-"
+            + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
+        )
+        data.loc[data["GAME_ID"].str[3:5].astype(int) + 1 < 10, "SEASON"] = (
+            data["GAME_ID"].str[2]
+            + "0"
+            + data["GAME_ID"].str[3:5]
+            + "-0"
             + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
         )
         # Add the game date
@@ -291,8 +341,11 @@ class SavePlayerTimeSeries(Task):
         # Loop through each player/season
         fs = fsspec.filesystem(filesystem)
         for name, group in data.groupby(["PLAYER_ID", "SEASON"]):
-            fdir = Path(output_dir, name[1], "impact-timeseries")
-            fs.mkdir(fdir)
+            if mode == "survival":
+                fdir = Path(output_dir, name[1], "impact-timeseries")
+            else:
+                fdir = Path(output_dir, name[1], "impact-plus-timeseries")
+            fs.mkdirs(fdir, exist_ok=True)
             fpath = fdir / f"data_{name[0]}.csv"
             with fs.open(fpath, "wb") as buf:
                 group.to_csv(buf, sep="|", mode="wb")
@@ -301,7 +354,9 @@ class SavePlayerTimeSeries(Task):
 class SaveTopPlayers(Task):
     """Save a summary of player performance over multiple games."""
 
-    def run(self, data: List[pd.DataFrame], output_dir: str):  # type: ignore
+    def run(  # type: ignore
+        self, data: List[pd.DataFrame], output_dir: str, mode: str = "survival"
+    ):
         """Save a summary of player performance.
 
         Parameters
@@ -312,25 +367,33 @@ class SaveTopPlayers(Task):
             The directory for the data.
         filelist : list
             A list of file locations.
+        mode : str, optional (default "survival")
+            Indicates whether or not the input data uses exogenous variables.
         """
         data = pd.concat(data, ignore_index=True)
-        data["SEASON"] = (
+        data["SEASON"] = None
+        data.loc[data["GAME_ID"].str[3:5].astype(int) + 1 >= 10, "SEASON"] = (
             data["GAME_ID"].str[2]
             + "0"
             + data["GAME_ID"].str[3:5]
             + "-"
             + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
         )
+        data.loc[data["GAME_ID"].str[3:5].astype(int) + 1 < 10, "SEASON"] = (
+            data["GAME_ID"].str[2]
+            + "0"
+            + data["GAME_ID"].str[3:5]
+            + "-0"
+            + (data["GAME_ID"].str[3:5].astype(int) + 1).astype(str)
+        )
         for name, group in data.groupby("SEASON"):
-            avg = group.groupby("PLAYER_ID")["IMPACT"].agg(["sum", "mean"])
-            avg.rename(
-                columns={"sum": "TOTAL_IMPACT", "mean": "MEAN_IMPACT"}, inplace=True
-            )
+            grp = group[group["IMPACT"] != 0.0].copy()
+            avg = grp.groupby("PLAYER_ID")[["IMPACT"]].agg(["sum", "mean"])
+            avg.columns = avg.columns.map("_".join).str.strip("_")
             avg.reset_index(inplace=True)
-            self.logger.info(
-                f"Saving {name} summary to {str(Path(output_dir, name, 'impact-summary.csv'))}"
-            )
-            avg.to_csv(
-                Path(output_dir, name, "impact-summary.csv"),
-                sep="|",
-            )
+            if mode == "survival":
+                outfile = Path(output_dir, name, "impact-summary.csv")
+            elif mode == "survival-plus":
+                outfile = Path(output_dir, name, "impact-plus-summary.csv")
+            self.logger.info(f"Saving {name} summary to {str(outfile)}")
+            avg.to_csv(outfile, sep="|")

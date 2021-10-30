@@ -8,7 +8,9 @@
                 "GAME_EVENT_ID",
                 "PLAYER_ID",
                 "SHOT_TYPE",
-                "SHOT_ZONE_BASIC"
+                "SHOT_ZONE_BASIC",
+                "SHOT_ATTEMPTED_FLAG",
+                "SHOT_MADE_FLAG"
             ],
             "rowSet": []
         },

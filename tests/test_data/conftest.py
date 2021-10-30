@@ -52,6 +52,22 @@ def header():
     return pd.concat(dfs).reset_index(drop=True)
 
 @pytest.fixture
+def linescore():
+    """Dummy linescore data."""
+    dfs = []
+    for fpath in Path(CURR_DIR, "data", "2018-19", "scoreboardv2").glob("data_*.json"):
+        with open(fpath) as infile:
+            rawdata = json.load(infile)
+        dfs.append(
+            pd.DataFrame(
+                rawdata["resultSets"][1]["rowSet"],
+                columns=rawdata["resultSets"][1]["headers"]
+            )
+        )
+    
+    return pd.concat(dfs).reset_index(drop=True)
+
+@pytest.fixture
 def last_meeting():
     """Dummy last meeting data."""
     dfs = []
@@ -103,6 +119,26 @@ def gamelog():
     
     out = pd.concat(dfs)
     out.sort_values(by=["Team_ID", "GAME_DATE"], ascending=True, inplace=True)
+    out.reset_index(drop=True, inplace=True)
+    
+    return out
+
+@pytest.fixture
+def playergamelog():
+    """Dummy player gamelog data."""
+    dfs = []
+    for fpath in Path(CURR_DIR, "data", "2018-19", "playergamelog").glob("data_*.json"):
+        with open(fpath) as infile:
+            rawdata = json.load(infile)
+        dfs.append(
+            pd.DataFrame(
+                rawdata["resultSets"][0]["rowSet"],
+                columns=rawdata["resultSets"][0]["headers"]
+            )
+        )
+    
+    out = pd.concat(dfs)
+    out.sort_values(by=["Player_ID", "GAME_DATE"], ascending=True, inplace=True)
     out.reset_index(drop=True, inplace=True)
     
     return out

@@ -8,26 +8,27 @@ with open("README.rst") as readme_file:
     README = readme_file.read()
 
 REQUIREMENTS = [
-    "alive-progress>=1.6.2,<=1.6.2",
-    "Click>=7.1.2,<=7.1.2",
-    "fsspec>=0.8.5,<=0.8.5",
-    "hyperopt>=0.2.5,<=0.2.5",
-    "lifelines>=0.25.9,<=0.25.9",
-    "lightgbm>=3.1.1,<=3.1.1",
-    "matplotlib>=3.3.4,<=3.3.4",
-    "pandas>=1.2.1,<=1.2.1",
-    "prefect>=0.14.5,<=0.14.5",
-    "ratelimit>=2.2.1,<=2.2.1",
-    "requests>=2.25.1,<=2.25.1",
-    "scikit-learn>=0.24.1,<=0.24.1",
-    "shap[plots]>=0.39.0,<=0.39.0",
-    "seaborn>=0.11.1,<=0.11.1",
-    "xgboost>=1.3.3,<=1.3.3"
+    "alive-progress==1.6.2",
+    "Click==7.1.2",
+    "fsspec==2021.10.1",
+    "gcsfs==2021.10.1",
+    "hyperopt==0.2.5",
+    "lifelines==0.25.9",
+    "lightgbm==3.1.1",
+    "matplotlib==3.3.4",
+    "pandas==1.2.1",
+    "prefect==0.14.5",
+    "ratelimit==2.2.1",
+    "requests==2.25.1",
+    "scikit-learn==0.24.1",
+    "shap[plots]==0.39.0",
+    "seaborn==0.11.1",
+    "xgboost==1.3.3"
 ]
 
 EXTRAS_REQUIRE = {
     "tests": ["pytest", "pytest-cov"],
-    "docs": ["sphinx", "furo"],
+    "docs": ["sphinx", "myst-nb", "furo"],
     "qa": [
         "black",
         "flake8",

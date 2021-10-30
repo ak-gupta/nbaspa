@@ -5,6 +5,7 @@ from typing import List
 from .gamelog import AddWinPercentage, GamesInLastXDays
 from .io import (
     GenericLoader,
+    FactoryGetter,
     PlayByPlayLoader,
     WinProbabilityLoader,
     GameLogLoader,
@@ -28,6 +29,7 @@ from .time import DeDupeTime, SurvivalTime
 __all__: List[str] = [
     "AddWinPercentage",
     "GenericLoader",
+    "FactoryGetter",
     "PlayByPlayLoader",
     "WinProbabilityLoader",
     "GameLogLoader",
