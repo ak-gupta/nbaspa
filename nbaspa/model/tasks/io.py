@@ -40,7 +40,7 @@ class LoadData(Task):
         data_dir: str,
         season: Optional[str] = None,
         gameid: Optional[str] = None,
-    ) -> pd.DataFrame:  # type: ignore
+    ) -> pd.DataFrame:
         """Load clean data to a DataFrame.
 
         Parameters
@@ -103,6 +103,7 @@ class SavePredictions(Task):
         data: pd.DataFrame,
         output_dir: str,
         filesystem: Optional[str] = "file",
+        swap: bool = False,
     ):
         """Save the game data.
 
@@ -114,6 +115,8 @@ class SavePredictions(Task):
             The directory containing the data.
         filesystem : str, optional (default "file")
             The name of the ``fsspec`` filesystem to use.
+        swap : bool, optional (default False)
+            Whether the input data is a swap probability (no exogenous variables).
 
         Returns
         -------
@@ -126,15 +129,63 @@ class SavePredictions(Task):
             if not name.startswith("002"):
                 self.logger.warning(f"{name} is not a regular season game. Skipping...")
                 continue
-            season = name[2] + "0" + name[3:5] + "-" + str(int(name[3:5]) + 1)
-            fdir = Path(output_dir, season, "survival-prediction")
-            fs.mkdir(fdir)
+            if int(name[3:5]) + 1 < 10:
+                season = name[2] + "0" + name[3:5] + "-0" + str(int(name[3:5]) + 1)
+            else:
+                season = name[2] + "0" + name[3:5] + "-" + str(int(name[3:5]) + 1)
+            if swap:
+                fdir = Path(output_dir, season, "swap-prediction")
+            else:
+                fdir = Path(output_dir, season, "survival-prediction")
+            fs.mkdirs(fdir, exist_ok=True)
             fpath = fdir / f"data_{name}.csv"
             self.logger.info(f"Writing data for game {name} to {str(fpath)}")
             with fs.open(fpath, "wb") as buf:
-                group.rename(columns={"stop": META["duration"]}, inplace=True)
+                group.rename(columns={"start": META["duration"]}, inplace=True)
                 group[
                     [META["id"], META["duration"], META["survival"]]
                     + META["static"]
                     + META["dynamic"]
                 ].to_csv(buf, sep="|", mode="wb")
+
+
+class SavePreGamePredictions(Task):
+    """Save pre-game predictions."""
+
+    def run(  # type: ignore
+        self,
+        pregame: pd.DataFrame,
+        output_dir: str,
+        filesystem: Optional[str] = "file",
+    ):
+        """Save pre-game predictions.
+
+        Parameters
+        ----------
+        pregame : pd.DataFrame
+            Standard pre-game prediction data.
+        output_dir : str
+            The directory containing the data.
+        filesystem : str, optional (default "file")
+            The name of the ``fsspec`` filesystem to use.
+
+        Returns
+        -------
+        None
+        """
+        fs = fsspec.filesystem(filesystem)
+        # Save the data
+        pregame["SEASON"] = (
+            pregame[META["id"]].str[2] + "0" + pregame[META["id"]].str[3:5] + "-"
+        )
+        pregame.loc[
+            pregame[META["id"]].str[3:5].astype(int) + 1 < 10, "SEASON"
+        ] += "0" + (pregame[META["id"]].str[3:5].astype(int) + 1).astype(str)
+        pregame.loc[pregame[META["id"]].str[3:5].astype(int) + 1 >= 10, "SEASON"] += (
+            pregame[META["id"]].str[3:5].astype(int) + 1
+        ).astype(str)
+        for name, group in pregame.groupby("SEASON"):
+            fpath = Path(output_dir, name, "pregame-predictions.csv")
+            self.logger.info(f"Writing pre-game predictions to {str(fpath)}")
+            with fs.open(fpath, "wb") as buf:
+                group.to_csv(buf, sep="|", mode="wb")

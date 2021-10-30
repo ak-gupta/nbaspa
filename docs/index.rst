@@ -22,7 +22,8 @@
    :caption: Survival probability added (SPA)
 
    _spa/definition
-   _spa/casestudy
+   notebooks/casestudy.ipynb
+   notebooks/interpretation.ipynb
 
 .. toctree::
    :maxdepth: 2

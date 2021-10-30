@@ -12,12 +12,18 @@ from .boxscore import (
 )
 from .lineup import TeamLineups
 from .pbp import PlayByPlay
-from .player import AllPlayers, PlayerDashboardGeneral, PlayerDashboardShooting
+from .player import (
+    AllPlayers,
+    PlayerInfo,
+    PlayerGameLog,
+    PlayerDashboardGeneral,
+    PlayerDashboardShooting,
+)
 from .rotation import GameRotation
 from .scoreboard import Scoreboard
 from .shotchart import ShotChart
 from .synergy import SynergyPlayType
-from .team import TeamStats, TeamGameLog
+from .team import TeamStats, TeamGameLog, TeamRoster
 from .winprobability import WinProbability
 
 __all__: List[str] = [
@@ -30,6 +36,8 @@ __all__: List[str] = [
     "TeamLineups",
     "PlayByPlay",
     "AllPlayers",
+    "PlayerInfo",
+    "PlayerGameLog",
     "PlayerDashboardGeneral",
     "PlayerDashboardShooting",
     "GameRotation",
@@ -38,5 +46,6 @@ __all__: List[str] = [
     "SynergyPlayType",
     "TeamStats",
     "TeamGameLog",
+    "TeamRoster",
     "WinProbability",
 ]

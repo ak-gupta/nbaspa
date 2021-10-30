@@ -4,7 +4,8 @@ This factory class will use rate-limiting to avoid spamming the API.
 """
 
 import logging
-from typing import Dict, List, Optional, Tuple
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
 
 from alive_progress import alive_bar
 import pandas as pd
@@ -41,21 +42,27 @@ class NBADataFactory:
 
     def __init__(
         self,
-        calls: List[Tuple[str, Dict[str, Dict]]],
-        output_dir: Optional[str] = None,
+        calls: List[Tuple[str, Dict]],
+        output_dir: Optional[Union[str, Path]] = None,
         filesystem: Optional[str] = "file",
     ):
         """Init method."""
         # Parse the calls
-        self.calls = [
-            getattr(endpoints, obj)(
-                output_dir=output_dir, filesystem=filesystem, **params
-            )
-            for obj, params in calls
-        ]
+        self.calls = []
+        for obj, params in calls:
+            if "output_dir" not in params:
+                params["output_dir"] = output_dir
+            if "filesystem" not in params:
+                params["filesystem"] = filesystem
+            self.calls.append(getattr(endpoints, obj)(**params))
 
-    def get(self) -> List[BaseRequest]:
+    def get(self, overwrite: bool = False) -> List[BaseRequest]:
         """Retrieve the data for each API call.
+
+        Parameters
+        ----------
+        overwrite : bool, optional (default False)
+            Whether or not to check for an existing file before loading.
 
         Returns
         -------
@@ -63,13 +70,16 @@ class NBADataFactory:
             The call objects with data.
         """
         # Don't download what we already have
-        LOG.info("Removing calls we already have data for...")
-        remaining = [
-            index for index, value in enumerate(self.calls) if not value.exists()
-        ]
+        if not overwrite:
+            LOG.info("Removing calls we already have data for...")
+            remaining = [
+                index for index, value in enumerate(self.calls) if not value.exists()
+            ]
+        else:
+            remaining = list(range(len(self.calls)))
         with alive_bar(len(remaining)) as bar:
             for index in remaining:
-                self._get(callobj=self.calls[index])
+                self._get(callobj=self.calls[index], overwrite=overwrite)
 
                 bar()
 
@@ -113,19 +123,20 @@ class NBADataFactory:
             try:
                 df_list.append(callobj.get_data(dataset_type=dataset_type))
             except KeyError:
-                LOG.error(f"Unable to retrieve data for {str(callobj)}")
-                raise ValueError(f"Unable to retrieve data for {str(callobj)}")
+                LOG.warning(f"Unable to retrieve data for {str(callobj)}")
 
-        return pd.concat(df_list).reset_index(drop=True)
+        return pd.concat(df_list, ignore_index=True)
 
     @sleep_and_retry
     @limits(calls=1, period=60)
-    def _get(self, callobj: BaseRequest):
+    def _get(self, callobj: BaseRequest, overwrite: bool = False):
         """Run the ``get()`` method to retrieve data.
 
         Parameters
         ----------
         callobj : BaseRequest
             The endpoint object.
+        overwrite : bool, optional (default False)
+            Whether or not to check for an existing file before loading.
         """
-        callobj.get()
+        callobj.get(overwrite=overwrite)

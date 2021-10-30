@@ -79,6 +79,8 @@ class SimplePlayerImpact(Task):
         """
         if mode == "nba":
             self.change_column = "NBA_WIN_PROB_CHANGE"
+        elif mode in ("survival", "survival-plus"):
+            self.change_column = "SURV_PROB_CHANGE"
         else:
             raise NotImplementedError
         # Initialize the column
@@ -293,6 +295,8 @@ class SimplePlayerImpact(Task):
             & (df["TIME"].isin(self._single_event_times(df=df)))
         )
 
+        # Remove the missed field goal impact since the shot was blocked
+        df.loc[home + visitor, "PLAYER1_IMPACT"] = 0.0
         df.loc[home, "PLAYER3_IMPACT"] += df.loc[home, self.change_column]
         df.loc[visitor, "PLAYER3_IMPACT"] -= df.loc[visitor, self.change_column]
 
@@ -326,7 +330,7 @@ class SimplePlayerImpact(Task):
         )
 
         df.loc[home, "PLAYER1_IMPACT"] += df.loc[home, self.change_column]
-        df.loc[visitor, "PLAYER2_IMPACT"] -= df.loc[visitor, self.change_column]
+        df.loc[visitor, "PLAYER1_IMPACT"] -= df.loc[visitor, self.change_column]
 
         return df
 
@@ -408,6 +412,8 @@ class CompoundPlayerImpact(Task):
         """
         if mode == "nba":
             self.change_column = "NBA_WIN_PROB_CHANGE"
+        elif mode in ("survival", "survival-plus"):
+            self.change_column = "SURV_PROB_CHANGE"
         else:
             raise NotImplementedError
         sizes, rowfilter = _num_events_at_time(pbp)
@@ -673,9 +679,7 @@ class CompoundPlayerImpact(Task):
         if not pd.isnull(df.loc[idx, "HOMEDESCRIPTION"]):
             df.loc[idx, "PLAYER1_IMPACT"] += df.loc[idx, self.change_column]
         else:
-            df.loc[event_indices[0], "PLAYER1_IMPACT"] -= df.loc[
-                event_indices[0], self.change_column
-            ]
+            df.loc[idx, "PLAYER1_IMPACT"] -= df.loc[idx, self.change_column]
 
         # Give credit for the free throw
         if df.loc[event_indices[-1], "EVENTMSGTYPE"] == self.event_types.REBOUND:
@@ -720,7 +724,7 @@ class CompoundPlayerImpact(Task):
             idx = event_indices[-2]
         else:
             idx = event_indices[-1]
-        if pd.isnull(df.loc[event_indices[0], "HOMEDESCRIPTION"]):
+        if not pd.isnull(df.loc[event_indices[0], "HOMEDESCRIPTION"]):
             # Get the credit for the rebounder
             reb_factor = np.max(
                 [((shotval * 100) / df.loc[event_indices[0], "HOME_OFF_RATING"]) - 1, 0]
@@ -792,43 +796,42 @@ class AggregateImpact(Task):
             The output of ``PlayerImpact``.
         boxscore : pd.DataFrame
             The output of ``BoxScoreTraditional.get_data("PlayerStats")``.
+        swap : pd.DataFrame
+            The pre-game swap probabilities.
 
         Returns
         -------
         pd.DataFrame
             The output DataFrame
         """
-        impact = boxscore[["GAME_ID", "PLAYER_ID"]].copy()
-        impact.set_index("PLAYER_ID", inplace=True)
+        impact = boxscore[["GAME_ID", "TEAM_ID", "PLAYER_ID"]].copy()
+
         # Merge
-        impact = pd.merge(
-            impact,
-            pbp.groupby("PLAYER1_ID")["PLAYER1_IMPACT"].sum(),
-            left_index=True,
-            right_index=True,
-            how="left",
-        )
-        impact = pd.merge(
-            impact,
-            pbp.groupby("PLAYER2_ID")["PLAYER2_IMPACT"].sum(),
-            left_index=True,
-            right_index=True,
-            how="left",
-        )
-        impact = pd.merge(
-            impact,
-            pbp.groupby("PLAYER3_ID")["PLAYER3_IMPACT"].sum(),
-            left_index=True,
-            right_index=True,
-            how="left",
-        )
+        for idx in range(1, 4):
+            tmp = pbp.groupby(["GAME_ID", f"PLAYER{idx}_ID"])[
+                f"PLAYER{idx}_IMPACT"
+            ].agg(["sum", "count"])
+            tmp.rename(
+                columns={"sum": f"PLAYER{idx}_IMPACT", "count": f"PLAYER{idx}_EVENTS"},
+                inplace=True,
+            )
+            impact = pd.merge(
+                impact,
+                tmp,
+                left_on=("GAME_ID", "PLAYER_ID"),
+                right_index=True,
+                how="left",
+            )
         impact.fillna(0, inplace=True)
         impact["IMPACT"] = (
             impact["PLAYER1_IMPACT"]
             + impact["PLAYER2_IMPACT"]
             + impact["PLAYER3_IMPACT"]
         )
-        # Reset the index
-        impact.reset_index(inplace=True)
+        impact["EVENTS"] = (
+            impact["PLAYER1_EVENTS"]
+            + impact["PLAYER2_EVENTS"]
+            + impact["PLAYER3_EVENTS"]
+        )
 
-        return impact[["GAME_ID", "PLAYER_ID", "IMPACT"]].copy()
+        return impact[["GAME_ID", "TEAM_ID", "PLAYER_ID", "EVENTS", "IMPACT"]].copy()

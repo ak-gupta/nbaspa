@@ -9,6 +9,7 @@ from prefect.tasks.control_flow import merge
 from .tasks import (
     AddWinPercentage,
     GenericLoader,
+    FactoryGetter,
     PlayByPlayLoader,
     WinProbabilityLoader,
     GameLogLoader,
@@ -48,9 +49,8 @@ def gen_pipeline() -> Flow:
     scoreboard_loader = GenericLoader(loader="Scoreboard", name="Load scoreboard data")
     pbp_loader = PlayByPlayLoader(name="Load play-by-play data")
     wprob_loader = WinProbabilityLoader(name="Load NBA win probability")
-    teamstats_loader = GenericLoader(
-        loader="TeamStats", name="Load team estimated metrics"
-    )
+    ogetter = FactoryGetter(name="Get overall dataset from the Factory")
+    lgetter = FactoryGetter(name="Get lineup dataset from the Factory")
     log_loader = GameLogLoader(name="Load gamelog data")
     lineup_loader = LineupLoader(name="Load lineup data")
     rota_loader = RotationLoader(name="Load rotation data")
@@ -106,11 +106,10 @@ def gen_pipeline() -> Flow:
             output_dir=data_dir,
             filesystem=filesystem,
         )
-        stats = teamstats_loader(
-            output_dir=data_dir,
-            filesystem=filesystem,
-            Season=season,
+        lineupdata = lineup_loader(
+            season=season, GameDate=gamedate, linescore=scoreboard["LineScore"]
         )
+        stats = ogetter(factory=lineupdata, dataset_type="Overall")
         boxscore = box_loader(
             header=scoreboard["GameHeader"],
             output_dir=data_dir,
@@ -122,7 +121,7 @@ def gen_pipeline() -> Flow:
         margin = margin_task(pbp=nbawin)
         target = target_task(pbp=margin)
         team_id = team_id_task(pbp=target, header=scoreboard["GameHeader"])
-        rating = rating_task(pbp=team_id, stats=stats["default"])
+        rating = rating_task(pbp=team_id, stats=stats)
         with case(mode, "rating"):  # type: ignore
             # Load shotchart and shot zone data
             shotchart = shotchart_loader(
@@ -132,10 +131,15 @@ def gen_pipeline() -> Flow:
                 filesystem=filesystem,
             )
             shotzonedashboard = shotzone_loader(
-                boxscore=boxscore, output_dir=data_dir, filesystem=filesystem
+                boxscore=boxscore,
+                season=season,
+                GameDate=gamedate,
+                output_dir=data_dir,
+                filesystem=filesystem,
             )
             shooting = gshooting_loader(
                 boxscore=boxscore,
+                season=season,
                 output_dir=data_dir,
                 filesystem=filesystem,
             )
@@ -153,11 +157,7 @@ def gen_pipeline() -> Flow:
                 output_dir=data_dir,
                 filesystem=filesystem,
             )
-            lineup_stats = lineup_loader(
-                season=season,
-                output_dir=data_dir,
-                filesystem=filesystem,
-            )
+            lineup_stats = lgetter(factory=lineupdata, dataset_type="Lineups")
             rotation = rota_loader(
                 header=scoreboard["GameHeader"],
                 output_dir=data_dir,
@@ -193,6 +193,7 @@ def run_pipeline(
     mode: Optional[str] = "model",
     Season: Optional[str] = None,
     GameDate: Optional[str] = None,
+    **kwargs
 ) -> Optional[State]:
     """Run the pipeline.
 
@@ -214,6 +215,8 @@ def run_pipeline(
         The ``Season`` value to use.
     GameDate : str, optional (default None)
         The ``GameDate`` value to use, in MM/DD/YYYY format.
+    kwargs
+        Keyword arguments for the ``run`` method.
 
     Returns
     -------
@@ -232,6 +235,6 @@ def run_pipeline(
     if GameDate is not None:
         params["GameDate"] = GameDate
 
-    output = flow.run(parameters=params)
+    output = flow.run(parameters=params, **kwargs)
 
     return output

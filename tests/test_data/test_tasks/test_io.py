@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import call, patch
 
 import pandas as pd
 
@@ -77,17 +78,41 @@ def test_gamelog_loader(data_dir, gamelog):
     
     assert output.equals(gamelog)
 
-def test_lineup_loader(data_dir, lineup_stats):
+@patch("nbaspa.data.tasks.io.NBADataFactory")
+def test_lineup_loader(mock_factory, linescore):
     """Test loading lineup stats."""
     loader = LineupLoader()
-    output = loader.run(
+    _ = loader.run(
         season="2018-19",
-        output_dir=data_dir / Path("2018-19")
+        GameDate="12/25/2018",
+        linescore=linescore
     )
-    output.sort_values(by=["GROUP_ID"], ascending=True, inplace=True)
-    output.reset_index(drop=True, inplace=True)
 
-    assert output.equals(lineup_stats)
+    mock_factory.assert_called_with(
+        calls=[
+            (
+                "TeamLineups",
+                {
+                    "TeamID": 1610612760,
+                    "Season": "2018-19",
+                    "MeasureType": "Advanced",
+                    "DateFrom": "10/16/2018",
+                    "DateTo": "12/24/2018"
+                }
+            ),
+            (
+                "TeamLineups",
+                {
+                    "TeamID": 1610612761,
+                    "Season": "2018-19",
+                    "MeasureType": "Advanced",
+                    "DateFrom": "10/16/2018",
+                    "DateTo": "12/24/2018"
+                }
+            )
+        ]
+    )
+    assert mock_factory.return_value.get.call_count == 1
 
 def test_rotation_loader(data_dir, header, homerotation, awayrotation):
     """Test loading the rotation data."""
@@ -132,20 +157,59 @@ def test_boxscore_loader(data_dir, header, boxscore):
 
     assert output.equals(boxscore)
 
-def test_shotzone_loader(data_dir, boxscore, shotzonedashboard):
+@patch("nbaspa.data.tasks.io.NBADataFactory")
+def test_shotzone_loader(mock_factory, data_dir, boxscore, playergamelog, shotchart):
     """Test loading shotzone data."""
     # Only test one game of data since we have repeated games
     loader = ShotZoneLoader()
-    output = loader.run(
+    mock_factory.return_value.get_data.side_effect = [playergamelog, shotchart]
+    _ = loader.run(
+        season="2018-19",
+        GameDate="12/25/2018",
         boxscore=boxscore[boxscore["GAME_ID"] == "00218DUMMY1"],
         output_dir=data_dir / Path("2018-19")
     )
-    assert output.equals(shotzonedashboard)
+
+    assert mock_factory.call_count == 2
+    assert mock_factory.return_value.load.call_count == 2
+    assert mock_factory.return_value.get_data.call_count == 2
+    mock_factory.assert_has_calls(
+        [
+            call(
+                calls=[
+                    (
+                        "PlayerGameLog",
+                        {
+                            "PlayerID": i,
+                            "Season": "2018-19"
+                        }
+                    )
+                    for i in range(1, 13)
+                ],
+                output_dir=data_dir / "2018-19",
+                filesystem="file"
+            ),
+            call().load(),
+            call().get_data(),
+            call(
+                calls=[
+                    (
+                        "ShotChart", {"GameID": "00218DUMMY0", "Season": "2018-19"}
+                    )
+                ],
+                output_dir=data_dir / "2018-19",
+                filesystem="file"
+            ),
+            call().load(),
+            call().get_data()
+        ]
+    )
 
 def test_overall_shooting_loader(data_dir, boxscore, overallshooting):
     """Test loading overall shooting data."""
     loader = GeneralShootingLoader()
     output = loader.run(
+        season="2018-19",
         boxscore=boxscore[boxscore["GAME_ID"] == "00218DUMMY1"],
         output_dir=data_dir / Path("2018-19")
     )

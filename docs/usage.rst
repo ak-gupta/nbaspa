@@ -100,6 +100,12 @@ Finally, we can download the game data:
 
     $ nbaspa-download games --output-dir nba-data --season 2018-19
 
+If you want to bundle these calls into a single CLI command, use the ``season`` endpoint:
+
+.. code-block:: console
+
+    $ nbaspa-download season --output-dir nba-data --season 2018-19
+
 -------------
 Cleaning data
 -------------
@@ -371,7 +377,7 @@ The above call will create game-level predictions for all cleaned game data avai
 
 .. important::
 
-    The predictions can be found in ``nba-data/<season>/survival-prediction/data_<GameID>.csv``.
+    The predictions can be found in ``nba-data/<Season>/survival-prediction/data_<GameID>.csv``.
 
 To restrict to a season or game, supply ``--season`` or ``--game-id``:
 
@@ -388,4 +394,137 @@ To restrict to a season or game, supply ``--season`` or ``--game-id``:
 Generate player ratings
 -----------------------
 
-Documentation coming soon.
+~~~~~~
+Python
+~~~~~~
+
+To generate player ratings for all of your data, run
+
+.. code-block:: python
+
+    from nbaspa.player_ratings.pipeline import gen_pipeline, run_pipeline
+
+    flow = gen_pipeline()
+    output = run_pipeline(
+        flow=flow,
+        data_dir="nba-data",
+        output_dir="nba-data",
+        filesystem="file"
+    )
+
+To restrict to a given season, supply ``Season``
+
+.. code-block:: python
+    :emphasize-lines: 6
+
+    output = run_pipeline(
+        flow=flow,
+        data_dir="nba-data",
+        output_dir="nba-data",
+        filesystem="file",
+        Season="2018-19"
+    )
+
+and to restrict to a game, supply ``GameID``
+
+.. code-block:: python
+    :emphasize-lines: 6
+
+    output = run_pipeline(
+        flow=flow,
+        data_dir="nba-data",
+        output_dir="nba-data",
+        filesystem="file",
+        GameID="0021800001"
+    )
+
+To remove contextual information like team quality and schedule, (see :doc:`here <notebooks/casestudy>`)
+supply ``mode``:
+
+.. code-block:: python
+
+    output = run_pipeline(
+        flow=flow,
+        data_dir="nba-data",
+        output_dir="nba-data",
+        filesystem="file",
+        GameID="0021800001",
+        mode="survival-plus"
+    )
+
+.. important::
+
+    You can find the play-by-play impact data at ``<output_dir>/<Season>/pbp-impact/data_<GameID>.csv``.
+    The aggregated game-level data can be found at ``<output_dir>/<Season>/game-impact/data_<GameID>/csv``.
+    This call will also save a season summary CSV with total and average impact for each player to
+    ``<output_dir>/<Season>/impact-summary.csv``, as well as player timeseries data to
+    ``<output_dir>/<Season>/impact-timeseries/data_<PlayerID>.csv``.
+
+~~~~~~~~~~~~~~~~~~~~~~
+Command-line interface
+~~~~~~~~~~~~~~~~~~~~~~
+
+To run game-level player ratings,
+
+.. code-block:: console
+
+    $ nbaspa-rate \
+        --data-dir nba-data \
+        --output-dir nba-data
+
+The above call will create ratings for all cleaned game data available in ``nba-data``. To restrict
+to a season or game, supply ``--season`` or ``--game-id``:
+
+.. code-block:: console
+
+    $ nbaspa-rate \
+        --data-dir nba-data \
+        --output-dir nba-data \
+        --season 2018-19 \
+        --game-id 0021800001
+
+To generate ratings that remove contextual information like team quality and schedule , change the ``mode`` parameter
+
+.. code-block:: console
+
+    $ nbaspa-rate \
+        --data-dir nba-data \
+        --output-dir nba-data \
+        --season 2018-19 \
+        --game-id 0021800001 \
+        --mode survival-plus
+
+--------------
+Daily snapshot
+--------------
+
+If you want to analyze the data for a single day's worth of games (maybe to prevent a large batch
+at the end of the season), you can use the set of ``daily`` CLI endpoints. For Christmas 2018, use
+
+.. code-block:: console
+
+    $ nbaspa-download daily \
+        --data-dir nba-data \
+        --output-dir nba-data \
+        --season 2018-19 \
+        --game-date 2018-12-25
+    $ nbaspa-clean daily \
+        --data-dir nba-data \
+        --output-dir nba-data \
+        --season 2018-19 \
+        --game-date 2018-12-25
+    $ nbaspa-model daily \
+        --data-dir nba-data \
+        --output-dir nba-data \
+        --model nba-data/models/2021-02-21/lifelines/model.pkl \
+        --season 2018-19 \
+        --game-date 2018-12-25
+    $ nbaspa-rate \
+        --data-dir nba-data \
+        --output-dir nba-data \
+        --season 2018-19
+    $ nbaspa-rate \
+        --data-dir nba-data \
+        --output-dir nba-data \
+        --season 2018-19 \
+        --mode survival-plus
