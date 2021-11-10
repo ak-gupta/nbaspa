@@ -13,6 +13,7 @@ from ..pipeline import (
     gen_predict_pipeline,
     run_pipeline,
 )
+from ...utility import season_from_date
 
 
 @click.group()
@@ -140,6 +141,9 @@ def predict(data_dir, output_dir, model, season, game_id):
 @click.option("--game-date", type=click.DateTime(formats=["%Y-%m-%d"]))
 def daily(data_dir, output_dir, model, season, game_date):
     """Daily survival predictions."""
+    # If no season provided, get it from the game date
+    if season is None:
+        season = season_from_date(date=game_date)
     flow = gen_predict_pipeline()
     score = Scoreboard(
         output_dir=Path(output_dir, season), GameDate=game_date.strftime("%m/%d/%Y")

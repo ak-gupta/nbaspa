@@ -13,6 +13,7 @@ import pandas as pd
 from ..endpoints import AllPlayers, Scoreboard
 from ..endpoints.parameters import ParameterValues, SEASONS
 from ..factory import NBADataFactory
+from ...utility import season_from_date
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
@@ -142,7 +143,7 @@ def season(ctx, output_dir, season):
 
 @download.command()
 @click.option("--output-dir", help="Path to the output directory")
-@click.option("--season", type=str, help="The season to download")
+@click.option("--season", type=str, default=None, help="The season to download")
 @click.option("--game-date", type=click.DateTime(formats=["%Y-%m-%d"]))
 @click.option(
     "--resume",
@@ -151,6 +152,9 @@ def season(ctx, output_dir, season):
 )
 def daily(output_dir, season, game_date, resume):
     """Download daily data."""
+    # If no season provided, get it from the game date
+    if season is None:
+        season = season_from_date(date=game_date)
     # Add the scoreboard
     score = Scoreboard(
         output_dir=Path(output_dir, season), GameDate=game_date.strftime("%m/%d/%Y")

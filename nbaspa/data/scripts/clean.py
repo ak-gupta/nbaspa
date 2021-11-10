@@ -11,6 +11,7 @@ import click
 
 from ..endpoints.parameters import SEASONS
 from ..pipeline import gen_pipeline, run_pipeline
+from ...utility import season_from_date
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
@@ -186,10 +187,13 @@ def rating(data_dir, output_dir, season, re_run):
 @clean.command()
 @click.option("--data-dir", help="Path to the directory containing the raw data.")
 @click.option("--output-dir", help="Path to the output directory.")
-@click.option("--season", type=str, help="The season to download")
+@click.option("--season", type=str, default=None, help="The season to download")
 @click.option("--game-date", type=click.DateTime(formats=["%Y-%m-%d"]))
 def daily(data_dir, output_dir, season, game_date):
     """Clean model and rating data for a given day."""
+    # If no season provided, get it from the game date
+    if season is None:
+        season = season_from_date(date=game_date)
     flow = gen_pipeline()
     output = run_pipeline(
         flow=flow,
