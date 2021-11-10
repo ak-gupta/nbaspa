@@ -20,7 +20,7 @@ from .parameters import ParameterValues
 LOG = logging.getLogger(__name__)
 
 SESSION = requests.Session()
-RETRIES = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
+RETRIES = Retry(total=10, backoff_factor=2, status_forcelist=[502, 503, 504])
 ADAPTER = HTTPAdapter(max_retries=RETRIES)
 SESSION.mount("http://", ADAPTER)
 SESSION.mount("https://", ADAPTER)

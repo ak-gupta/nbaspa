@@ -45,7 +45,7 @@ setup(
     author_email='akgcodes@gmail.com',
     python_requires=">=3.8",
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
@@ -62,7 +62,7 @@ setup(
     name="nbaspa",
     packages=find_packages(include=["nbaspa", "nbaspa.*"]),
     url="https://github.com/ak-gupta/nbaspa",
-    version="0.1.0",
+    version="0.1.1",
     zip_safe=False,
     entry_points={
         "console_scripts": [
