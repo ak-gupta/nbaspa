@@ -506,25 +506,22 @@ at the end of the season), you can use the set of ``daily`` CLI endpoints. For C
     $ nbaspa-download daily \
         --data-dir nba-data \
         --output-dir nba-data \
-        --season 2018-19 \
         --game-date 2018-12-25
     $ nbaspa-clean daily \
         --data-dir nba-data \
         --output-dir nba-data \
-        --season 2018-19 \
         --game-date 2018-12-25
     $ nbaspa-model daily \
         --data-dir nba-data \
         --output-dir nba-data \
         --model nba-data/models/2021-02-21/lifelines/model.pkl \
-        --season 2018-19 \
         --game-date 2018-12-25
     $ nbaspa-rate \
         --data-dir nba-data \
         --output-dir nba-data \
-        --season 2018-19
+        --game-date 2018-12-25
     $ nbaspa-rate \
         --data-dir nba-data \
         --output-dir nba-data \
-        --season 2018-19 \
+        --game-date 2018-12-25 \
         --mode survival-plus
