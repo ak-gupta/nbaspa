@@ -504,7 +504,6 @@ at the end of the season), you can use the set of ``daily`` CLI endpoints. For C
 .. code-block:: console
 
     $ nbaspa-download daily \
-        --data-dir nba-data \
         --output-dir nba-data \
         --game-date 2018-12-25
     $ nbaspa-clean daily \
