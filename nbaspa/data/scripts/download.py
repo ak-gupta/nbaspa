@@ -228,7 +228,7 @@ def daily(output_dir, season, game_date, resume):
         ],
         output_dir=output_dir,
     )
-    info_factory.get(overwrite=not resume)
+    info_factory.get()
 
     player_factory = NBADataFactory(
         calls=playercalls, output_dir=Path(output_dir, season)
