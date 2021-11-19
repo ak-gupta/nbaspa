@@ -34,7 +34,7 @@ def scoreboard(output_dir, season):
     # Generate the list of calls
     calls: List[str] = []
     if season == CURRENT_SEASON:
-        end_date = datetime.datetime.today()
+        end_date = datetime.datetime.today() + datetime.timedelta(days=-1)
     else:
         end_date = SEASONS[season]["END"]
     for n in range(int((end_date - SEASONS[season]["START"]).days) + 1):
@@ -52,7 +52,7 @@ def games(output_dir, season):
     """Download the game data."""
     calls: List[str] = []
     if season == CURRENT_SEASON:
-        end_date = datetime.datetime.today()
+        end_date = datetime.datetime.today() + datetime.timedelta(days=-1)
     else:
         end_date = SEASONS[season]["END"]
     for n in range(int((end_date - SEASONS[season]["START"]).days) + 1):

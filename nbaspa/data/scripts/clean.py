@@ -45,7 +45,7 @@ def model(data_dir, output_dir, season, re_run):
         ]
     else:
         if season == CURRENT_SEASON:
-            end_date = datetime.today()
+            end_date = datetime.today() + timedelta(days=-1)
         else:
             end_date = SEASONS[season]["END"]
         timelist = list(
@@ -129,7 +129,7 @@ def rating(data_dir, output_dir, season, re_run):
         ]
     else:
         if season == CURRENT_SEASON:
-            end_date = datetime.today()
+            end_date = datetime.today() + timedelta(days=-1)
         else:
             end_date = SEASONS[season]["END"]
         timelist = list(
