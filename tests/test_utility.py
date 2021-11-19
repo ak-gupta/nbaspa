@@ -6,7 +6,7 @@ import pytest
 
 from nbaspa.utility import season_from_date
 
-@pytest.mark.parameterize(
+@pytest.mark.parametrize(
     "test_date,expected",
     [
         (datetime(year=2005, month=10, day=30), "2005-06"),
