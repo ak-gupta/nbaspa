@@ -9,7 +9,7 @@ from nbaspa.utility import season_from_date
 @pytest.mark.parametrize(
     "test_date,expected",
     [
-        (datetime(year=2005, month=10, day=30), "2005-06"),
+        (datetime(year=2005, month=11, day=1), "2005-06"),
         (datetime(year=2005, month=12, day=10), "2005-06"),
         (datetime(year=2006, month=3, day=15), "2005-06")
     ]
