@@ -9,7 +9,7 @@ from typing import Dict, List
 
 import click
 
-from ..endpoints.parameters import SEASONS
+from ..endpoints.parameters import CURRENT_SEASON, SEASONS
 from ..pipeline import gen_pipeline, run_pipeline
 from ...utility import season_from_date
 
@@ -44,8 +44,12 @@ def model(data_dir, output_dir, season, re_run):
             if row["reason"] == "Unknown"
         ]
     else:
+        if season == CURRENT_SEASON:
+            end_date = datetime.today()
+        else:
+            end_date = SEASONS[season]["END"]
         timelist = list(
-            range(int((SEASONS[season]["END"] - SEASONS[season]["START"]).days) + 1)
+            range(int((end_date - SEASONS[season]["START"]).days) + 1)
         )
         daterange = [SEASONS[season]["START"] + timedelta(n) for n in timelist]
     for game_date in daterange:
@@ -124,8 +128,12 @@ def rating(data_dir, output_dir, season, re_run):
             if row["reason"] == "Unknown"
         ]
     else:
+        if season == CURRENT_SEASON:
+            end_date = datetime.today()
+        else:
+            end_date = SEASONS[season]["END"]
         timelist = list(
-            range(int((SEASONS[season]["END"] - SEASONS[season]["START"]).days) + 1)
+            range(int((end_date - SEASONS[season]["START"]).days) + 1)
         )
         daterange = [SEASONS[season]["START"] + timedelta(n) for n in timelist]
     for game_date in daterange:
