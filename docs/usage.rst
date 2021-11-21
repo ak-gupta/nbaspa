@@ -504,27 +504,109 @@ at the end of the season), you can use the set of ``daily`` CLI endpoints. For C
 .. code-block:: console
 
     $ nbaspa-download daily \
-        --data-dir nba-data \
         --output-dir nba-data \
-        --season 2018-19 \
         --game-date 2018-12-25
     $ nbaspa-clean daily \
         --data-dir nba-data \
         --output-dir nba-data \
-        --season 2018-19 \
         --game-date 2018-12-25
     $ nbaspa-model daily \
         --data-dir nba-data \
         --output-dir nba-data \
         --model nba-data/models/2021-02-21/lifelines/model.pkl \
-        --season 2018-19 \
         --game-date 2018-12-25
     $ nbaspa-rate \
         --data-dir nba-data \
         --output-dir nba-data \
-        --season 2018-19
+        --game-date 2018-12-25
     $ nbaspa-rate \
         --data-dir nba-data \
         --output-dir nba-data \
-        --season 2018-19 \
+        --game-date 2018-12-25 \
         --mode survival-plus
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Using docker and gcs to push daily updates
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+
+    This documentation is adapted from the `Google Cloud SDK <https://github.com/GoogleCloudPlatform/cloud-sdk-docker#usage>`_.
+
+First, pull the ``gcloud`` image
+
+.. code-block:: console
+
+    $ docker pull gcr.io/google.com/cloudsdktool/cloud-sdk:latest
+
+and authenticate ``gcloud`` with service account credentials:
+
+.. code-block:: console
+
+    $ docker run \
+        --name gcloud-config \
+        gcr.io/google.com/cloudsdktool/cloud-sdk gcloud auth activate-service-account SERVICE_ACCOUNT@DOMAIN.COM --key-file=/path/key.json --project=PROJECT_ID
+
+.. important::
+
+    If you want to authenticate with user credentials, call
+
+    .. code-block:: console
+
+        $ docker run \
+            -ti \
+            --name gcloud-config \
+            gcr.io/google.com/cloudsdktool/cloud-sdk gcloud auth login
+
+Then, build the ``nbaspa`` docker image
+
+.. code-block:: console
+
+    $ docker build --tag nbaspa .
+
+and run the container. We will
+
+* include the authentication container ``gcloud-config`` as a volume,
+* update the application default credentials (ADC), and
+* mount our local ``nba-data`` directory to the container.
+
+Run the target container with the following script (``snapshot.sh``)
+
+.. code-block:: bash
+
+    DATE=$(date -d "yesterday 13:00" +"%Y-%m-%d")
+
+    cd /opt
+
+    nbaspa-download daily --output-dir $DATA_DIR --game-date $DATE
+    nbaspa-clean daily --data-dir $DATA_DIR --output-dir $DATA_DIR --game-date $DATE
+    nbaspa-model daily --data-dir $DATA_DIR --output-dir $DATA_DIR --model $MODEL_PATH--game-date $DATE
+    nbaspa-rate --data-dir $DATA_DIR --output-dir $DATA_DIR --game-date $DATE
+    nbaspa-rate --data-dir $DATA_DIR --output-dir $DATA_DIR --game-date $DATE --mode survival-plus
+
+    gsutil -m rsync -r $DATA_DIR $GCS_PATH
+
+.. code-block:: console
+
+    $ docker run \
+        --rm \
+        --volumes-from gcloud-config \
+        --mount type=bind,src=<PATH_TO_PARENT>,target=/opt \
+        -e DATA_DIR=<DATA_DIRECTORY> \
+        -e MODEL_PATH=/opt/<PATH_TO_MODEL_PKL> \
+        -e GCS_PATH=gs://<BUCKET_NAME>/<TARGET_DIRECTORY> \
+        nbaspa snapshot.sh
+
+for example, if you're using docker on Windows Subsystem for Linux and the ``nba-data`` directory
+exists in your local branch of ``nbaspa``.
+
+.. code-block:: console
+
+    $ docker run \
+        --rm \
+        --volumes-from gcloud-config \
+        --mount type=bind,src=/mnt/c/Users/UserName/Documents/GitHub/nbaspa,target=/opt \
+        -e DATA_DIR=nba-data \
+        -e MODEL_PATH=/opt/nba-data/models/2021-02-21/lifelines/model.pkl \
+        -e GCS_PATH=gs://mybucket/nba-data \
+        nbaspa snapshot.sh

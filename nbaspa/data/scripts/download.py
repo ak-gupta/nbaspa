@@ -11,8 +11,9 @@ import numpy as np
 import pandas as pd
 
 from ..endpoints import AllPlayers, Scoreboard
-from ..endpoints.parameters import ParameterValues, SEASONS
+from ..endpoints.parameters import ParameterValues, SEASONS, CURRENT_SEASON
 from ..factory import NBADataFactory
+from ...utility import season_from_date
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
@@ -32,7 +33,11 @@ def scoreboard(output_dir, season):
     """Download the scoreboard data."""
     # Generate the list of calls
     calls: List[str] = []
-    for n in range(int((SEASONS[season]["END"] - SEASONS[season]["START"]).days) + 1):
+    if season == CURRENT_SEASON:
+        end_date = datetime.datetime.today() + datetime.timedelta(days=-1)
+    else:
+        end_date = SEASONS[season]["END"]
+    for n in range(int((end_date - SEASONS[season]["START"]).days) + 1):
         game_date = SEASONS[season]["START"] + datetime.timedelta(n)
         calls.append(("Scoreboard", {"GameDate": game_date.strftime("%m/%d/%Y")}))
 
@@ -46,7 +51,11 @@ def scoreboard(output_dir, season):
 def games(output_dir, season):
     """Download the game data."""
     calls: List[str] = []
-    for n in range(int((SEASONS[season]["END"] - SEASONS[season]["START"]).days) + 1):
+    if season == CURRENT_SEASON:
+        end_date = datetime.datetime.today() + datetime.timedelta(days=-1)
+    else:
+        end_date = SEASONS[season]["END"]
+    for n in range(int((end_date - SEASONS[season]["START"]).days) + 1):
         game_date = SEASONS[season]["START"] + datetime.timedelta(n)
         # Get the scoreboard data
         score = Scoreboard(
@@ -142,7 +151,7 @@ def season(ctx, output_dir, season):
 
 @download.command()
 @click.option("--output-dir", help="Path to the output directory")
-@click.option("--season", type=str, help="The season to download")
+@click.option("--season", type=str, default=None, help="The season to download")
 @click.option("--game-date", type=click.DateTime(formats=["%Y-%m-%d"]))
 @click.option(
     "--resume",
@@ -151,6 +160,9 @@ def season(ctx, output_dir, season):
 )
 def daily(output_dir, season, game_date, resume):
     """Download daily data."""
+    # If no season provided, get it from the game date
+    if season is None:
+        season = season_from_date(date=game_date)
     # Add the scoreboard
     score = Scoreboard(
         output_dir=Path(output_dir, season), GameDate=game_date.strftime("%m/%d/%Y")
