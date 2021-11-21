@@ -576,6 +576,8 @@ Run the target container with the following script (``snapshot.sh``)
 
     DATE=$(date -d "yesterday 13:00" +"%Y-%m-%d")
 
+    cd /opt
+
     nbaspa-download daily --output-dir $DATA_DIR --game-date $DATE
     nbaspa-clean daily --data-dir $DATA_DIR --output-dir $DATA_DIR --game-date $DATE
     nbaspa-model daily --data-dir $DATA_DIR --output-dir $DATA_DIR --model $MODEL_PATH--game-date $DATE
@@ -589,10 +591,10 @@ Run the target container with the following script (``snapshot.sh``)
     $ docker run \
         --rm \
         --volumes-from gcloud-config \
-        --mount type=bind,src=<PATH_TO_LOCAL_DATA_DIRECTORY>,target=/opt \
-        -e DATA_DIR=/opt/<PATH_TO_LOCAL_DATA_DIRECTORY> \
+        --mount type=bind,src=<PATH_TO_PARENT>,target=/opt \
+        -e DATA_DIR=<DATA_DIRECTORY> \
         -e MODEL_PATH=/opt/<PATH_TO_MODEL_PKL> \
-        -e GCS_PATH=<TARGET_DIRECTORY> \
+        -e GCS_PATH=gs://<BUCKET_NAME>/<TARGET_DIRECTORY> \
         nbaspa snapshot.sh
 
 for example, if you're using docker on Windows Subsystem for Linux and the ``nba-data`` directory
@@ -604,7 +606,7 @@ exists in your local branch of ``nbaspa``.
         --rm \
         --volumes-from gcloud-config \
         --mount type=bind,src=/mnt/c/Users/UserName/Documents/GitHub/nbaspa,target=/opt \
-        -e DATA_DIR=/opt/nba-data \
+        -e DATA_DIR=nba-data \
         -e MODEL_PATH=/opt/nba-data/models/2021-02-21/lifelines/model.pkl \
         -e GCS_PATH=gs://mybucket/nba-data \
         nbaspa snapshot.sh
