@@ -16,7 +16,7 @@ RUN apt-get -y upgrade \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy local code to the container image.
-SHELL ["/bin/bash", "-c"]
+SHELL ["/bin/sh", "-c"]
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 COPY . ./

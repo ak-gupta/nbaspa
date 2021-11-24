@@ -575,6 +575,7 @@ Run the target container with the following script (``snapshot.sh``)
 .. code-block:: bash
 
     DATE=$(date -d "yesterday 13:00" +"%Y-%m-%d")
+    CURRENT_SEASON=`python -c "from nbaspa.data.endpoints.parameters import CURRENT_SEASON; print(CURRENT_SEASON)"`
 
     cd /opt
 
@@ -584,7 +585,8 @@ Run the target container with the following script (``snapshot.sh``)
     nbaspa-rate --data-dir $DATA_DIR --output-dir $DATA_DIR --game-date $DATE
     nbaspa-rate --data-dir $DATA_DIR --output-dir $DATA_DIR --game-date $DATE --mode survival-plus
 
-    gsutil -m rsync -r $DATA_DIR $GCS_PATH
+    gsutil -m rsync -r $DATA_DIR/$CURRENT_SEASON $GCS_PATH/$CURRENT_SEASON
+    gsutil -m rsync -r $DATA_DIR/commonplayerinfo $GCS_PATH/commonplayerinfo
 
 .. code-block:: console
 
@@ -593,9 +595,10 @@ Run the target container with the following script (``snapshot.sh``)
         --volumes-from gcloud-config \
         --mount type=bind,src=<PATH_TO_PARENT>,target=/opt \
         -e DATA_DIR=<DATA_DIRECTORY> \
-        -e MODEL_PATH=/opt/<PATH_TO_MODEL_PKL> \
+        -e MODEL_PATH=<PATH_TO_MODEL_PKL> \
         -e GCS_PATH=gs://<BUCKET_NAME>/<TARGET_DIRECTORY> \
-        nbaspa snapshot.sh
+        nbaspa \
+        ./snapshot.sh
 
 for example, if you're using docker on Windows Subsystem for Linux and the ``nba-data`` directory
 exists in your local branch of ``nbaspa``.
@@ -607,6 +610,7 @@ exists in your local branch of ``nbaspa``.
         --volumes-from gcloud-config \
         --mount type=bind,src=/mnt/c/Users/UserName/Documents/GitHub/nbaspa,target=/opt \
         -e DATA_DIR=nba-data \
-        -e MODEL_PATH=/opt/nba-data/models/2021-02-21/lifelines/model.pkl \
+        -e MODEL_PATH=nba-data/models/2021-02-21/lifelines/model.pkl \
         -e GCS_PATH=gs://mybucket/nba-data \
-        nbaspa snapshot.sh
+        nbaspa \
+        ./snapshot.sh
