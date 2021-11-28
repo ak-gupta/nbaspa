@@ -1,7 +1,7 @@
 """Bayesian target encoder."""
 
 import logging
-from typing import Callable, Dict, List, Union
+from typing import Callable, Dict, List, Tuple, Union
 
 import numpy as np
 import scipy.stats
@@ -10,13 +10,92 @@ from sklearn.utils.validation import check_is_fitted
 
 LOG = logging.getLogger(__name__)
 
+
+def _init_bernoulli(y) -> Tuple:
+    """Initialize a prior distribution for bernoulli likelihood.
+
+    With a bernoulli likelihood, the common interpretation is that
+    the conjugate prior beta distribution should be initialized with
+    :math:`\alpha` representing the proportion of successes and :math:`\beta`
+    representing the proportion of failures in the training set.
+    
+    Parameters
+    ----------
+    y : array-like of shape (n_samples,)
+        Target values.
+    
+    Returns
+    -------
+    tuple
+        The initialization parameters.
+    """
+    return np.average(y), 1 - np.average(y)
+
+_LIKELIHOOD_PRIOR_MAPPING: Dict[str, Callable] = {
+    "bernoulli": _init_bernoulli
+}
+
+def _posterior_bernoulli(y, mask, *params) -> Tuple:
+    """Generate the posterior distribution for a bernoulli likelihood.
+
+    According to Fink, the posterior distribution is parameterized by
+
+    .. math::
+
+        \alpha^{\prime} = \alpha + \sum_{i = 1}^{n} y_{i}
+    
+    and
+
+    .. math::
+
+        \beta^{\prime} = \beta + n - \sum_{i = 1}^{n} y_{i}
+    
+    Parameters
+    ----------
+    y : array-like of shape (n_samples,)
+        Target values.
+    mask : array-like of shape (n_samples,)
+        A boolean array indicating the observations in ``y`` that should
+        be used to generate the posterior distribution.
+    *params
+        The prior distribution parameters.
+    
+    Returns
+    -------
+    tuple
+        Parameters for the posterior distribution.
+
+    References
+    ----------
+    .. [1] A compendium of conjugate priors, from https://www.johndcook.com/CompendiumOfConjugatePriors.pdf
+    """
+    success = np.sum(y[mask])
+
+    return params[0] + success, params[1] + np.sum(mask) - success
+
+_POSTERIOR_UPDATE: Dict[str, Callable] = {
+    "bernoulli": _posterior_bernoulli
+}
+
+_POSTERIOR_DISPATCHER: Dict[str, Callable] = {
+    "bernoulli": scipy.stats.beta
+}
+
 class BayesianTargetEncoder(_BaseEncoder):
     """Bayesian target encoder.
+
+    This encoder will
+
+    1. Derive the prior distribution from the supplied ``dist``,
+    2. Initialize the prior distribution hyperparameters using the training data,
+    3. For each level in each categorical,
+        * Generate the posterior distribution,
+        * Set the encoding value(s) as a sample or the mean from the posterior distribution
     
     Parameters
     ----------
     dist : str
-        The posterior distribution for the target. This must be a distribution
+        The likelihood for the target. This must be a distribution
         accessible through ``scipy.stats``. The parameters will be estimated
         using the distribution's ``.fit`` method and stored as ``posterior_params_``.
     sample : bool, optional (default False)
@@ -44,10 +123,12 @@ class BayesianTargetEncoder(_BaseEncoder):
 
     Attributes
     ----------
-
-    References
-    ----------
-    .. [1] A compendium of conjugate priors, from https://www.johndcook.com/CompendiumOfConjugatePriors.pdf
+    prior_params_ : tuple
+        The estimated hyperparameters for the prior distribution.
+    posterior_params_ : list
+        A list of arrays. Each entry in the list corresponds to the categorical
+        feature in ``categories_``. Each index in the underlying array contains
+        the parameters for the posterior distribution for the given level.
     """
 
     _required_parameters = ["dist"]
@@ -85,10 +166,27 @@ class BayesianTargetEncoder(_BaseEncoder):
             Fitted encoder.
         """
         self._fit(X, handle_unknown=self.handle_unknown, force_all_finite=True)
-        # First, save the parameters for the posterior distribution of the target
+        # Initialize the prior distribution parameters
+        try:
+            self.prior_params_ = _LIKELIHOOD_PRIOR_MAPPING[self.dist](y)
+        except KeyError:
+            raise NotImplementedError(f"{self.dist} has not been implemented.")
+        
+        # Loop through each categorical
+        self.posterior_params_: List[np.ndarray] = []
+        for index, cat in enumerate(self.categories_):
+            # Loop through each level
+            catparams = []
+            for level in cat:
+                # Get a mask
+                mask = (X[:, index] == level)
+                # Update the posterior distribution
+                catparams.append(_POSTERIOR_UPDATE[self.dist](y, mask, *self.prior_params_))
+            
+            self.posterior_params_.append(np.array(catparams))
 
         return self
-    
+
 
     def transform(self, X):
         """Transform the input dataset.
@@ -105,9 +203,22 @@ class BayesianTargetEncoder(_BaseEncoder):
         """
         check_is_fitted(self)
 
-        X_int, X_mask = self._transform(
+        X_int, _ = self._transform(
             X,
             handle_unknown=self.handle_unknown,
             force_all_finite=True,
-            warn_on_unknown=(self.handle_unknown == "ignore")
         )
+
+        X_out = np.zeros(X.shape)
+        # Loop through each categorical
+        for idx, cat in enumerate(self.categories_):
+            # Loop through each level and sample or evaluate the mean from the posterior
+            for levelno in range(cat.shape[0]):
+                mask = (X_int[:, idx] == levelno)
+                rv = _POSTERIOR_DISPATCHER[self.dist](*self.posterior_params_[idx][levelno, :])
+                if self.sample:
+                    X_out[mask, idx] = rv.rvs(size=np.sum(mask))
+                else:
+                    X_out[mask, idx] = rv.moment(n=1)
+
+        return X_out
