@@ -148,7 +148,7 @@ def _posterior_bernoulli(y, mask, *params) -> Tuple:
     """
     success = np.sum(y[mask])
 
-    return params[0] + success, params[1] + np.sum(mask) - success, 0, 0
+    return params[0] + success, params[1] + np.sum(mask) - success, 0, 1
 
 def _posterior_exponential(y, mask, *params) -> Tuple:
     """Generate the posterior distribution for an exponential likelihood.
@@ -255,10 +255,8 @@ class BayesianTargetEncoder(_BaseEncoder):
     
     Parameters
     ----------
-    dist : str
-        The likelihood for the target. This must be a distribution
-        accessible through ``scipy.stats``. The parameters will be estimated
-        using the distribution's ``.fit`` method and stored as ``posterior_params_``.
+    dist : {"bernoulli", "exponential", "gamma", "invgamma"}
+        The likelihood for the target.
     sample : bool, optional (default False)
         Whether or not to encode the categorical values as a sample from the posterior
         distribution or the mean.
@@ -324,7 +322,7 @@ class BayesianTargetEncoder(_BaseEncoder):
         self : object
             Fitted encoder.
         """
-        X, y = self._validate_data(X, y)
+        X, y = self._validate_data(X, y, dtype=None)
         self._fit(X, handle_unknown=self.handle_unknown, force_all_finite=True)
         # Initialize the prior distribution parameters
         try:
@@ -387,6 +385,7 @@ class BayesianTargetEncoder(_BaseEncoder):
                         X_out[mask, idx] = rv.rvs(size=np.sum(mask))
                     else:
                         X_out[mask, idx] = rv.moment(n=1)
+                        print(rv.moment(n=1))
                     
                     bar()
                 # Capture any new levels
