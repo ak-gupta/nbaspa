@@ -31,8 +31,57 @@ def _init_bernoulli(y) -> Tuple:
     """
     return np.average(y), 1 - np.average(y)
 
+
+def _init_exponential(y) -> Tuple:
+    """Initialize a prior distribution for exponential likelihood.
+    
+    With an exponential likelihood, the common interpretation is that
+    the conjugate prior gamma distribution should be initialized with
+    
+    * :math:`\alpha = n + 1`
+    * :math:`\beta = \sum_{i = 1}^{n} y_{i}`
+    
+    Parameters
+    ----------
+    y : array-like of shape (n_samples,)
+        Target values.
+    
+    Returns
+    -------
+    tuple
+        The initialization parameters.
+    """
+    return y.shape[0] + 1, np.sum(y)
+
+def _init_gamma(y) -> Tuple:
+    """Initialize a prior distribution for a gamma likelihood.
+
+    For computational efficiency, we will assume a fixed shape parameter
+    :math:`\alpha` that will be observed from the input ``y`. The common
+    interpretation is that the conjugate prior gamma distribution should
+    be initialized with
+
+    * :math:`\alpha_{0} = n\alpha`
+    * :math:`\beta_{0} = \sum_{i = 1}^{n} y_{i}`
+    
+    Parameters
+    ----------
+    y : array-like of shape (n_samples,)
+        Target values.
+    
+    Returns
+    -------
+    tuple
+        The initialization parameters.
+    """
+    alpha, _, _ = scipy.stats.gamma.fit(y)
+
+    return y.shape[0] * alpha, 0, np.sum(y)
+
 _LIKELIHOOD_PRIOR_MAPPING: Dict[str, Callable] = {
-    "bernoulli": _init_bernoulli
+    "bernoulli": _init_bernoulli,
+    "exponential": _init_exponential,
+    "gamma": _init_gamma
 }
 
 def _posterior_bernoulli(y, mask, *params) -> Tuple:
@@ -71,14 +120,96 @@ def _posterior_bernoulli(y, mask, *params) -> Tuple:
     """
     success = np.sum(y[mask])
 
-    return params[0] + success, params[1] + np.sum(mask) - success
+    return params[0] + success, params[1] + np.sum(mask) - success, 0, 0
+
+def _posterior_exponential(y, mask, *params) -> Tuple:
+    """Generate the posterior distribution for an exponential likelihood.
+    
+    According to Fink, the posterior distribution is parameterized by
+    
+    .. math::
+        
+        \alpha^{\prime} = \alpha + n
+    
+    and
+    
+    .. math::
+        
+        \beta^{\prime} = \frac{\beta}{1 + \beta\sum_{i = 1}^{n} y_{i}}
+    
+    Parameters
+    ----------
+    y : array-like of shape (n_samples,)
+        Target values.
+    mask : array-like of shape (n_samples,)
+        A boolean array indicating the observations in ``y`` that should
+        be used to generate the posterior distribution.
+    *params
+        The prior distribution parameters.
+    
+    Returns
+    -------
+    tuple
+        Parameters for the posterior distribution. The parameters are based on the
+        ``scipy.stats.gamma`` parameterization of the distribution.
+
+    References
+    ----------
+    .. [1] A compendium of conjugate priors, from https://www.johndcook.com/CompendiumOfConjugatePriors.pdf
+    """
+    return params[0] + np.sum(mask), 0, params[1]/(1 + params[1] * np.sum(y[mask]))
+
+
+def _posterior_gamma(y, mask, *params) -> Tuple:
+    """Generate the posterior distribution for a gamma likelihood.
+    
+    According to Fink, the posterior distribution is parameterized by
+    
+    .. math::
+        
+        \alpha^{\prime} = n\alpha + \alpha_{0}
+    
+    where :math:`\alpha_{0}` is from the prior distribution and :math:`\alpha`
+    is the fixed shape parameter from the training data, and
+    
+    .. math::
+        
+        \beta^{\prime} = \frac{\beta_{0}}{1 + \beta_{0}\sum_{i = 1}^{n} y_{i}}
+    
+    Parameters
+    ----------
+    y : array-like of shape (n_samples,)
+        Target values.
+    mask : array-like of shape (n_samples,)
+        A boolean array indicating the observations in ``y`` that should
+        be used to generate the posterior distribution.
+    *params
+        The prior distribution parameters.
+
+    Returns
+    -------
+    tuple
+        Parameters for the posterior distribution. The parameters are based on the
+        ``scipy.stats.gamma`` parameterization of the distribution.
+
+    References
+    ----------
+    .. [1] A compendium of conjugate priors, from https://www.johndcook.com/CompendiumOfConjugatePriors.pdf
+    """
+    alpha, _, _ = scipy.stats.gamma.fit(y)
+
+    return np.sum(mask) * alpha + params[0], 0, params[2]/(1 + np.sum(y[mask]))
 
 _POSTERIOR_UPDATE: Dict[str, Callable] = {
-    "bernoulli": _posterior_bernoulli
+    "bernoulli": _posterior_bernoulli,
+    "exponential": _posterior_exponential,
+    "gamma": _posterior_gamma
 }
 
 _POSTERIOR_DISPATCHER: Dict[str, Callable] = {
-    "bernoulli": scipy.stats.beta
+    "bernoulli": scipy.stats.beta,
+    "exponential": scipy.stats.gamma,
+    "gamma": scipy.stats.gamma
 }
 
 class BayesianTargetEncoder(_BaseEncoder):
