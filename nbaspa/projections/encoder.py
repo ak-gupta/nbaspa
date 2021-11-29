@@ -3,6 +3,7 @@
 import logging
 from typing import Callable, Dict, List, Tuple, Union
 
+from alive_progress import alive_bar
 import numpy as np
 import scipy.stats
 from sklearn.preprocessing._encoders import _BaseEncoder
@@ -78,10 +79,37 @@ def _init_gamma(y) -> Tuple:
 
     return y.shape[0] * alpha, 0, np.sum(y)
 
+
+def _init_invgamma(y) -> Tuple:
+    """Initialize a prior distribution for an inverse gamma likelihood.
+    
+    For computational efficiency, we will assume a fixed shape parameter
+    :math:`\alpha` that will be observed from the input ``y``. The common
+    interpretation is that the conjugate prior gamma distribution should
+    be initializated with
+
+    * :math:`\alpha_{0} = n\alpha`
+    * :math:`\beta_{0} = \sum_{i = 1}^{n} y_{i}`
+    
+    Parameters
+    ----------
+    y : array-like of shape (n_samples,)
+        Target values.
+    
+    Returns
+    -------
+    tuple
+        The initialization parameters.
+    """
+    alpha, _, _ = scipy.stats.invgamma.fit(y)
+
+    return y.shape[0] * alpha, 0, np.sum(y)
+
 _LIKELIHOOD_PRIOR_MAPPING: Dict[str, Callable] = {
     "bernoulli": _init_bernoulli,
     "exponential": _init_exponential,
-    "gamma": _init_gamma
+    "gamma": _init_gamma,
+    "invgamma": _init_invgamma
 }
 
 def _posterior_bernoulli(y, mask, *params) -> Tuple:
@@ -203,13 +231,15 @@ def _posterior_gamma(y, mask, *params) -> Tuple:
 _POSTERIOR_UPDATE: Dict[str, Callable] = {
     "bernoulli": _posterior_bernoulli,
     "exponential": _posterior_exponential,
-    "gamma": _posterior_gamma
+    "gamma": _posterior_gamma,
+    "invgamma": _posterior_gamma
 }
 
 _POSTERIOR_DISPATCHER: Dict[str, Callable] = {
     "bernoulli": scipy.stats.beta,
     "exponential": scipy.stats.gamma,
-    "gamma": scipy.stats.gamma
+    "gamma": scipy.stats.gamma,
+    "invgamma": scipy.stats.invgamma
 }
 
 class BayesianTargetEncoder(_BaseEncoder):
@@ -244,13 +274,11 @@ class BayesianTargetEncoder(_BaseEncoder):
         The used categories can be found in the ``categories_`` attribute.
     dtype : number type, optional (default float)
         Desired dtype of output.
-    handle_unknown : {'error', 'ignore'}, default='error'
+    handle_unknown : {'error', 'ignore'}, optional (default "ignore")
         Whether to raise an error or ignore if an unknown categorical feature
         is present during transform (default is to raise). When this parameter
-        is set to 'ignore' and an unknown category is encountered during
-        transform, the resulting one-hot encoded columns for this feature
-        will be all zeros. In the inverse transform, an unknown category
-        will be denoted as None.
+        is set to 'ignore' and an unknown category is encountered, the resulting
+        encoding will be taken from the prior distribution.
 
     Attributes
     ----------
@@ -270,7 +298,7 @@ class BayesianTargetEncoder(_BaseEncoder):
         sample: bool = False,
         categories: Union[str, List] = "auto",
         dtype=np.float64,
-        handle_unknown: str = "error",
+        handle_unknown: str = "ignore",
     ):
         """Init method."""
         self.dist = dist
@@ -296,6 +324,7 @@ class BayesianTargetEncoder(_BaseEncoder):
         self : object
             Fitted encoder.
         """
+        X, y = self._validate_data(X, y)
         self._fit(X, handle_unknown=self.handle_unknown, force_all_finite=True)
         # Initialize the prior distribution parameters
         try:
@@ -304,17 +333,22 @@ class BayesianTargetEncoder(_BaseEncoder):
             raise NotImplementedError(f"{self.dist} has not been implemented.")
         
         # Loop through each categorical
+        LOG.info("Determining the posterior distribution parameters...")
+        nlevels = np.sum([len(cat) for cat in self.categories_])
         self.posterior_params_: List[np.ndarray] = []
-        for index, cat in enumerate(self.categories_):
-            # Loop through each level
-            catparams = []
-            for level in cat:
-                # Get a mask
-                mask = (X[:, index] == level)
-                # Update the posterior distribution
-                catparams.append(_POSTERIOR_UPDATE[self.dist](y, mask, *self.prior_params_))
-            
-            self.posterior_params_.append(np.array(catparams))
+        with alive_bar(int(nlevels)) as bar:
+            for index, cat in enumerate(self.categories_):
+                # Loop through each level
+                catparams = []
+                for level in cat:
+                    # Get a mask
+                    mask = (X[:, index] == level)
+                    # Update the posterior distribution
+                    catparams.append(_POSTERIOR_UPDATE[self.dist](y, mask, *self.prior_params_))
+
+                    bar()
+
+                self.posterior_params_.append(np.array(catparams))
 
         return self
 
@@ -334,7 +368,7 @@ class BayesianTargetEncoder(_BaseEncoder):
         """
         check_is_fitted(self)
 
-        X_int, _ = self._transform(
+        X_int, X_mask = self._transform(
             X,
             handle_unknown=self.handle_unknown,
             force_all_finite=True,
@@ -342,11 +376,22 @@ class BayesianTargetEncoder(_BaseEncoder):
 
         X_out = np.zeros(X.shape)
         # Loop through each categorical
-        for idx, cat in enumerate(self.categories_):
-            # Loop through each level and sample or evaluate the mean from the posterior
-            for levelno in range(cat.shape[0]):
-                mask = (X_int[:, idx] == levelno)
-                rv = _POSTERIOR_DISPATCHER[self.dist](*self.posterior_params_[idx][levelno, :])
+        nlevels = np.sum([len(cat) for cat in self.categories_])
+        with alive_bar(int(nlevels)) as bar:
+            for idx, cat in enumerate(self.categories_):
+                # Loop through each level and sample or evaluate the mean from the posterior
+                for levelno in range(cat.shape[0]):
+                    mask = (X_int[:, idx] == levelno) & (X_mask[:, idx])
+                    rv = _POSTERIOR_DISPATCHER[self.dist](*self.posterior_params_[idx][levelno, :])
+                    if self.sample:
+                        X_out[mask, idx] = rv.rvs(size=np.sum(mask))
+                    else:
+                        X_out[mask, idx] = rv.moment(n=1)
+                    
+                    bar()
+                # Capture any new levels
+                mask = (~X_mask[:, idx])
+                rv = _POSTERIOR_DISPATCHER[self.dist](*self.prior_params_)
                 if self.sample:
                     X_out[mask, idx] = rv.rvs(size=np.sum(mask))
                 else:
